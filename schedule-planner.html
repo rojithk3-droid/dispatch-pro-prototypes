@@ -1,0 +1,2529 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Dispatch Pro — Schedule Planner</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<!-- Inter as a VARIABLE font (opsz + wght axes), not the 5 static instances
+     this file used to request. The variable face is what shadcn/ui ships
+     with, and it lets font-optical-sizing actually do something at the small
+     sizes this UI uses. -->
+<link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300..800&display=swap" rel="stylesheet">
+<!-- Lucide: the icon set Basecoat ships its components with. Every
+     <i data-lucide="name"> in the markup below is swapped for an inline
+     <svg> at runtime; dpIcons() re-runs it after JS builds new rows. -->
+<script src="https://cdn.jsdelivr.net/npm/lucide@0.544.0/dist/umd/lucide.min.js"></script>
+<style>
+  /* ---------------- TOKENS ---------------- */
+  :root{
+    --blue:            #0F6FFF;
+    --blue-dark:       #1667CA;
+    --blue-bg:         #EFF6FF;
+    --blue-border:     #DBEAFE;
+    --red:             #E7000B;
+    --text-dark:       #101828;
+    --text-heading:    #1E2939;
+    --text-body:       #364153;
+    --text-muted:      #6A7282;
+    --text-faint:      #99A1AF;
+    --border:          #E5E7EB;
+    --border-soft:     #F3F4F6;
+    --page-bg:         #F9FAFB;
+    --sidebar-bg:      #FFFFFF;
+
+    --navy-deep:       #101B33;
+    --card-navy:       #16274A;
+    --blue-pill:       #2E7DF7;
+    --icon-muted-dark: #66739A;
+    --hairline-dark:   rgba(255,255,255,0.08);
+
+    --surface:         #FFFFFF;
+    --segmented-track: #F3F4F6;
+    --input-border:    #E4E7EC;
+    --icon-default:    #4A5468;
+  }
+  /* Dark theme palette calibrated to login.html's own — same file that
+     the button dimensions above and the dropdown hover color were ported
+     from. login.html's dark tokens (its 2FA/OTP step included) are
+     --bg:#0b1220 --surface:#121b2e --border:#263248 --heading/--text-
+     strong:#f3f5f9 --text-color:#a6b0c3 --text-faint:#7c879b — mapped
+     onto this file's own (more granular, 2-tier heading / +muted-tier)
+     token names below rather than flattening our scale to match theirs. */
+  [data-theme="dark"]{
+    --page-bg:         #0B1220;
+    --surface:         #121B2E;
+    --segmented-track: #17202F;
+    --border:          #263248;
+    --border-soft:     #1C2537;
+    --input-border:    #2A3346;
+    --text-dark:       #F3F5F9;
+    --text-heading:    #E9EDF4;
+    --text-body:       #A6B0C3;
+    --text-muted:      #8B96AC;
+    --text-faint:      #7C879B;
+    --blue-bg:         #16233A;
+    /* The blue accent needs a dark border of its own, exactly as the green,
+       amber and red families get one in the CONTENT palette further down.
+       Without it the light value (#DBEAFE) leaks into dark mode and paints a
+       near-white outline on the navy fill - which is what made the step-2
+       explainer alert look like it came from a different design. Lifted off
+       --blue-bg by about what --border is lifted off --surface, with the
+       blue channel kept high so it still reads as the info accent and not
+       as a neutral hairline. */
+    --blue-border:     #2C3E60;
+    --icon-default:    #AEB6C7;
+  }
+
+  :root{
+    /* shadcn neutral semantics this file didn't have. --accent is the
+       menu/option hover fill: neutral, not the blue tint used before. */
+    --accent:          #F4F4F5;
+    --accent-fg:       #18181B;
+    --popover:         #FFFFFF;
+    --muted-fg:        #71717A;
+
+    --ring:            rgba(15,111,255,0.50);
+    --ring-danger:     rgba(231,0,11,0.20);
+    /* shadcn shadow-xs / shadow-sm / shadow-md / shadow-lg */
+    /* Drop shadows removed by request: every elevation surface (cards,
+       buttons, inputs, the dropdown panel, the dialog, toasts,
+       the stepper shell, the summary rail, the active tab) resolves these
+       tokens, so nulling them here turns all of it off in one place and
+       keeps it trivially reversible. Focus RINGS are unaffected - they are
+       spread-only `0 0 0 Npx` box-shadows written inline, not elevation. */
+    --shadow-xs:       none;
+    --shadow-sm:       none;
+    --shadow-md:       none;
+    --shadow-lg:       none;
+
+    --green:           #047857;
+    --green-bg:        #ECFDF5;
+    --green-border:    #A7F3D0;
+    --amber:           #B45309;
+    --amber-bg:        #FFFBEB;
+    --amber-border:    #FDE68A;
+    --red-bg:          #FEF2F2;
+    --red-border:      #FFE2E2;
+    --row-hover:       #FAFAFA;
+
+    /* Type scale — rendered size in the comment. */
+    /* Rendered size in the comment (declared x 0.8), all whole pixels.
+       Every LINE-HEIGHT also renders EVEN. That is deliberate: a line box
+       is constantly centred against a container (a button, a table cell, a
+       card footer, a flex row), and an odd line box inside an even box
+       centres onto a half-pixel. --lh-xs at 16.25px rendered 13px and
+       --lh-base at 23.75px rendered 19px, which put the card footers, the
+       review "Edit" links and the GL cells all on halves. */
+    --fs-xs:    12.5px;   --lh-xs:   17.5px;   /* 10 / 14 */
+    --fs-sm:    13.75px;  --lh-sm:   20px;     /* 11 / 16 */
+    --fs-base:  16.25px;  --lh-base: 25px;     /* 13 / 20 */
+    --fs-lg:    17.5px;   --lh-lg:   27.5px;   /* 14 / 22 */
+    --fs-xl:    20px;     --lh-xl:   27.5px;   /* 16 / 22 */
+    --fs-2xl:   23.75px;  --lh-2xl:  32.5px;   /* 19 / 26 */
+
+    /* Control heights + radii */
+    --h-8:      32.5px;   /* 26 - shadcn size="sm" at 80% */
+    /* 30, not 29: an EVEN painted height. A flex/inline child centred in an
+       odd-height box lands on a half-pixel (an even 16px line box in a 29px
+       trigger sat at y+6.5), which softens the text. Even container heights
+       centre even children exactly. */
+    --h-9:      37.5px;   /* 30 - shadcn default at 80%   */
+    --h-10:     40px;     /* 32 - shadcn size="lg" at 80% */
+    --r-sm:     3.75px;   /* 3  - rounded-sm  */
+    --r-md:     6.25px;   /* 5  - rounded-md  */
+    --r-lg:     7.5px;    /* 6  - rounded-lg  */
+    --r-xl:     12.5px;   /* 10 - rounded-xl  */
+    --ring-w:   2.5px;    /* 2  - ring        */
+  }
+  [data-theme="dark"]{
+    --accent:          #27272A;
+    --accent-fg:       #FAFAFA;
+    --popover:         #121B2E;
+    --muted-fg:        #8B96AC;
+
+    --ring:            rgba(58,140,255,0.55);
+    --ring-danger:     rgba(248,113,113,0.26);
+    --shadow-xs:       none;
+    --shadow-sm:       none;
+    --shadow-md:       none;
+    --shadow-lg:       none;
+
+    --green:           #6EE7B7;
+    --green-bg:        #0E2A22;
+    --green-border:    #1C4638;
+    --amber:           #FCD34D;
+    --amber-bg:        #2A2113;
+    --amber-border:    #4A3A18;
+    --red-bg:          #2C1416;
+    --red-border:      #4A1F24;
+    --row-hover:       rgba(255,255,255,0.03);
+  }
+
+  /* ---------------- BASE ---------------- */
+  *{ box-sizing:border-box; }
+  [hidden]{ display:none !important; }
+  html,body{ margin:0; padding:0; height:100%; }
+  body{
+    font-family:'Inter',system-ui,-apple-system,'Segoe UI',sans-serif;
+    /* An explicit base size, ON the 1.25 grid. Without one, body inherits the
+       UA's 16px, and 16 x 0.8 = 12.8px painted - a fractional glyph size, which
+       is the one thing that genuinely softens text here (see the note on zoom
+       below). Nothing visible inherited it today, but anything added without
+       its own font-size would have rendered blurry for no obvious reason.
+       13.75px -> 11px painted, matching --fs-sm, the body copy size.
+
+       Font-size only, deliberately: every element that paints text sets its
+       own line-height from the scale, so adding one here would only change
+       the inline-box height of containers that currently use `normal` -
+       layout churn for no glyph-quality gain. */
+    font-size:var(--fs-sm);
+    /* -webkit-font-smoothing / -moz-osx-font-smoothing:grayscale and
+       text-rendering:optimizeLegibility used to sit here, with a comment
+       claiming they fixed colour fringing from zoom:0.8 on Windows Chrome.
+       Measured 1:1 against every alternative (antialiased / auto /
+       subpixel-antialiased, and auto / optimizeLegibility / geometricPrecision
+       / optimizeSpeed) at 11px and 22px: byte-identical rendering and
+       identical advance widths. -webkit-font-smoothing is a macOS-only
+       property in Blink, where `antialiased` makes text THINNER, and Chrome
+       advises against optimizeLegibility. So they did nothing on the platform
+       they were added for and could only hurt on the other one. */
+    font-optical-sizing:auto;
+    /* Never let the browser fake a weight it can synthesise badly — the
+       variable face covers 300-800, so any miss is a real bug worth seeing. */
+    font-synthesis-weight:none;
+    background:var(--page-bg);
+    display:flex;
+    flex-direction:column;
+    /* 125vh, not 100vh: body itself has zoom:0.8 below, so its own box
+       gets rendered (painted) at 80% scale — a plain 100vh would only
+       ever visually reach 80% of the true viewport height, leaving a
+       blank gap below the sidebar/footer. Dividing by the zoom factor
+       (100/0.8=125) compensates, same fix as the dropdown-panel's
+       position math above. */
+    height:125vh;
+    overflow:hidden;
+    color:var(--text-body);
+    /* Whole-page 80% default zoom, per direct request. `zoom` (not
+       `transform:scale`) so position:fixed content — the toasts
+       and the custom .dropdown-panel's viewport-relative positioning —
+       keeps behaving correctly instead of getting trapped in a
+       transformed containing block.
+
+       TEXT QUALITY, and the whole reason for the 1.25px grid: glyphs are
+       rasterised at font-size x zoom x devicePixelRatio, and a FRACTIONAL
+       result is what makes Inter look soft. Demonstrated directly - the same
+       13.75px string at zoom .80 (11.00px, whole) is crisp, at .85 (11.69px)
+       and .90 (12.38px) it is visibly blurred. Every size in the scale is a
+       multiple of 1.25px so that x0.8 lands whole, which holds at dpr 1 and
+       1.25 (0.8 x 1.25 = exactly 1.0). It does NOT hold at Windows display
+       scaling of 150% or 175%: 0.8 x 1.5 = 1.2, and 13.75 x 1.2 = 16.5
+       device px. On those displays the text is unavoidably soft, and no
+       font property fixes it - only dropping `zoom` in favour of a scale
+       authored at 100% would. */
+    zoom:0.8;
+  }
+  button, input, select, textarea, optgroup{ font-family:inherit; }
+
+  /* ---------------- TOP BAR ---------------- */
+  .topbar{
+    /* 66.25px total - 1.25px border = a 65px content box -> 52px painted,
+       i.e. EVEN. What matters for flex centring is the CONTENT box, not the
+       border box: at 63.75px the content box painted 51px (odd), so every
+       even-height child sat on a half-pixel. The FSC card and icon-button
+       sizes below were also nudged to even painted heights so all three
+       topbar groups centre exactly. Same reasoning as --h-9. */
+    height:66.25px;
+    flex:0 0 66.25px;
+    background:var(--surface);
+    border-bottom:1.25px solid var(--border);
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    padding:0 20px;
+    gap:20px;
+    z-index:10;
+  }
+  .topbar-left{ display:flex; align-items:center; gap:22.5px; min-width:0; flex:1 1 auto; }
+  /* Explicit px line-heights on the 1.25 grid, not the unitless 1.25 that
+     used to sit on .company-block: 1.25 x the 11.25px sub-label computed to
+     14.0625px, the one off-grid line-height on the page, which made this
+     block 27.25px tall and knocked its own text onto a half-pixel. */
+  .company-block{ flex:0 0 auto; }
+  .company-title{ font-size:15px; line-height:18.75px; font-weight:700; color:var(--text-dark); }
+  .company-sub{ font-size:11.25px; line-height:15px; font-weight:500; color:var(--text-faint); margin-top:1.25px; }
+
+  .search-box{
+    background:var(--surface);
+    border:1.25px solid var(--border);
+    border-radius:6.25px;
+    height:35px;
+    width:280px;
+    display:flex;
+    align-items:center;
+    padding:0 12.5px;
+    gap:7.5px;
+    flex:0 1 280px;
+  }
+  .search-box svg{ color:var(--text-faint); flex:0 0 auto; }
+  .search-box input{
+    border:none; outline:none; font-family:inherit; font-size:12.5px;
+    /* Explicit grid line-height/height: with neither set, the input sized
+       itself from font metrics to 13.59px painted, the one fractional box
+       left in the topbar. */
+    line-height:20px; height:20px;
+    color:var(--text-body); flex:1; min-width:0; background:transparent;
+  }
+  .search-box input::placeholder{ color:var(--text-faint); }
+
+  .topbar-right{ display:flex; align-items:center; gap:16.25px; flex:0 0 auto; }
+
+  .surcharge-card{
+    background:var(--card-navy);
+    border-radius:7.5px;
+    padding:7.5px 12.5px;
+    display:flex;
+    align-items:center;
+    gap:10px;
+    flex:0 0 auto;
+  }
+  /* Explicit grid line-heights and a 2px (painted) gap instead of 1px, so
+     this two-line column is 22px painted rather than 21px. With `normal`
+     line-height and a 1px gap the card came out 33px tall (odd) and every
+     line inside it, plus the card itself, sat on a half-pixel. */
+  .surcharge-label{ font-size:10px; line-height:12.5px; font-weight:700; letter-spacing:0.5px; color:#8FA3C7; text-transform:uppercase; }
+  .surcharge-date{ font-size:10px; line-height:12.5px; color:#5E729C; margin-top:2.5px; }
+  .surcharge-value{ font-size:16.25px; line-height:20px; font-weight:800; color:#fff; }
+
+  .icon-actions{ display:flex; align-items:center; gap:6.25px; flex:0 0 auto; }
+  .icon-btn{
+    position:relative;
+    width:35px; height:35px;
+    border-radius:7.5px;
+    display:flex; align-items:center; justify-content:center;
+    color:var(--icon-default);
+    background:none; border:none; cursor:pointer;
+  }
+  .icon-btn:hover{ background:var(--border-soft); }
+  .icon-btn .dot{
+    position:absolute; top:6.25px; right:7.5px;
+    width:6.25px; height:6.25px; border-radius:50%;
+    background:var(--red); border:1.25px solid var(--surface);
+  }
+  .icon-popover{
+    position:absolute; top:calc(100% + 7.5px); right:0;
+    width:220px;
+    background:var(--surface);
+    border:1.25px solid var(--border);
+    border-radius:7.5px;
+    /* Shadow removed with the rest; this was the only elevation written as a
+       literal rather than through a --shadow-* token. */
+    padding:10px 12.5px;
+    font-size:12.5px; font-weight:400; line-height:1.4;
+    color:var(--text-body);
+    text-align:left;
+    white-space:normal;
+    cursor:default;
+    z-index:50;
+  }
+
+  .user-chip{ display:flex; align-items:center; gap:7.5px; cursor:pointer; flex:0 0 auto; }
+  .user-name{ font-size:13.75px; font-weight:600; color:var(--text-heading); }
+  .user-chip .chevron{ color:var(--text-faint); }
+  .avatar{
+    width:32.5px; height:32.5px; border-radius:50%;
+    background:var(--card-navy);
+    color:#fff;
+    font-size:12.5px; font-weight:700;
+    display:flex; align-items:center; justify-content:center;
+    flex:0 0 auto;
+  }
+
+  /* ---------------- BREADCRUMB ---------------- */
+  .breadcrumb-bar{
+    flex:0 0 auto;
+    background:var(--surface);
+    border-bottom:1.25px solid var(--border);
+    padding:11.25px 23.75px;
+    font-size:12.5px;
+  }
+  .breadcrumb-bar span{ color:var(--text-faint); }
+  .breadcrumb-bar span.current{ color:var(--text-dark); font-weight:600; }
+
+  /* ---------------- APP BODY ---------------- */
+  .app-body{ flex:1 1 auto; display:flex; min-height:0; }
+
+  /* ---------------- SIDEBAR ---------------- */
+  .sidebar{
+    width:56.25px;
+    flex:0 0 56.25px;
+    background:var(--navy-deep);
+    border-right:1.25px solid var(--border);
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    padding:12.5px 0;
+    gap:6.25px;
+    overflow-y:auto;
+  }
+  .sidebar::-webkit-scrollbar{ width:0; }
+  .side-logo{
+    width:32.5px; height:32.5px;
+    background:var(--blue-pill);
+    border-radius:7.5px;
+    display:flex; align-items:center; justify-content:center;
+    color:#fff; font-weight:800; font-size:11.25px; letter-spacing:0.2px;
+    flex:0 0 auto;
+    margin-bottom:6.25px;
+  }
+  .side-icon{
+    position:relative;
+    width:37.5px; height:33.75px;
+    border-radius:7.5px;
+    display:flex; align-items:center; justify-content:center;
+    color:var(--icon-muted-dark);
+    background:none; border:none; cursor:pointer;
+    flex:0 0 auto;
+  }
+  .side-icon svg{ stroke-width:1.8; }
+  .side-icon:hover{ color:#C4CEE4; background:rgba(255,255,255,0.06); }
+  .side-icon.active{ color:#fff; background:rgba(255,255,255,0.08); }
+  .side-icon.active::before{
+    content:'';
+    position:absolute; left:1.25px; top:50%; transform:translateY(-50%);
+    width:2.5px; height:20px; border-radius:0 2.5px 2.5px 0;
+    background:var(--blue-pill);
+  }
+  .sidebar-spacer{ flex:1 1 auto; }
+  .side-icon-bottom{
+    width:33.75px; height:33.75px;
+    border-radius:7.5px;
+    display:flex; align-items:center; justify-content:center;
+    color:var(--icon-muted-dark);
+    background:none; border:none; cursor:pointer;
+  }
+  .side-icon-bottom:hover{ color:#C4CEE4; }
+
+  .content{ flex:1 1 auto; display:flex; flex-direction:column; min-height:0; }
+
+  /* ---------------- TOAST (shadcn / sonner) ---------------- */
+  .toast-stack{
+    position:fixed; top:73.75px; right:20px; z-index:500;
+    display:flex; flex-direction:column; gap:10px;
+    pointer-events:none;
+  }
+  .toast{
+    display:flex; align-items:flex-start; gap:10px;
+    min-width:280px; max-width:360px;
+    padding:16.25px;
+    border-radius:var(--r-lg);
+    border:1.25px solid var(--border);
+    background:var(--popover);
+    box-shadow:var(--shadow-lg);
+    font-size:var(--fs-sm); line-height:var(--lh-sm);
+    color:var(--muted-fg);
+    animation:toast-in .2s cubic-bezier(.2,.9,.3,1) both;
+  }
+  @keyframes toast-in{ from{ opacity:0; transform:translateX(17.5px); } to{ opacity:1; transform:none; } }
+  .toast .toast-title{
+    font-weight:500; display:block; margin-bottom:2.5px; color:var(--text-dark);
+  }
+  .toast.success{ border-color:var(--green-border); }
+  .toast.success svg, .toast.success .toast-title{ color:var(--green); }
+  .toast.error{ border-color:var(--red-border); }
+  .toast.error svg, .toast.error .toast-title{ color:var(--red); }
+  [data-theme="dark"] .toast.error svg,
+  [data-theme="dark"] .toast.error .toast-title{ color:#FCA5A5; }
+
+  /* ---------------- FOCUS RING (shadcn) ----------------
+     focus-visible:border-ring + focus-visible:ring-[3px] ring-ring/50 */
+  .text-input:focus-visible,
+  .rate-input:focus-visible,
+  .select-input:focus-visible,
+  .dropdown-trigger:focus-visible{
+    border-color:var(--blue);
+    box-shadow:0 0 0 var(--ring-w) var(--ring);
+  }
+  .btn:focus-visible,
+  .btn-primary:focus-visible,
+  .btn-outline:focus-visible,
+  .icon-action-btn:focus-visible,
+  .add-line-btn:focus-visible,
+  .segmented button:focus-visible,
+  .step.is-navigable:focus-visible,
+  .alert-more:focus-visible,
+  .review-edit:focus-visible,
+  .row-checkbox:focus-visible,
+  .summary-row:focus-visible{
+    outline:none;
+    box-shadow:0 0 0 var(--ring-w) var(--ring);
+  }
+  .link-danger:focus-visible,
+  .btn-danger:focus-visible{ outline:none; box-shadow:0 0 0 var(--ring-w) var(--ring-danger); }
+
+  /* ---------------- BUTTON (shadcn) ----------------
+     inline-flex items-center justify-center gap-2 rounded-md text-sm
+     font-medium shadow-xs transition-all, with data-variant/data-size. */
+  .btn{
+    display:inline-flex; align-items:center; justify-content:center; gap:7.5px;
+    height:var(--h-9); padding:0 16.25px;
+    border-radius:var(--r-md);
+    border:1.25px solid transparent;
+    background:var(--blue); color:#fff;
+    font-family:inherit; font-size:var(--fs-sm); line-height:var(--lh-sm); font-weight:500;
+    box-shadow:var(--shadow-xs);
+    cursor:pointer; white-space:nowrap;
+    transition:background .15s ease, border-color .15s ease, color .15s ease, box-shadow .15s ease;
+  }
+  .btn:hover{ background:var(--blue-dark); }
+  .btn:disabled{ opacity:0.5; cursor:not-allowed; }
+  .btn svg{ width:16.25px; height:16.25px; flex:0 0 auto; pointer-events:none; }
+
+  .btn[data-variant="outline"]{
+    background:var(--surface); color:var(--text-heading); border-color:var(--input-border);
+  }
+  .btn[data-variant="outline"]:hover{ border-color:var(--blue); color:var(--blue); background:var(--surface); }
+  .btn[data-variant="secondary"]{
+    background:var(--accent); color:var(--accent-fg); border-color:transparent; box-shadow:none;
+  }
+  .btn[data-variant="secondary"]:hover{ background:var(--border); }
+  .btn[data-variant="ghost"]{ background:transparent; color:var(--text-body); border-color:transparent; box-shadow:none; }
+  .btn[data-variant="ghost"]:hover{ background:var(--blue-bg); color:var(--blue); }
+  .btn[data-variant="destructive"]{ background:var(--red); color:#fff; }
+  .btn[data-variant="destructive"]:hover{ background:#C60009; }
+
+  .btn[data-size="sm"]{ height:var(--h-8); padding:0 12.5px; gap:6.25px; }
+  .btn[data-size="lg"]{ height:var(--h-10); padding:0 23.75px; }
+  .btn[data-size="icon"]{ width:var(--h-9); height:var(--h-9); padding:0; }
+  .btn[data-size="icon-sm"]{ width:var(--h-8); height:var(--h-8); padding:0; }
+
+  /* Named aliases — the file's JS builds row markup referencing these by
+     name, so they map onto shadcn's default and outline variants. */
+  .btn-primary{
+    display:inline-flex; align-items:center; justify-content:center; gap:7.5px;
+    height:var(--h-9); padding:0 16.25px;
+    background:var(--blue); color:#fff;
+    font-family:inherit; font-size:var(--fs-sm); line-height:var(--lh-sm); font-weight:500;
+    border:1.25px solid transparent; border-radius:var(--r-md);
+    box-shadow:var(--shadow-xs);
+    cursor:pointer; white-space:nowrap;
+    transition:background .15s ease, box-shadow .15s ease;
+  }
+  .btn-primary:hover{ background:var(--blue-dark); }
+  .btn-primary:disabled{ opacity:0.5; cursor:not-allowed; }
+  .btn-primary svg{ width:16.25px; height:16.25px; flex:0 0 auto; }
+
+  .btn-outline{
+    display:inline-flex; align-items:center; justify-content:center; gap:7.5px;
+    height:var(--h-9); padding:0 16.25px;
+    border-radius:var(--r-md);
+    border:1.25px solid var(--input-border);
+    background:var(--surface);
+    color:var(--text-heading);
+    font-family:inherit; font-size:var(--fs-sm); line-height:var(--lh-sm); font-weight:500;
+    box-shadow:var(--shadow-xs);
+    cursor:pointer; white-space:nowrap;
+    transition:background .15s ease, border-color .15s ease, color .15s ease;
+  }
+  .btn-outline:hover{ border-color:var(--blue); color:var(--blue); }
+  .btn-outline svg{ width:16.25px; height:16.25px; flex:0 0 auto; }
+
+  .btn-primary[data-size="sm"], .btn-outline[data-size="sm"]{
+    height:var(--h-8); padding:0 12.5px; gap:6.25px;
+  }
+
+  /* ---------------- BADGE (shadcn) ----------------
+     rounded-md border px-2 py-0.5 text-xs font-medium w-fit gap-1 */
+  .badge{
+    display:inline-flex; align-items:center; justify-content:center; gap:3.75px;
+    width:fit-content;
+    padding:2.5px 7.5px;
+    border-radius:var(--r-md);
+    border:1.25px solid var(--border);
+    background:var(--accent);
+    color:var(--muted-fg);
+    /* 15px line-height rather than --lh-xs (16.25px): 12 + 2 + 2 padding
+       + 1 + 1 border = 18px painted, an EVEN height that also centres its
+       own 12px line box exactly. At --lh-xs the badge came out 19px (odd),
+       so it sat on a half-pixel everywhere it appears - the page header,
+       every data-grid toolbar, and each review section. */
+    font-size:var(--fs-xs); line-height:15px; font-weight:500;
+    white-space:nowrap; flex:0 0 auto;
+  }
+  .badge svg{ width:12.5px; height:12.5px; flex:0 0 auto; }
+  .badge[data-variant="info"]{ background:var(--blue-bg); border-color:var(--blue-border); color:var(--blue-dark); }
+  .badge[data-variant="success"]{ background:var(--green-bg); border-color:var(--green-border); color:var(--green); }
+  .badge[data-variant="warning"]{ background:var(--amber-bg); border-color:var(--amber-border); color:var(--amber); }
+  .badge[data-variant="danger"]{ background:var(--red-bg); border-color:var(--red-border); color:var(--red); }
+  [data-theme="dark"] .badge[data-variant="info"]{ color:#93C5FD; }
+  [data-theme="dark"] .badge[data-variant="danger"]{ color:#FCA5A5; }
+
+  .context-chip{
+    display:inline-flex; align-items:center; gap:6.25px;
+    padding:2.5px 10px;
+    border-radius:var(--r-md);
+    background:var(--blue-bg); border:1.25px solid var(--blue-border);
+    color:var(--blue-dark);
+    font-size:var(--fs-xs); line-height:var(--lh-xs); font-weight:500;
+  }
+  [data-theme="dark"] .context-chip{ color:#93C5FD; }
+  .required{ color:var(--red); }
+
+  /* ---------------- TABS (shadcn) — the segmented controls ----------------
+     TabsList: bg-muted h-9 rounded-lg p-[3px]
+     TabsTrigger: rounded-md px-2 py-1 text-sm font-medium,
+                  active -> bg-background shadow-sm */
+  .segmented{
+    display:inline-flex; align-items:center; justify-content:center;
+    width:fit-content;
+    height:var(--h-9);
+    background:var(--segmented-track);
+    border:1.25px solid var(--border);
+    border-radius:var(--r-lg);
+    padding:2.5px;
+    gap:0;
+    flex:0 0 auto;
+  }
+  .segmented button{
+    display:inline-flex; align-items:center; justify-content:center; gap:6.25px;
+    height:100%;
+    font-family:inherit; font-size:var(--fs-sm); line-height:var(--lh-sm); font-weight:500;
+    color:var(--muted-fg);
+    background:none; border:1.25px solid transparent;
+    padding:0 12.5px; border-radius:var(--r-md);
+    cursor:pointer; white-space:nowrap;
+    transition:color .15s ease, background .15s ease, box-shadow .15s ease;
+  }
+  /* Identical to .dropdown-item:hover - --blue-bg fill, --blue label - so a
+     segmented control and an option list highlight the same way.
+     :not(.active) is load-bearing: the selected tab is marked ONLY by its
+     fill, so letting hover repaint that fill would erase the selection for
+     as long as the pointer sits on it. An option list has a tick to fall
+     back on; this does not. It also outranks .segmented button.active
+     rather than relying on source order, which is what let the frequency
+     variant's own hover rule tint the ACTIVE tab's label blue. */
+  .segmented button:not(.active):hover{ background:var(--blue-bg); color:var(--blue); }
+  /* Selected tab is a solid --blue pill with white text - the same fill
+     .btn-primary uses, so "selected" reads identically everywhere in the
+     flow: the Pay Frequency tabs and all five Custom/Existing Profile
+     toggles. It replaces shadcn's TabsTrigger treatment (bg-background +
+     shadow-sm, i.e. a white pill on a grey track), which needs a shadow to
+     read as raised and had nothing to lean on with every --shadow-* token
+     set to none.
+
+     It also has to beat the hover fill above, which is --blue-bg: near-white
+     in light mode, so a light-blue selected tab would have been hard to tell
+     from a merely hovered one. Solid blue keeps the two apart, and it is
+     legible on the light AND dark track from one rule - bg-background was
+     not, which is why the dark-mode override this used to need is gone. */
+  .segmented button.active{
+    background:var(--blue);
+    color:#fff;
+    border-color:transparent;
+  }
+  /* Compact variant for the per-card Custom/Existing Profile toggle. */
+  .card-head .segmented{ height:var(--h-8); padding:2.5px; }
+  .card-head .segmented button{ font-size:var(--fs-xs); line-height:var(--lh-xs); padding:0 10px; }
+
+  /* Pay frequency (step 1) - shadcn/ui Tabs, per request. Recipe taken
+     straight from the component source:
+
+       TabsList     inline-flex w-fit items-center justify-center rounded-lg
+                    p-[3px] bg-muted h-9
+       TabsTrigger  h-[calc(100%-1px)] flex-1 gap-1.5 rounded-md
+                    border border-transparent px-2 py-1 text-sm font-medium,
+                    text-foreground/60, hover:text-foreground,
+                    active -> bg-background text-foreground shadow-sm,
+                    dark active -> border-input bg-input/30
+
+     The base .segmented/.segmented button above ALREADY match TabsList and
+     TabsTrigger on every count except the two below, so those two are all
+     this variant declares. It used to restate height, font-size, line-height,
+     font-weight, background and colour verbatim, which cost nothing visually
+     but made the variant (0,3,1) outrank .segmented button.active at (0,2,1)
+     - so the selected tab kept the muted label instead of going white. A
+     variant that only says what differs cannot do that.
+
+     Two deliberate departures from the recipe, both forced by decisions
+     already made in this file:
+
+     1. h-[calc(100%-1px)] is NOT used. The track's inner box is 24px painted;
+        subtracting 1px leaves the trigger at 23px, an ODD painted height, and
+        its 16px line box would then centre onto a half-pixel. Inheriting the
+        base height:100% keeps it even. The -1px only exists so the pill
+        cannot touch the track's edge, and the 2px painted track padding
+        already guarantees that.
+     2. active is a solid --blue pill, not bg-background + shadow-sm. See
+        .segmented button.active above for why.
+
+     text-foreground/60 resolves to ~#6A7178 over white; --muted-fg (#71717A)
+     is within a hair of it, so the base colour needs no adjustment here. */
+  .segmented[data-variant="frequency"] button{
+    /* flex-1, as TabsTrigger has it. Note it does NOT equalise the three
+       widths: inside a w-fit track the flex base resolves against each
+       item's own content, so they come out 53/61/57px painted - which is
+       exactly how shadcn renders a w-fit TabsList too (equal columns need
+       the list to be given a width, e.g. w-full grid-cols-3). What it does
+       do is let them share the track without a min-width; the old variant's
+       110px min-width was what stretched this control to 272px. */
+    flex:1 1 0;
+    padding:0 7.5px;                 /* px-2 -> 6px painted */
+  }
+
+  /* ---------------- CARD (shadcn) ----------------
+     rounded-xl border bg-card shadow-sm, with px-6 header/content/footer
+     sections divided by hairlines. */
+  .card{
+    background:var(--surface);
+    border:1.25px solid var(--border);
+    border-radius:var(--r-xl);
+    box-shadow:var(--shadow-sm);
+  }
+  .card + .card{ margin-top:17.5px; }
+  .card-head{
+    display:flex; align-items:flex-start; justify-content:space-between; gap:16.25px;
+    padding:16.25px 23.75px;
+    border-bottom:1.25px solid var(--border-soft);
+  }
+  .card-head-text{ min-width:0; }
+  .card-title{
+    font-size:var(--fs-base); line-height:var(--lh-base); font-weight:600;
+    color:var(--text-dark); margin:0; letter-spacing:-0.3px;
+  }
+  .card-desc{
+    margin:3.75px 0 0; font-size:var(--fs-sm); line-height:var(--lh-sm);
+    color:var(--muted-fg);
+  }
+  .card-head-actions{ display:flex; align-items:center; gap:10px; flex:0 0 auto; }
+  .card-body{ padding:20px 23.75px; }
+
+  /* A card that is a heading, a grey line and ONE control - step 1's Pay
+     Frequency. Every other card here heads a table or a builder, where the
+     hairline usefully separates "what this card is" from "the data in it".
+     With a single control in the body that same rule divides a label from
+     the thing it labels, so this variant drops it and the three elements
+     read as one block. 16.25px -> 13px painted, on the grid. */
+  .card[data-variant="plain"] .card-head{ border-bottom:none; padding-bottom:0; }
+  .card[data-variant="plain"] .card-body{ padding-top:16.25px; }
+  .card-foot{
+    display:flex; align-items:center; justify-content:space-between; gap:16.25px;
+    padding:16.25px 23.75px;
+    border-top:1.25px solid var(--border-soft);
+    background:var(--page-bg);
+    border-radius:0 0 var(--r-xl) var(--r-xl);
+  }
+  .card-foot-note{
+    font-size:var(--fs-xs); line-height:var(--lh-xs); color:var(--muted-fg);
+    display:flex; align-items:center; gap:6.25px;
+  }
+  .card-foot-note svg{ width:12.5px; height:12.5px; flex:0 0 auto; }
+  .card-foot-actions{ display:flex; align-items:center; gap:10px; }
+
+  /* ---------------- FIELD / LABEL (shadcn) ----------------
+     Label: text-sm font-medium leading-none. The old uppercase 11px label
+     rendered at 8.8px; it is sentence-case text-sm now. */
+  .field{ margin-bottom:16.25px; }
+  .field:last-child{ margin-bottom:0; }
+  .field-label{
+    display:flex; align-items:center; gap:3.75px;
+    font-size:var(--fs-sm); line-height:1; font-weight:500;
+    letter-spacing:0; text-transform:none;
+    color:var(--text-heading);
+    margin-bottom:7.5px;
+  }
+  .field-hint{ margin:6.25px 0 0; font-size:var(--fs-xs); line-height:var(--lh-xs); color:var(--muted-fg); }
+  .field-error{
+    margin:6.25px 0 0; font-size:var(--fs-xs); line-height:var(--lh-xs); font-weight:500;
+    color:var(--red);
+    display:flex; align-items:center; gap:5px;
+  }
+  .field-error svg{ width:12.5px; height:12.5px; flex:0 0 auto; }
+  .field-group{ min-width:0; }
+  .settings-field-row{ display:flex; align-items:flex-start; gap:16.25px; margin-bottom:16.25px; }
+  .settings-field-row .field-group{ width:220px; flex:0 0 auto; }
+  /* The Remove button lines up with the CONTROL, not the top of the row.
+     .settings-field-row is align-items:flex-start and every .field-group
+     stacks a .field-label above its control, so an unlabelled child sits 17px
+     too high - it measured 19px out, because the old padding-bottom:8.75px
+     grew the box downward without moving the button inside it at all.
+     Offsetting by exactly the label block - font-size 13.75px at line-height
+     1, plus the label's own 7.5px margin-bottom = 21.25px = 17px painted -
+     drops it onto the control's centre line.
+     margin-top rather than align-self:flex-end: a control showing a
+     validation error grows its own .field-group downward, and flex-end would
+     chase that growth back off the control. */
+  .settings-field-row .row-actions{ margin-top:calc(var(--fs-sm) + 7.5px); }
+  .existing-profile-hint{ margin:10px 0 0; font-size:var(--fs-xs); line-height:var(--lh-xs); color:var(--muted-fg); }
+
+  /* ---------------- INPUT (shadcn) ----------------
+     h-9 w-full rounded-md border border-input px-3 py-1 text-sm shadow-xs */
+  .text-input{
+    width:100%; height:var(--h-9);
+    border:1.25px solid var(--input-border);
+    border-radius:var(--r-md);
+    padding:0 12.5px;
+    font-family:inherit; font-size:var(--fs-sm); line-height:var(--lh-sm);
+    color:var(--text-body);
+    background:var(--surface);
+    box-shadow:var(--shadow-xs);
+    outline:none;
+    transition:border-color .15s ease, box-shadow .15s ease;
+  }
+  .text-input::placeholder{ color:var(--text-faint); }
+  .text-input:hover{ border-color:var(--blue); }
+
+  /* Kept for any native select that hasn't been enhanced yet; the enhanced
+     .dropdown-trigger below is what actually renders in the flow. */
+  .select-input{
+    width:100%; height:var(--h-9);
+    border:1.25px solid var(--input-border);
+    border-radius:var(--r-md);
+    padding:0 30px 0 12.5px;
+    font-family:inherit; font-size:var(--fs-sm); line-height:var(--lh-sm);
+    color:var(--text-body);
+    background:var(--surface) url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="%2371717A"><path d="M7 10l5 5 5-5z"/></svg>') no-repeat right 12.5px center;
+    box-shadow:var(--shadow-xs);
+    appearance:none; -webkit-appearance:none; outline:none;
+    transition:border-color .15s ease, box-shadow .15s ease;
+  }
+  [data-theme="dark"] .select-input{
+    background-image:url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="%238B96AC"><path d="M7 10l5 5 5-5z"/></svg>');
+  }
+
+  .rate-input-wrap{ position:relative; }
+  .rate-input-wrap .prefix{
+    position:absolute; left:12.5px; top:50%; transform:translateY(-50%);
+    font-size:var(--fs-sm); color:var(--muted-fg); pointer-events:none;
+  }
+  .rate-input-wrap .suffix-group{
+    position:absolute; right:0; top:0; bottom:0;
+    display:none; align-items:center; gap:7.5px; padding-right:12.5px; pointer-events:none;
+  }
+  .rate-input-wrap .suffix-divider{ width:1.25px; align-self:stretch; margin:7.5px 0; background:var(--input-border); }
+  .rate-input-wrap .suffix-text{ font-size:var(--fs-sm); color:var(--muted-fg); }
+  .rate-input-wrap.percent .prefix{ display:none; }
+  .rate-input-wrap.percent .suffix-group{ display:flex; }
+  .rate-input{
+    width:100%; height:var(--h-9);
+    border:1.25px solid var(--input-border);
+    border-radius:var(--r-md);
+    padding:0 12.5px 0 23.75px;
+    font-family:inherit; font-size:var(--fs-sm); line-height:var(--lh-sm);
+    /* Tabular figures so money/percent columns align digit-for-digit. */
+    font-variant-numeric:tabular-nums;
+    font-feature-settings:'tnum' 1;
+    color:var(--text-body);
+    background:var(--surface);
+    box-shadow:var(--shadow-xs);
+    outline:none;
+    transition:border-color .15s ease, box-shadow .15s ease;
+  }
+  .rate-input-wrap.percent .rate-input{ padding:0 40px 0 12.5px; }
+  .rate-input:hover, .select-input:hover{ border-color:var(--blue); }
+
+  /* shadcn aria-invalid: border-destructive + ring-destructive/20 */
+  .field-invalid.select-input, .field-invalid.text-input, .field-invalid.rate-input,
+  .dropdown-trigger.field-invalid{ border-color:var(--red) !important; }
+  .field-invalid.select-input:focus-visible, .field-invalid.text-input:focus-visible,
+  .field-invalid.rate-input:focus-visible,
+  .dropdown-trigger.field-invalid:focus-visible{ box-shadow:0 0 0 var(--ring-w) var(--ring-danger); }
+
+  /* ---------------- CHECKBOX (shadcn) ----------------
+     size-4 shrink-0 rounded-[4px] border shadow-xs,
+     checked -> bg-primary border-primary */
+  .row-checkbox{
+    appearance:none; -webkit-appearance:none;
+    /* 12px painted, and EVEN on purpose. It was 16.25px (13px painted, odd)
+       under a comment claiming it "renders 16px", which was simply wrong -
+       16.25 x 0.8 = 13. Odd is what made it uncenterable: half of the 30px
+       control band's leftover space is a half-pixel for any odd-height box,
+       so no margin could put it on the row's centre line. 12 is also nearer
+       shadcn's size-4 at this density (16 x 0.8333 = 13.33) than 13 was to
+       the 16 the old comment claimed. */
+    width:15px; height:15px;
+    /* Centres in the control band rather than sitting at the top of it. The
+       cells are vertical-align:top (deliberately - field errors render
+       INSIDE the cell, and middle-aligning would make every input drift
+       downward as soon as one row showed an error), so a bare input in a
+       td starts at the top of the text band and read 6.5px above the
+       inputs beside it. Derived from --h-9 rather than hard-coded, so it
+       still centres if the control height changes: (37.5 - 15) / 2 =
+       11.25px = 9px painted, whole. */
+    margin-top:calc((var(--h-9) - 15px) / 2);
+    border:1.25px solid var(--input-border);
+    border-radius:var(--r-sm);
+    background:var(--surface);
+    box-shadow:var(--shadow-xs);
+    /* Flex centering instead of position:absolute + left/top math: the
+       ::after tick is a normal flex item here, so the browser's own flex
+       centering places it exactly in the middle every time — nothing for
+       the page's zoom:0.8 to throw off. */
+    display:flex; align-items:center; justify-content:center;
+    flex:0 0 auto; cursor:pointer; outline:none;
+    transition:background .13s ease, border-color .13s ease, box-shadow .13s ease;
+  }
+  .row-checkbox:hover{ border-color:var(--blue); }
+  .row-checkbox:checked{ background:var(--blue); border-color:var(--blue); }
+  .row-checkbox:checked::after{
+    content:'';
+    /* A real checkmark icon (Feather-style polyline, not the old CSS
+       border-corner trick) — the border-corner shape only draws two sides
+       of a rotated box, so its visible "ink" sits toward the bottom-right
+       of its own bounding box even when that box is mathematically
+       centered, which is why it kept LOOKING off-center no matter how
+       precisely the box itself was centered. A symmetric icon doesn't have
+       that problem. Do not "simplify" this back to a border trick. */
+    /* 8px painted, tracking the box down from 15px. The content box is
+       15 - 2.5 border = 12.5px = 10px painted, so an 8px tick leaves a
+       1px gutter each side - whole pixels, which is the same 1px gutter
+       the old 13px box gave its 9px tick. An even tick in an even content
+       box is the only combination that centres without a half-pixel. */
+    width:10px; height:10px;
+    background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='3.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='20 6 9 17 4 12'/%3E%3C/svg%3E");
+    background-size:contain;
+    background-repeat:no-repeat;
+  }
+
+
+  /* ---------------- EMPTY STATE (shadcn) ---------------- */
+  .empty-state{
+    display:flex; flex-direction:column; align-items:center; gap:12.5px;
+    padding:43.75px 23.75px 40px;
+    text-align:center;
+  }
+  .empty-icon{
+    width:43.75px; height:43.75px;
+    border-radius:var(--r-lg);
+    border:1.25px solid var(--border);
+    background:var(--page-bg);
+    display:flex; align-items:center; justify-content:center;
+    color:var(--muted-fg);
+  }
+  .empty-icon svg{ width:20px; height:20px; }
+  .empty-title{
+    margin:0; font-size:var(--fs-base); line-height:var(--lh-base); font-weight:600;
+    color:var(--text-heading); letter-spacing:-0.2px;
+  }
+  .empty-state p{
+    margin:0; font-size:var(--fs-sm); line-height:var(--lh-sm);
+    color:var(--muted-fg); max-width:400px;
+  }
+
+  .landing-filter{ max-width:320px; }
+
+
+  /* ================================================================
+     SCHEDULE PLANNER — shadcn/ui component layer.
+
+     Built from the Figma node "Group 57533" (Schedule Planner), but
+     every control is re-authored as the shadcn/ui component it maps
+     onto rather than tracing the node's own hex values and metrics:
+
+       Figma search field      -> Input (with leading icon)
+       Figma "Add" pill        -> Button variant="outline"
+       Figma month grid        -> Calendar (react-day-picker recipe)
+       Figma date range field  -> Input + Popover trigger
+       Figma "Reminder" panel  -> Card + Avatar
+       Figma marker rows       -> Switch
+       Figma driver tiles      -> Card + Avatar + Badge
+       Figma availability box  -> Checkbox
+       Figma timeline bars     -> Badge-derived event chips,
+                                  laid out as ReUI's resource week view
+       (new) toolbar           -> ReUI EventCalendarNav: Today,
+                                  prev/next, period title, view switcher
+
+     THE 1.25 GRID applies here exactly as it does in
+     agent-pay-profile.html: <body> is zoom:0.8, so every declared px
+     must be a multiple of 1.25 to land on a whole rendered pixel, and
+     any box that centres a child should render EVEN. Rendered sizes
+     are in the comments. Do not hand-edit a value off the grid.
+     ================================================================ */
+
+  /* Event tone families. Same fg / bg / border / dot shape as the
+     --green and --amber families the base layer already defines, so a
+     chip tone can be swapped by changing one data-tone attribute. The
+     timeline needs an ORANGE that the base palette has no entry for
+     (--amber is a warning colour, too yellow next to these), plus a
+     neutral SLATE for non-driving time. */
+  :root{
+    --ev-orange:        #C2410C;  --ev-orange-bg: #FFF7ED;  --ev-orange-border: #FED7AA;  --ev-orange-dot: #F97316;
+    --ev-green:         #047857;  --ev-green-bg:  #ECFDF5;  --ev-green-border:  #A7F3D0;  --ev-green-dot:  #10B981;
+    --ev-blue:          #1D4ED8;  --ev-blue-bg:   #EFF6FF;  --ev-blue-border:   #DBEAFE;  --ev-blue-dot:   #3B82F6;
+    --ev-slate:         #475569;  --ev-slate-bg:  #F8FAFC;  --ev-slate-border:  #E2E8F0;  --ev-slate-dot:  #94A3B8;
+    --ev-red:           #B91C1C;  --ev-red-bg:    #FEF2F2;  --ev-red-border:    #FECACA;  --ev-red-dot:    #EF4444;
+  }
+  [data-theme="dark"]{
+    --ev-orange:        #FDBA74;  --ev-orange-bg: #2A1A0F;  --ev-orange-border: #4A2E18;  --ev-orange-dot: #FB923C;
+    --ev-green:         #6EE7B7;  --ev-green-bg:  #0E2A22;  --ev-green-border:  #1C4638;  --ev-green-dot:  #34D399;
+    --ev-blue:          #93C5FD;  --ev-blue-bg:   #16233A;  --ev-blue-border:   #2C3E60;  --ev-blue-dot:   #60A5FA;
+    --ev-slate:         #A6B0C3;  --ev-slate-bg:  #17202F;  --ev-slate-border:  #263248;  --ev-slate-dot:  #64748B;
+    --ev-red:           #FCA5A5;  --ev-red-bg:    #2C1416;  --ev-red-border:    #4A1F24;  --ev-red-dot:    #F87171;
+  }
+
+  /* ---------------- PLANNER SHELL ---------------- */
+  .planner{ flex:1 1 auto; display:flex; flex-direction:column; min-height:0; }
+
+  /* ReUI EventCalendarNav — Today, prev/next, the period title and a
+     view switcher, in one band above the three panes. 61.25px total
+     minus the 1.25px border = a 60px content box -> 48px painted,
+     EVEN, so the h-8 controls inside centre exactly (see --h-9). */
+  .planner-toolbar{
+    flex:0 0 61.25px; height:61.25px;
+    display:flex; align-items:center; justify-content:space-between; gap:16.25px;
+    padding:0 20px;
+    background:var(--surface);
+    border-bottom:1.25px solid var(--border);
+  }
+  .toolbar-left{ display:flex; align-items:center; gap:12.5px; min-width:0; }
+  .toolbar-right{ display:flex; align-items:center; gap:10px; flex:0 0 auto; }
+  .toolbar-nav{ display:flex; align-items:center; gap:5px; }
+  .period-title{
+    margin:0; font-size:var(--fs-base); line-height:var(--lh-base); font-weight:600;
+    color:var(--text-dark); letter-spacing:-0.3px; white-space:nowrap;
+  }
+  .period-sub{
+    font-size:var(--fs-xs); line-height:var(--lh-xs); color:var(--muted-fg);
+    white-space:nowrap;
+  }
+
+  .planner-body{ flex:1 1 auto; display:flex; min-height:0; }
+
+  /* ---------------- LEFT RAIL ---------------- */
+  /* 287.5px declared -> 230px painted. The Figma panel is 287px wide;
+     287.5 is the nearest value on the grid. */
+  .rail{
+    width:287.5px; flex:0 0 287.5px;
+    background:var(--surface);
+    border-right:1.25px solid var(--border);
+    overflow-y:auto; overflow-x:hidden;
+    padding:16.25px;
+    display:flex; flex-direction:column; gap:16.25px;
+  }
+  /* The rail scrolls, so its content is taller than the column. Without
+     this every direct child is a shrinkable flex item and the browser
+     takes the overflow out of them - it had squashed the Add button from
+     30px painted to 18. Children size themselves; the rail scrolls. */
+  .rail > *{ flex:0 0 auto; }
+  .rail::-webkit-scrollbar{ width:6.25px; }
+  .rail::-webkit-scrollbar-thumb{ background:var(--border); border-radius:5px; }
+  .rail-head{ display:flex; align-items:center; justify-content:space-between; gap:10px; }
+  .rail-title{
+    margin:0; font-size:var(--fs-base); line-height:var(--lh-base); font-weight:600;
+    color:var(--text-dark); letter-spacing:-0.3px;
+    white-space:nowrap;
+  }
+  /* The rail is 230px wide painted, so the title and this button have to
+     share one line without either wrapping - hence the smaller label and
+     a button that will not be squeezed by the heading beside it. */
+  .rail-head .btn{ flex:0 0 auto; font-size:var(--fs-xs); padding:0 8.75px; gap:5px; }
+  .rail-head .btn svg{ width:13.75px; height:13.75px; }
+
+  /* Input with a leading/trailing icon — shadcn puts the icon in an
+     absolutely positioned span and pads the input past it. */
+  .input-icon{ position:relative; display:block; }
+  .input-icon > svg{
+    position:absolute; top:50%; transform:translateY(-50%);
+    width:16.25px; height:16.25px;
+    color:var(--text-faint); pointer-events:none;
+  }
+  .input-icon[data-side="left"] > svg{ left:11.25px; }
+  .input-icon[data-side="left"] .text-input{ padding-left:35px; }
+  .input-icon[data-side="right"] > svg{ right:11.25px; }
+  .input-icon[data-side="right"] .text-input{ padding-right:35px; }
+
+  .rail-add{ width:100%; }
+
+  /* ---------------- CALENDAR (shadcn / react-day-picker) ----------------
+     Caption row with ghost nav buttons, a weekday head row at
+     text-muted-foreground, and size-8 day cells. Selected -> primary
+     fill; the days between a range start and end -> accent band. */
+  .cal-caption{
+    display:flex; align-items:center; justify-content:space-between;
+    padding:0 1.25px 8.75px;
+  }
+  .cal-label{
+    font-size:var(--fs-sm); line-height:var(--lh-sm); font-weight:600;
+    color:var(--text-heading);
+  }
+  .cal-nav{ display:flex; align-items:center; gap:5px; }
+  .cal-grid{ display:grid; grid-template-columns:repeat(7,1fr); }
+  .cal-wd{
+    height:25px; line-height:25px; text-align:center;
+    font-size:var(--fs-xs); font-weight:500; color:var(--muted-fg);
+  }
+  /* The range band is painted on the CELL and the pill on the button
+     inside it, which is how react-day-picker gets a continuous stripe
+     that still has rounded ends. */
+  .cal-cell{
+    display:flex; align-items:center; justify-content:center;
+    height:32.5px; position:relative;
+  }
+  .cal-cell[data-range="mid"],
+  .cal-cell[data-range="start"],
+  .cal-cell[data-range="end"]{ background:var(--blue-bg); }
+  .cal-cell[data-range="start"]{ border-radius:var(--r-md) 0 0 var(--r-md); }
+  .cal-cell[data-range="end"]{ border-radius:0 var(--r-md) var(--r-md) 0; }
+  .cal-cell[data-range="solo"]{ background:none; }
+  .cal-day{
+    width:32.5px; height:32.5px;
+    display:flex; align-items:center; justify-content:center;
+    border:1.25px solid transparent; border-radius:var(--r-md);
+    background:none; color:var(--text-body);
+    font-family:inherit; font-size:var(--fs-xs); line-height:1; font-weight:500;
+    font-variant-numeric:tabular-nums;
+    cursor:pointer; position:relative;
+    transition:background .13s ease, color .13s ease, border-color .13s ease;
+  }
+  .cal-day:hover{ background:var(--accent); color:var(--accent-fg); }
+  .cal-day[data-outside="true"]{ color:var(--text-faint); opacity:0.6; }
+  .cal-day[data-today="true"]{ border-color:var(--blue); color:var(--blue); font-weight:600; }
+  .cal-day[data-selected="true"],
+  .cal-day[data-selected="true"]:hover{
+    background:var(--navy-deep); border-color:var(--navy-deep); color:#fff; font-weight:600;
+  }
+  [data-theme="dark"] .cal-day[data-selected="true"],
+  [data-theme="dark"] .cal-day[data-selected="true"]:hover{
+    background:var(--blue); border-color:var(--blue);
+  }
+  .cal-day:focus-visible{ outline:none; box-shadow:0 0 0 var(--ring-w) var(--ring); }
+
+  /* ---------------- RAIL CARDS ---------------- */
+  /* The rail's cards are denser than the page-level .card: a 287px
+     column cannot carry the 23.75px gutter the wizard cards use. */
+  .rail .card-head{ padding:11.25px 13.75px; }
+  .rail .card-title{ font-size:var(--fs-sm); line-height:var(--lh-sm); }
+  .rail .card-body{ padding:0 13.75px; }
+
+  .rem-item{ padding:12.5px 0; border-bottom:1.25px solid var(--border-soft); }
+  .rem-item:last-child{ border-bottom:none; }
+  .rem-head{ display:flex; align-items:center; gap:8.75px; }
+  .rem-name{
+    font-size:var(--fs-sm); line-height:var(--lh-sm); font-weight:600;
+    color:var(--text-heading);
+  }
+  .rem-sub{
+    font-size:var(--fs-xs); line-height:var(--lh-xs); color:var(--muted-fg);
+    white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
+  }
+
+  /* Stop-count strip: two ring nodes joined by a rule. */
+  .route{ display:flex; align-items:center; gap:7.5px; margin:10px 0 7.5px; }
+  .route-node{
+    width:20px; height:20px; flex:0 0 auto;
+    border-radius:50%; border:1.25px solid var(--border);
+    background:var(--surface);
+    display:flex; align-items:center; justify-content:center;
+    font-size:8.75px; line-height:1; font-weight:600; color:var(--muted-fg);
+    font-variant-numeric:tabular-nums;
+  }
+  .route-node[data-end="true"]{ border-color:var(--green-border); color:var(--green); }
+  .route-line{ flex:1 1 auto; height:1.25px; background:var(--border); }
+  .route-ends{ display:flex; align-items:flex-start; justify-content:space-between; gap:10px; }
+  .route-end{ min-width:0; }
+  .route-end[data-align="end"]{ text-align:right; }
+  .route-place{
+    font-size:var(--fs-sm); line-height:var(--lh-sm); font-weight:500;
+    color:var(--text-heading); white-space:nowrap;
+  }
+  .route-when{ font-size:var(--fs-xs); line-height:var(--lh-xs); color:var(--muted-fg); white-space:nowrap; }
+
+  /* ---------------- SWITCH (shadcn) ----------------
+     h-[1.15rem] w-8 rounded-full, thumb size-4, checked ->
+     bg-primary. Rendered: a 26x16 track with a 12px thumb and a 2px
+     inset, so the 10px travel and both gutters are whole pixels. */
+  .marker-row{
+    display:flex; align-items:center; gap:10px;
+    padding:8.75px 0;
+    border-bottom:1.25px solid var(--border-soft);
+  }
+  .marker-row:last-child{ border-bottom:none; }
+  .marker-dot{ width:8.75px; height:8.75px; border-radius:50%; flex:0 0 auto; }
+  .marker-label{
+    flex:1 1 auto; min-width:0;
+    font-size:var(--fs-sm); line-height:var(--lh-sm); color:var(--text-body);
+  }
+  .switch{
+    position:relative; flex:0 0 auto;
+    width:32.5px; height:20px;
+    padding:0; border:none; border-radius:999px;
+    background:var(--input-border);
+    cursor:pointer; outline:none;
+    transition:background .15s ease;
+  }
+  .switch[aria-checked="true"]{ background:var(--blue); }
+  .switch:focus-visible{ box-shadow:0 0 0 var(--ring-w) var(--ring); }
+  .switch-thumb{
+    position:absolute; top:2.5px; left:2.5px;
+    width:15px; height:15px; border-radius:50%;
+    background:#fff;
+    transition:transform .15s ease;
+  }
+  .switch[aria-checked="true"] .switch-thumb{ transform:translateX(12.5px); }
+
+  /* ---------------- AVATAR (shadcn) ----------------
+     Fallback-only: the Figma tiles carry stock portraits, which are
+     not ours to ship, so every avatar renders shadcn's AvatarFallback
+     - initials on a muted circle - instead. */
+  .avatar-sm, .avatar-md{
+    display:flex; align-items:center; justify-content:center;
+    flex:0 0 auto; border-radius:50%;
+    background:var(--accent); color:var(--muted-fg);
+    font-weight:600; letter-spacing:0.2px;
+    overflow:hidden; user-select:none;
+  }
+  .avatar-sm{ width:30px; height:30px; font-size:10px; line-height:1; }
+  .avatar-md{ width:37.5px; height:37.5px; font-size:var(--fs-xs); line-height:1; }
+  .driver-card.active .avatar-md{ background:var(--blue); color:#fff; }
+
+  /* ---------------- ROSTER (driver list) ---------------- */
+  .roster{
+    width:270px; flex:0 0 270px;
+    background:var(--surface);
+    border-right:1.25px solid var(--border);
+    display:flex; flex-direction:column; min-height:0;
+  }
+  /* Matches .planner-toolbar's 61.25px so the roster header, the rail
+     and the timeline's day header all sit on one line. */
+  .roster-head{
+    flex:0 0 auto;
+    padding:0 13.75px;
+    height:61.25px;
+    display:flex; align-items:center; gap:8.75px;
+    border-bottom:1.25px solid var(--border);
+  }
+  /* The base .row-checkbox is built for a table cell and carries a
+     margin-top that centres it against an --h-9 control band. In a
+     plain flex row there is no band to centre against, so that margin
+     only pushes it off the label's centre line. */
+  .roster-head .row-checkbox{ margin-top:0; }
+  .roster-head label{
+    font-size:var(--fs-sm); line-height:var(--lh-sm); font-weight:500;
+    color:var(--text-heading); cursor:pointer;
+  }
+  .roster-scroll{ flex:1 1 auto; overflow:hidden; }
+  .roster-list{ will-change:transform; }
+
+  .driver-card{
+    position:relative;
+    padding:12.5px 13.75px;
+    border-bottom:1.25px solid var(--border);
+    display:flex; flex-direction:column; gap:7.5px;
+    cursor:pointer;
+    box-sizing:border-box;
+    transition:background .13s ease;
+  }
+  .driver-card:hover{ background:var(--row-hover); }
+  .driver-card.active{ background:var(--blue-bg); }
+  .driver-card.active::before{
+    content:''; position:absolute; left:0; top:0; bottom:0;
+    width:2.5px; background:var(--blue);
+  }
+  .driver-top{ display:flex; align-items:flex-start; gap:8.75px; }
+  .driver-id{ min-width:0; flex:1 1 auto; }
+  .driver-name{
+    font-size:var(--fs-sm); line-height:var(--lh-sm); font-weight:600;
+    color:var(--text-heading);
+    white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
+  }
+  .driver-loc{
+    font-size:var(--fs-xs); line-height:var(--lh-xs); color:var(--muted-fg);
+    white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
+  }
+  .driver-equip{ display:flex; align-items:center; gap:13.75px; }
+  .equip{
+    display:flex; align-items:center; gap:5px;
+    font-size:var(--fs-xs); line-height:var(--lh-xs); color:var(--text-body);
+    font-variant-numeric:tabular-nums;
+  }
+  .equip svg{ width:13.75px; height:13.75px; color:var(--text-faint); flex:0 0 auto; }
+  .driver-foot{
+    display:flex; align-items:center; justify-content:space-between; gap:10px;
+    padding-top:7.5px;
+    border-top:1.25px solid var(--border-soft);
+  }
+  /* The square duty code beside the status text — a Badge with its
+     padding traded for a fixed square, so D / ON / OF all sit on the
+     same footprint. 16px painted, EVEN, centring an even line box. */
+  .duty{
+    width:20px; height:20px; flex:0 0 auto;
+    border-radius:var(--r-sm);
+    display:flex; align-items:center; justify-content:center;
+    font-size:8.75px; line-height:1; font-weight:700; letter-spacing:0.2px;
+    color:#fff;
+  }
+  .duty[data-tone="green"]{ background:var(--ev-green-dot); }
+  .duty[data-tone="orange"]{ background:var(--ev-orange-dot); }
+  .duty[data-tone="red"]{ background:var(--ev-red-dot); }
+  .duty[data-tone="slate"]{ background:var(--ev-slate-dot); }
+  .driver-status{ display:flex; align-items:center; gap:6.25px; min-width:0; }
+  .driver-status span{
+    font-size:var(--fs-xs); line-height:var(--lh-xs); font-weight:500;
+    white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
+  }
+  .driver-status[data-tone="green"] span{ color:var(--ev-green); }
+  .driver-status[data-tone="orange"] span{ color:var(--ev-orange); }
+  .driver-status[data-tone="red"] span{ color:var(--ev-red); }
+  .driver-status[data-tone="slate"] span{ color:var(--ev-slate); }
+  .driver-more{
+    display:inline-flex; align-items:center; gap:5px;
+    background:none; border:none; padding:0;
+    font-family:inherit; font-size:var(--fs-xs); line-height:var(--lh-xs); font-weight:500;
+    color:var(--muted-fg); cursor:pointer; flex:0 0 auto;
+    border-radius:var(--r-sm); outline:none;
+    transition:color .13s ease;
+  }
+  .driver-more:hover{ color:var(--blue); }
+  .driver-more:focus-visible{ box-shadow:0 0 0 var(--ring-w) var(--ring); }
+  .driver-more svg{ width:13.75px; height:13.75px; }
+
+  /* ---------------- TIMELINE (ReUI resource week view) ---------------- */
+  .timeline{ flex:1 1 auto; display:flex; flex-direction:column; min-height:0; overflow:hidden; }
+  /* 45px -> 36px painted. Wide enough for the h-8 icon button that adds
+     a schedule to a row, and it lines the row gutters up with the day
+     grid's left edge. */
+  /* The day header lives INSIDE the scroller and sticks to its top edge,
+     rather than sitting above it as a sibling. A month is 30 columns
+     wide and scrolls horizontally, and a header outside the scroller
+     would stay put while the columns it labels slid under it. */
+  .tl-head{
+    position:sticky; top:0; z-index:6;
+    flex:0 0 auto; height:61.25px;
+    display:flex; align-items:stretch;
+    background:var(--surface);
+    border-bottom:1.25px solid var(--border);
+  }
+  /* The add-schedule gutter sticks to the left edge for the same reason.
+     background:inherit rather than a literal, so it keeps tracking the
+     row's own fill through :hover and .active. */
+  .tl-gutter, .tl-rowgutter{
+    position:sticky; left:0; z-index:5;
+    background:inherit;
+  }
+  .tl-gutter{ width:45px; flex:0 0 45px; border-right:1.25px solid var(--border); }
+  .tl-days{ flex:1 1 auto; display:grid; grid-template-columns:repeat(7,1fr); min-width:0; }
+    /* gap 2.5px, not 1.25px: the head is a 48px painted content box and
+     the two lines are 14px + 16px. At a 1px gap the stack is 31px - odd
+     inside an even box, so both lines centred onto a half-pixel. A 2px
+     gap makes it 32 and the 8px above and below are whole. */
+  .tl-dayhead{
+    display:flex; flex-direction:column; align-items:center; justify-content:center; gap:2.5px;
+    border-left:1.25px solid var(--border-soft);
+    min-width:0; padding:0 5px;
+  }
+  .tl-dayhead:first-child{ border-left:none; }
+  .tl-dayhead .dh-wd{
+    font-size:var(--fs-xs); line-height:var(--lh-xs); font-weight:500;
+    color:var(--muted-fg); text-transform:uppercase; letter-spacing:0.4px;
+  }
+  .tl-dayhead .dh-date{
+    font-size:var(--fs-sm); line-height:var(--lh-sm); font-weight:600;
+    color:var(--text-heading); font-variant-numeric:tabular-nums;
+  }
+  .tl-dayhead[data-today="true"] .dh-wd{ color:var(--blue); }
+  .tl-dayhead[data-today="true"] .dh-date{ color:var(--blue); }
+
+  .tl-scroll{ flex:1 1 auto; overflow:auto; background:var(--page-bg); }
+  .tl-scroll::-webkit-scrollbar{ width:8.75px; height:8.75px; }
+  .tl-scroll::-webkit-scrollbar-thumb{ background:var(--border); border-radius:5px; }
+  .tl-inner{ min-width:875px; }
+  .tl-row{
+    display:flex; align-items:stretch;
+    border-bottom:1.25px solid var(--border);
+    background:var(--surface);
+    box-sizing:border-box;
+  }
+  .tl-row:hover{ background:var(--row-hover); }
+  .tl-row.active{ background:var(--blue-bg); }
+  .tl-rowgutter{
+    width:45px; flex:0 0 45px;
+    border-right:1.25px solid var(--border);
+    display:flex; align-items:flex-start; justify-content:center;
+    padding-top:12.5px;
+  }
+  /* The lane field. Day boundaries are painted as absolutely
+     positioned rules rather than as a background gradient, so they
+     stay exactly on the 1/7 column edges the chips are measured
+     against - a gradient rounds independently and drifts by a pixel
+     at some widths. */
+  .tl-lanes{ position:relative; flex:1 1 auto; min-width:0; }
+  .tl-colrule{
+    position:absolute; top:0; bottom:0; width:0;
+    border-left:1.25px dashed var(--border);
+    pointer-events:none;
+  }
+  .tl-today{
+    position:absolute; top:0; bottom:0;
+    background:var(--blue-bg); opacity:0.45;
+    pointer-events:none;
+  }
+
+  /* ---------------- EVENT CHIP ----------------
+     A Badge stretched to a time span: same border + tinted fill +
+     text-xs recipe, with the leading dot the Figma bars use. 27.5px
+     -> 22px painted, EVEN, so its 14px line box centres exactly. */
+  .chip{
+    position:absolute;
+    height:27.5px;
+    display:flex; align-items:center; gap:6.25px;
+    padding:0 8.75px;
+    border:1.25px solid transparent;
+    border-radius:var(--r-md);
+    font-family:inherit; font-size:var(--fs-xs); line-height:var(--lh-xs); font-weight:500;
+    white-space:nowrap; overflow:hidden;
+    cursor:pointer; text-align:left;
+    box-sizing:border-box;
+    transition:box-shadow .13s ease, filter .13s ease;
+  }
+  .chip:hover{ filter:brightness(0.985); box-shadow:0 0 0 1.25px currentColor; }
+  [data-theme="dark"] .chip:hover{ filter:brightness(1.12); }
+  .chip:focus-visible{ outline:none; box-shadow:0 0 0 var(--ring-w) var(--ring); }
+  .chip-dot{ width:7.5px; height:7.5px; border-radius:50%; flex:0 0 auto; }
+  .chip-a{ flex:0 0 auto; }
+  .chip-b{ flex:1 1 auto; text-align:center; overflow:hidden; text-overflow:ellipsis; min-width:0; }
+  .chip-c{ flex:0 0 auto; }
+  /* Chips narrower than their content drop the tail labels rather than
+     ellipsing all three into noise. Set from the measured px width in
+     layoutTimeline(), not from a media query - a chip's width depends
+     on its own duration, not on the viewport. */
+  .chip[data-fit="mid"] .chip-c{ display:none; }
+  .chip[data-fit="min"] .chip-b,
+  .chip[data-fit="min"] .chip-c{ display:none; }
+  .chip[data-fit="min"] .chip-a{ overflow:hidden; text-overflow:ellipsis; min-width:0; flex:1 1 auto; }
+
+  .chip[data-tone="orange"]{ background:var(--ev-orange-bg); border-color:var(--ev-orange-border); color:var(--ev-orange); }
+  .chip[data-tone="orange"] .chip-dot{ background:var(--ev-orange-dot); }
+  .chip[data-tone="green"]{ background:var(--ev-green-bg); border-color:var(--ev-green-border); color:var(--ev-green); }
+  .chip[data-tone="green"] .chip-dot{ background:var(--ev-green-dot); }
+  .chip[data-tone="blue"]{ background:var(--ev-blue-bg); border-color:var(--ev-blue-border); color:var(--ev-blue); }
+  .chip[data-tone="blue"] .chip-dot{ background:var(--ev-blue-dot); }
+  .chip[data-tone="slate"]{ background:var(--ev-slate-bg); border-color:var(--ev-slate-border); color:var(--ev-slate); }
+  .chip[data-tone="slate"] .chip-dot{ background:var(--ev-slate-dot); }
+  .chip[data-tone="red"]{ background:var(--ev-red-bg); border-color:var(--ev-red-border); color:var(--ev-red); }
+  .chip[data-tone="red"] .chip-dot{ background:var(--ev-red-dot); }
+
+  /* ---------------- POPOVER (shadcn) ----------------
+     position:fixed and placed by JS against the trigger's live rect,
+     exactly like the pay-profile dropdown panel. ONLY opacity is
+     animated: a transform - even one whose final keyframe is
+     `transform:none` - leaves an identity matrix behind, which
+     establishes a containing block and breaks the fixed positioning
+     this depends on. */
+  .pop{
+    position:fixed; z-index:400;
+    width:281.25px;
+    background:var(--popover);
+    border:1.25px solid var(--border);
+    border-radius:var(--r-lg);
+    padding:13.75px;
+    animation:pop-fade .13s ease both;
+  }
+  @keyframes pop-fade{ from{ opacity:0; } to{ opacity:1; } }
+  .pop-head{ display:flex; align-items:flex-start; justify-content:space-between; gap:10px; }
+  .pop-title{
+    margin:0; font-size:var(--fs-sm); line-height:var(--lh-sm); font-weight:600;
+    color:var(--text-dark);
+  }
+  .pop-sub{ margin:2.5px 0 0; font-size:var(--fs-xs); line-height:var(--lh-xs); color:var(--muted-fg); }
+  .pop-body{ margin-top:11.25px; display:flex; flex-direction:column; gap:7.5px; }
+  .pop-row{ display:flex; align-items:baseline; justify-content:space-between; gap:12.5px; }
+  .pop-key{ font-size:var(--fs-xs); line-height:var(--lh-xs); color:var(--muted-fg); flex:0 0 auto; }
+  .pop-val{
+    font-size:var(--fs-xs); line-height:var(--lh-xs); font-weight:500;
+    color:var(--text-heading); text-align:right; min-width:0;
+  }
+  .pop-foot{
+    margin-top:12.5px; padding-top:11.25px;
+    border-top:1.25px solid var(--border-soft);
+    display:flex; align-items:center; gap:7.5px;
+  }
+  .pop-foot .btn{ flex:1 1 auto; }
+
+  /* ---------------- EMPTY / UTILITY ---------------- */
+  .roster-empty{ padding:35px 16.25px; text-align:center; }
+  .roster-empty p{
+    margin:7.5px 0 0; font-size:var(--fs-xs); line-height:var(--lh-xs); color:var(--muted-fg);
+  }
+  .roster-empty .empty-title{ font-size:var(--fs-sm); line-height:var(--lh-sm); }
+  .filter-extra{ display:flex; flex-direction:column; gap:10px; }
+  .muted-note{
+    font-size:var(--fs-xs); line-height:var(--lh-xs); color:var(--muted-fg);
+    display:flex; align-items:center; gap:5px;
+  }
+  .muted-note svg{ width:12.5px; height:12.5px; flex:0 0 auto; }
+  .toast svg{ flex:0 0 auto; margin-top:1.25px; width:16.25px; height:16.25px; }
+</style>
+<script>
+  // Applied synchronously, before body paints, so a saved dark-mode
+  // preference doesn't flash light-then-dark on load.
+  (function(){
+    try{
+      var saved = localStorage.getItem('dp-theme');
+      if(saved === 'dark') document.documentElement.setAttribute('data-theme', 'dark');
+    }catch(e){}
+  })();
+</script>
+</head>
+<body>
+
+
+  <!-- TOP BAR -->
+  <div class="topbar">
+    <div class="topbar-left">
+      <div class="company-block">
+        <div class="company-title">Dawson Truck Lines</div>
+        <div class="company-sub">Carrier &middot; MC 884210</div>
+      </div>
+      <div class="search-box">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>
+        <input type="text" placeholder="Search loads, drivers, customers, trailers...">
+      </div>
+    </div>
+    <div class="topbar-right">
+      <div class="surcharge-card">
+        <div>
+          <div class="surcharge-label">Diesel FSC</div>
+          <div class="surcharge-date">07/27/26</div>
+        </div>
+        <div class="surcharge-value">$0.68</div>
+      </div>
+      <div class="surcharge-card">
+        <div>
+          <div class="surcharge-label">Gas FSC</div>
+          <div class="surcharge-date">07/27/26</div>
+        </div>
+        <div class="surcharge-value">0.30%</div>
+      </div>
+      <div class="icon-actions">
+        <button class="icon-btn" id="btnAdd" data-popover="Quick create: new load, customer, or agent">
+          <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></svg>
+        </button>
+        <button class="icon-btn" id="btnHelp" data-popover="Need help? Contact support at support@dispatchpro.com">
+          <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M9.5 9.3a2.5 2.5 0 0 1 4.9.7c0 1.7-2.4 2-2.4 3.5"/><path d="M12 17.2v.1"/></svg>
+        </button>
+        <button class="icon-btn" id="btnMail" data-popover="No new messages">
+          <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 7l9 6 9-6"/></svg>
+          <div class="dot"></div>
+        </button>
+        <button class="icon-btn" id="btnBell" data-popover="No new notifications">
+          <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.7 21a2 2 0 0 1-3.4 0"/></svg>
+        </button>
+      </div>
+      <div class="user-chip">
+        <div class="avatar">CS</div>
+        <div class="user-name">Christian Snead</div>
+        <svg class="chevron" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg>
+      </div>
+    </div>
+  </div>
+
+  <!-- BREADCRUMB -->
+  <div class="breadcrumb-bar">
+    <span>Dispatch</span> <span>/</span> <span class="current">Schedule Planner</span>
+  </div>
+
+  <div class="app-body">
+    <!-- SIDEBAR -->
+    <nav class="sidebar">
+      <div class="side-logo">DP</div>
+      <button class="side-icon" title="Dashboard">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg>
+      </button>
+      <button class="side-icon active" title="Dispatch">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M2 17h11V6H2v11Z"/><path d="M13 10h4l4 4v3h-8v-7Z"/><circle cx="6.5" cy="19" r="1.6"/><circle cx="17.5" cy="19" r="1.6"/></svg>
+      </button>
+      <button class="side-icon" title="Personnel">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M18 20v-1.6a4 4 0 0 0-4-4h-4a4 4 0 0 0-4 4V20"/><circle cx="12" cy="7.5" r="3.5"/></svg>
+      </button>
+      <button class="side-icon" title="Rates">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M20.6 12.3 12.7 20a2 2 0 0 1-2.8 0l-6-6a2 2 0 0 1 0-2.8L11.7 3.5 20.6 4l.6 8.9-.6-.6Z"/><circle cx="15.5" cy="8.5" r="1.4"/></svg>
+      </button>
+      <button class="side-icon" title="Accounting">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v20"/><path d="M17 6H9.5a3 3 0 0 0 0 6H14a3 3 0 0 1 0 6H6.5"/></svg>
+      </button>
+      <button class="side-icon" title="Archive">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="5" rx="1.2"/><rect x="4.5" y="9" width="15" height="11" rx="1.2"/><path d="M10 13.5h4"/></svg>
+      </button>
+      <button class="side-icon" title="Compliance">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l7 3v5c0 5-3 8-7 10-4-2-7-5-7-10V6l7-3Z"/></svg>
+      </button>
+      <button class="side-icon" title="Reports">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20V10"/><path d="M12 20V4"/><path d="M20 20v-7"/></svg>
+      </button>
+      <button class="side-icon" title="Documents">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M7 3h7l4 4v14H7Z"/><path d="M14 3v4h4"/><path d="M9.5 12.5h5M9.5 16h5"/></svg>
+      </button>
+      <div class="sidebar-spacer"></div>
+      <button class="side-icon-bottom" id="themeToggleBtn" type="button" title="Switch to dark mode" aria-label="Toggle dark mode" aria-pressed="false">
+        <svg class="theme-icon-sun" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4.2"/><path d="M12 2.5v2.2M12 19.3v2.2M4.2 4.2l1.6 1.6M18.2 18.2l1.6 1.6M2.5 12h2.2M19.3 12h2.2M4.2 19.8l1.6-1.6M18.2 5.8l1.6-1.6"/></svg>
+        <svg class="theme-icon-moon" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="display:none"><path d="M20.8 14.5A8.5 8.5 0 1 1 9.5 3.2a6.8 6.8 0 0 0 11.3 11.3Z"/></svg>
+      </button>
+    </nav>
+    <!-- CONTENT — SCHEDULE PLANNER -->
+    <main class="content">
+      <div class="planner">
+
+        <!-- TOOLBAR — ReUI EventCalendarNav: Today, prev/next, period
+             title, view switcher. Not in the Figma node; the node shows
+             a single fixed week with no way to move off it. -->
+        <div class="planner-toolbar">
+          <div class="toolbar-left">
+            <button class="btn" data-variant="outline" data-size="sm" id="btnToday">Today</button>
+            <div class="toolbar-nav">
+              <button class="btn" data-variant="outline" data-size="icon-sm" id="btnPrev" aria-label="Previous week">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>
+              </button>
+              <button class="btn" data-variant="outline" data-size="icon-sm" id="btnNext" aria-label="Next week">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18l6-6-6-6"/></svg>
+              </button>
+            </div>
+            <div>
+              <h2 class="period-title" id="periodTitle">Apr 6 &ndash; 12, 2026</h2>
+              <div class="period-sub" id="periodSub">7 drivers &middot; 21 scheduled</div>
+            </div>
+          </div>
+          <div class="toolbar-right">
+            <div class="segmented" id="viewSwitch">
+              <button type="button" data-view="day">Day</button>
+              <button type="button" data-view="week" class="active">Week</button>
+              <button type="button" data-view="month">Month</button>
+            </div>
+            <button class="btn" data-size="sm" id="btnNewSchedule">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></svg>
+              New Schedule
+            </button>
+          </div>
+        </div>
+
+        <div class="planner-body">
+
+          <!-- ============ LEFT RAIL ============ -->
+          <aside class="rail">
+            <div class="rail-head">
+              <h1 class="rail-title">Schedule Planner</h1>
+              <button class="btn" data-variant="ghost" data-size="sm" id="btnMoreFilters" aria-expanded="false">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 5h18l-7 8v5l-4 2v-7L3 5Z"/></svg>
+                More Filters
+              </button>
+            </div>
+
+            <!-- Input, leading icon -->
+            <label class="input-icon" data-side="left">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>
+              <input type="text" class="text-input" id="driverSearch" placeholder="Search drivers, units, refs">
+            </label>
+
+            <!-- Extra filters, revealed by "More Filters" -->
+            <div class="filter-extra" id="filterExtra" hidden>
+              <div class="field" style="margin-bottom:0">
+                <label class="field-label" for="fltStatus">Duty status</label>
+                <select class="select-input" id="fltStatus">
+                  <option value="">All statuses</option>
+                  <option value="green">Driving</option>
+                  <option value="orange">On duty</option>
+                  <option value="red">Off duty</option>
+                </select>
+              </div>
+              <div class="field" style="margin-bottom:0">
+                <label class="field-label" for="fltFleet">Home terminal</label>
+                <select class="select-input" id="fltFleet">
+                  <option value="">All terminals</option>
+                  <option value="West Monroe, LA">West Monroe, LA</option>
+                  <option value="Huttonsville, VA">Huttonsville, VA</option>
+                  <option value="Roanoke, VA">Roanoke, VA</option>
+                </select>
+              </div>
+            </div>
+
+            <button class="btn" data-variant="outline" id="btnAddSchedule">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 8v8M8 12h8"/></svg>
+              Add
+            </button>
+
+            <!-- Calendar (shadcn) -->
+            <div>
+              <div class="cal-caption">
+                <span class="cal-label" id="calLabel">April 2026</span>
+                <div class="cal-nav">
+                  <button class="btn" data-variant="outline" data-size="icon-sm" id="calPrev" aria-label="Previous month">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>
+                  </button>
+                  <button class="btn" data-variant="outline" data-size="icon-sm" id="calNext" aria-label="Next month">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18l6-6-6-6"/></svg>
+                  </button>
+                </div>
+              </div>
+              <div class="cal-grid" id="calWeekdays"></div>
+              <div class="cal-grid" id="calDays"></div>
+            </div>
+
+            <!-- Range field (Input + trailing icon) -->
+            <label class="input-icon" data-side="right">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/></svg>
+              <input type="text" class="text-input" id="rangeField" placeholder="Start Date - End Date" readonly>
+            </label>
+
+            <!-- Reminder (Card + Avatar) -->
+            <section class="card">
+              <div class="card-head">
+                <div class="card-head-text"><h3 class="card-title">Reminder</h3></div>
+                <span class="badge" id="reminderCount">2</span>
+              </div>
+              <div class="card-body" id="reminderList"></div>
+            </section>
+
+            <!-- View Markers (Card + Switch) -->
+            <section class="card">
+              <div class="card-head">
+                <div class="card-head-text"><h3 class="card-title">View Markers</h3></div>
+              </div>
+              <div class="card-body" id="markerList"></div>
+            </section>
+          </aside>
+
+          <!-- ============ ROSTER ============ -->
+          <aside class="roster">
+            <div class="roster-head">
+              <input type="checkbox" class="row-checkbox" id="onlyAvailable">
+              <label for="onlyAvailable">Only Show Available Driver</label>
+            </div>
+            <div class="roster-scroll" id="rosterScroll">
+              <div class="roster-list" id="rosterList"></div>
+            </div>
+          </aside>
+
+          <!-- ============ TIMELINE ============ -->
+          <section class="timeline">
+            <div class="tl-scroll" id="tlScroll">
+              <div class="tl-inner" id="tlInner">
+                <div class="tl-head">
+                  <div class="tl-gutter"></div>
+                  <div class="tl-days" id="tlDays"></div>
+                </div>
+                <div class="tl-rows" id="tlRows"></div>
+              </div>
+            </div>
+          </section>
+
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <div class="toast-stack" id="toastStack"></div>
+
+  <script>
+    /* Toasts — the app confirms saves and reports limits this way. */
+    window.dpToast = (function(){
+      var stack = document.getElementById('toastStack');
+      var ICONS = {
+        success: '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>',
+        error: '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7.5v5M12 16.2v.1"/></svg>'
+      };
+      return function(kind, title, message){
+        var el = document.createElement('div');
+        el.className = 'toast ' + kind;
+        el.innerHTML = ICONS[kind] + '<div><span class="toast-title">' + title + '</span>' + message + '</div>';
+        stack.appendChild(el);
+        setTimeout(function(){ el.remove(); }, 3200);
+      };
+    })();
+
+    /* Dark mode toggle (bottom of the sidebar icon rail) */
+    (function(){
+      const root = document.documentElement;
+      const btn = document.getElementById('themeToggleBtn');
+      const sunIcon = btn.querySelector('.theme-icon-sun');
+      const moonIcon = btn.querySelector('.theme-icon-moon');
+      function applyTheme(theme){
+        if(theme === 'dark') root.setAttribute('data-theme', 'dark');
+        else root.removeAttribute('data-theme');
+        sunIcon.style.display = theme === 'dark' ? 'none' : 'block';
+        moonIcon.style.display = theme === 'dark' ? 'block' : 'none';
+        btn.setAttribute('aria-pressed', theme === 'dark' ? 'true' : 'false');
+        btn.title = theme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode';
+      }
+      applyTheme(root.getAttribute('data-theme') === 'dark' ? 'dark' : 'light');
+      btn.addEventListener('click', ()=>{
+        const next = root.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
+        applyTheme(next);
+        try{ localStorage.setItem('dp-theme', next); }catch(e){}
+      });
+    })();
+  </script>
+
+  <script>
+
+    /* Tabs (shadcn): clicking a trigger selects it, deselects its siblings
+       and emits `segchange` so the view switcher can react. */
+    document.querySelectorAll(".segmented").forEach(function(seg){
+      var buttons = seg.querySelectorAll("button");
+      buttons.forEach(function(btn){
+        btn.addEventListener("click", function(){
+          buttons.forEach(function(b){ b.classList.remove("active"); });
+          btn.classList.add("active");
+          seg.dispatchEvent(new CustomEvent("segchange", { detail: { button: btn } }));
+        });
+      });
+    });
+
+    /* Sidebar nav rail: single-select highlighting, mirrors a real left nav. */
+    (function(){
+      var navIcons = document.querySelectorAll('.sidebar .side-icon');
+      navIcons.forEach(function(icon){
+        icon.addEventListener('click', function(){
+          navIcons.forEach(function(i){ i.classList.remove('active'); });
+          icon.classList.add('active');
+        });
+      });
+    })();
+
+    /* Topbar icon buttons: each shows a small popover on click; opening the
+       mail popover also clears its unread dot. Only one popover open at a time. */
+    (function(){
+      function closeAllPopovers(){
+        document.querySelectorAll('.icon-popover').forEach(function(p){ p.remove(); });
+      }
+      document.querySelectorAll('.icon-btn[data-popover]').forEach(function(btn){
+        btn.addEventListener('click', function(e){
+          e.stopPropagation();
+          var alreadyOpen = btn.querySelector('.icon-popover');
+          closeAllPopovers();
+          if(alreadyOpen) return;
+          var pop = document.createElement('div');
+          pop.className = 'icon-popover';
+          pop.textContent = btn.dataset.popover;
+          btn.appendChild(pop);
+          var dot = btn.querySelector('.dot');
+          if(dot) dot.remove();
+        });
+      });
+      document.addEventListener('click', closeAllPopovers);
+    })();
+  </script>
+
+  <script>
+    /* Lucide swap — any <i data-lucide="name"> added to the content area
+       becomes an inline <svg>. The planner below inlines its own SVGs, so
+       nothing on this page depends on the CDN; this stays for markup
+       added later. */
+    window.dpIcons = function(){
+      if(window.lucide && window.lucide.createIcons) window.lucide.createIcons();
+    };
+    dpIcons();
+  </script>
+
+  <script>
+  /* ==================================================================
+     SCHEDULE PLANNER
+
+     One renderer drives all three views. Day / Week / Month differ only
+     in where the range starts and how many day columns it spans, so the
+     chip geometry below is expressed in HOURS FROM RANGE START and
+     converted to a percentage of the whole range - nothing in the
+     layout code knows which view is active.
+     ================================================================== */
+  (function(){
+    'use strict';
+
+    /* ---------- constants (all on the 1.25 grid; see the CSS note) ---------- */
+    var CHIP_H   = 27.5;   /* 22 painted */
+    var LANE_GAP = 7.5;    /*  6 painted */
+    var ROW_PAD  = 12.5;   /* 10 painted */
+    var ROW_MIN  = 112.5;  /* 90 painted - the height a driver card needs */
+    var DAY_MIN  = 112.5;  /* narrowest a day column may get before scrolling */
+
+    var WD = ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
+    var MONTHS = ['January','February','March','April','May','June',
+                  'July','August','September','October','November','December'];
+    var MON_SHORT = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+
+    /* ---------- data ---------- */
+    var DRIVERS = [
+      { id:'d1', name:'Harris, Lacy',   loc:'West Monroe, LA',  truck:'DTL0987', trailer:'V3882',
+        reserved:null,      duty:'D',  tone:'green',  status:'Arrived (Stop 1)' },
+      { id:'d2', name:'Philip Sam',     loc:'Huttonsville, VA', truck:'DTL0223', trailer:'V8762',
+        reserved:'muted',   duty:'D',  tone:'green',  status:'Arrived (Stop 1)' },
+      { id:'d3', name:'Sam Wilson',     loc:'West Monroe, LA',  truck:'DTL8765', trailer:'V6447',
+        reserved:'muted',   duty:'D',  tone:'green',  status:'Arrived (Stop 1)' },
+      { id:'d4', name:'Bucky Barns',    loc:'West Monroe, LA',  truck:'DTL0221', trailer:'V9832',
+        reserved:'danger',  duty:'D',  tone:'green',  status:'Arrived (Stop 1)' },
+      { id:'d5', name:'John Walker',    loc:'West Monroe, LA',  truck:'DTL8765', trailer:'V6447',
+        reserved:'danger',  duty:'D',  tone:'green',  status:'Arrived (Stop 1)' },
+      { id:'d6', name:'Isaiah Bradley', loc:'West Monroe, LA',  truck:'DTL8768', trailer:'V3453',
+        reserved:'muted',   duty:'ON', tone:'orange', status:'Arrived (Stop 1)' },
+      { id:'d7', name:'Micheal, Smith', loc:'Roanoke, VA',      truck:'DTL2996', trailer:'V0334',
+        reserved:'muted',   duty:'OF', tone:'red',    status:'Arrived (Stop 1)' }
+    ];
+    /* A red "Reserved" is a hard hold, a grey one is soft - so only the
+       red ones come off the available list. */
+    DRIVERS.forEach(function(d){ d.available = d.reserved !== 'danger'; });
+
+    /* Events are authored against the week of Mon 6 Apr 2026, as day
+       index + hour, and turned into real Dates below. `kind` picks the
+       View Markers row that switches the chip on and off. */
+    var WEEK0 = new Date(2026, 3, 6);
+    function at(dayIdx, hour){ return new Date(2026, 3, 6 + dayIdx, hour); }
+
+    var RAW = [
+      ['d1','off',   0, 0,  1, 0, null],
+      ['d1','load',  1, 6,  2,18, 'orange'],
+      ['d1','drive', 3, 6,  3,18, 'green'],
+      ['d1','duty',  3, 6,  3,18, 'orange'],
+      ['d1','plan',  3, 6,  4,18, 'blue'],
+
+      ['d2','load',  0, 6,  4,18, 'orange'],
+      ['d2','drive', 5, 6,  5,18, 'green'],
+      ['d2','duty',  5, 6,  5,18, 'orange'],
+
+      ['d3','drive', 0, 6,  1,18, 'green'],
+      ['d3','plan',  2, 6,  3,18, 'blue'],
+      ['d3','drive', 4, 6,  4,18, 'green'],
+
+      ['d4','load',  0, 6,  1,18, 'orange'],
+      ['d4','drive', 2, 6,  2,18, 'green'],
+      ['d4','duty',  2, 6,  2,18, 'orange'],
+      ['d4','plan',  2, 6,  3,18, 'blue'],
+      ['d4','off',   4, 0,  7, 0, null],
+
+      ['d5','load',  0, 6,  4,18, 'orange'],
+      ['d5','drive', 5, 6,  5,18, 'green'],
+      ['d5','duty',  5, 6,  5,18, 'orange'],
+
+      ['d6','drive', 0, 6,  1,18, 'green'],
+      ['d6','plan',  2, 6,  3,18, 'blue'],
+      ['d6','drive', 4, 6,  4,18, 'green'],
+
+      ['d7','off',   0, 0,  1, 0, null],
+      ['d7','load',  1, 6,  2,18, 'orange'],
+      ['d7','drive', 3, 6,  3,18, 'green'],
+      ['d7','duty',  3, 6,  3,18, 'orange'],
+      ['d7','plan',  3, 6,  4,18, 'blue']
+    ];
+
+    var EVENTS = RAW.map(function(r, i){
+      var off = r[1] === 'off';
+      return {
+        id:      'e' + i,
+        driver:  r[0],
+        kind:    r[1],
+        start:   at(r[2], r[3]),
+        end:     at(r[4], r[5]),
+        tone:    off ? 'slate' : r[6],
+        title:   off ? 'Vacation/Time Off' : 'Montello, MS',
+        from:    off ? null : 'Montello, MS',
+        to:      off ? null : 'Elkhart, IN',
+        ref:     off ? null : 'DATR-1789224'
+      };
+    });
+
+    var REMINDERS = [
+      { name:'Harris, Lacy', sub:'West Monroe, LA  DATR-1789224', stops:[1, 99],
+        from:'Fairfield, CA', fromAt:'Mar 15 08:00 AM', to:'Roanoke, VA',  toAt:'Mar 16 11:00 AM' },
+      { name:'Philip Sam',   sub:'Huttonsville, VA  DATR-1789225', stops:[1, 99],
+        from:'Elkhart, IN',   fromAt:'Mar 15 08:00 AM', to:'Montello, MS', toAt:'Mar 16 11:00 AM' }
+    ];
+
+    /* The four markers are the Figma's. "Planned Load" is added so every
+       tone painted on the board has a control - without it the blue
+       chips are the only ones that cannot be switched off. */
+    var MARKERS = [
+      { kind:'drive', label:'Drive Time',   dot:'var(--ev-green-dot)'  },
+      { kind:'duty',  label:'On Duty',      dot:'var(--ev-orange-dot)' },
+      { kind:'off',   label:'Off Duty',     dot:'var(--ev-red-dot)'    },
+      { kind:'load',  label:'Sleeper Birth',dot:'var(--ev-slate-dot)'  },
+      { kind:'plan',  label:'Planned Load', dot:'var(--ev-blue-dot)'   }
+    ];
+
+    /* ---------- state ---------- */
+    var state = {
+      view:     'week',
+      anchor:   new Date(2026, 3, 6),
+      calMonth: new Date(2026, 3, 1),
+      selected: null,
+      search:   '',
+      onlyAvail:false,
+      status:   '',
+      terminal: '',
+      markers:  { drive:true, duty:true, off:true, load:true, plan:true }
+    };
+
+    var ICONS = {
+      truck:   '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M2 17h11V6H2v11Z"/><path d="M13 10h4l4 4v3h-8v-7Z"/><circle cx="6.5" cy="19" r="1.6"/><circle cx="17.5" cy="19" r="1.6"/></svg>',
+      trailer: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="6" width="18" height="10" rx="1.5"/><path d="M20 16h2"/><circle cx="7" cy="18.5" r="1.5"/><circle cx="14" cy="18.5" r="1.5"/></svg>',
+      route:   '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 18c0-5 4-9 9-9h5"/><path d="M15 6l3 3-3 3"/></svg>',
+      plus:    '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></svg>',
+      users:   '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M18 20v-1.6a4 4 0 0 0-4-4h-4a4 4 0 0 0-4 4V20"/><circle cx="12" cy="7.5" r="3.5"/></svg>'
+    };
+
+    /* ---------- date helpers ---------- */
+    var DAY_MS = 86400000;
+    function startOfDay(d){ return new Date(d.getFullYear(), d.getMonth(), d.getDate()); }
+    function addDays(d, n){ return new Date(d.getFullYear(), d.getMonth(), d.getDate() + n); }
+    function sameDay(a, b){
+      return a.getFullYear() === b.getFullYear() && a.getMonth() === b.getMonth() && a.getDate() === b.getDate();
+    }
+    /* Monday-first, matching the Figma's weekday header. */
+    function startOfWeek(d){
+      var day = (d.getDay() + 6) % 7;
+      return addDays(startOfDay(d), -day);
+    }
+    /* Whole days between two midnights. Computed from the rendered
+       calendar dates rather than by dividing the millisecond gap, so a
+       DST boundary inside the range cannot round a day away. */
+    function daysBetween(a, b){
+      return Math.round((startOfDay(b) - startOfDay(a)) / DAY_MS);
+    }
+
+    /* The visible range for the current view. */
+    function range(){
+      if(state.view === 'day'){
+        var s = startOfDay(state.anchor);
+        return { start:s, days:1 };
+      }
+      if(state.view === 'month'){
+        var m = new Date(state.anchor.getFullYear(), state.anchor.getMonth(), 1);
+        var n = new Date(state.anchor.getFullYear(), state.anchor.getMonth() + 1, 0).getDate();
+        return { start:m, days:n };
+      }
+      return { start:startOfWeek(state.anchor), days:7 };
+    }
+
+    /* ---------- element helper ---------- */
+    function el(tag, cls, html){
+      var n = document.createElement(tag);
+      if(cls) n.className = cls;
+      if(html != null) n.innerHTML = html;
+      return n;
+    }
+    function initials(name){
+      /* "Harris, Lacy" and "Philip Sam" are both in the data, so split on
+         the comma first and fall back to whitespace. */
+      var parts = name.indexOf(',') > -1
+        ? name.split(',').map(function(s){ return s.trim(); }).reverse()
+        : name.split(/\s+/);
+      return parts.filter(Boolean).slice(0, 2).map(function(p){ return p[0]; }).join('').toUpperCase();
+    }
+    function fmtTime(d){
+      var h = d.getHours(), m = d.getMinutes();
+      var ap = h < 12 ? 'AM' : 'PM';
+      var hh = h % 12; if(hh === 0) hh = 12;
+      return hh.toString().padStart(2, '0') + ':' + m.toString().padStart(2, '0') + ' ' + ap;
+    }
+    function fmtDay(d){ return MON_SHORT[d.getMonth()] + ' ' + d.getDate(); }
+    function pad2(n){ return n < 10 ? '0' + n : '' + n; }
+
+    /* ---------- filtering ---------- */
+    function visibleDrivers(){
+      var q = state.search.trim().toLowerCase();
+      return DRIVERS.filter(function(d){
+        if(state.onlyAvail && !d.available) return false;
+        if(state.status && d.tone !== state.status) return false;
+        if(state.terminal && d.loc !== state.terminal) return false;
+        if(q){
+          var hay = (d.name + ' ' + d.loc + ' ' + d.truck + ' ' + d.trailer).toLowerCase();
+          if(hay.indexOf(q) === -1) return false;
+        }
+        return true;
+      });
+    }
+    function eventsFor(driverId, r){
+      var end = addDays(r.start, r.days);
+      return EVENTS.filter(function(e){
+        if(e.driver !== driverId) return false;
+        if(!state.markers[e.kind]) return false;
+        return e.end > r.start && e.start < end;   /* overlaps the range */
+      }).sort(function(a, b){ return a.start - b.start || b.end - a.end; });
+    }
+    /* First-fit lane packing: an event goes in the topmost lane whose
+       last event has already ended. This is what stacks the three
+       Thursday chips in the Figma onto three separate lines. */
+    function packLanes(list){
+      var lanes = [];
+      list.forEach(function(e){
+        var i = 0;
+        for(; i < lanes.length; i++){ if(lanes[i] <= e.start){ break; } }
+        lanes[i] = e.end;
+        e._lane = i;
+      });
+      return Math.max(lanes.length, 1);
+    }
+
+    /* ---------- renderers ---------- */
+    var rosterList = document.getElementById('rosterList');
+    var tlRows     = document.getElementById('tlRows');
+    var tlDays     = document.getElementById('tlDays');
+    var tlScroll   = document.getElementById('tlScroll');
+    var tlInner    = document.getElementById('tlInner');
+
+    function renderBoard(){
+      var r = range();
+      var drivers = visibleDrivers();
+
+      /* --- day header --- */
+      tlDays.innerHTML = '';
+      tlDays.style.gridTemplateColumns = 'repeat(' + r.days + ', minmax(0, 1fr))';
+      var today = new Date();
+      for(var i = 0; i < r.days; i++){
+        var d = addDays(r.start, i);
+        var head = el('div', 'tl-dayhead');
+        if(sameDay(d, today)) head.setAttribute('data-today', 'true');
+        var wd = WD[(d.getDay() + 6) % 7];
+        if(state.view === 'day'){
+          head.appendChild(el('div', 'dh-wd', wd + 'day'));
+          head.appendChild(el('div', 'dh-date', MONTHS[d.getMonth()] + ' ' + d.getDate()));
+        }else{
+          head.appendChild(el('div', 'dh-wd', wd));
+          head.appendChild(el('div', 'dh-date', pad2(d.getMonth() + 1) + '/' + pad2(d.getDate())));
+        }
+        tlDays.appendChild(head);
+      }
+
+      /* --- rows --- */
+      rosterList.innerHTML = '';
+      tlRows.innerHTML = '';
+      tlInner.style.minWidth = Math.max(875, r.days * DAY_MIN) + 'px';
+
+      if(!drivers.length){
+        rosterList.appendChild(el('div', 'roster-empty',
+          '<div class="empty-icon" style="margin:0 auto">' + ICONS.users + '</div>' +
+          '<h3 class="empty-title" style="margin:10px 0 0">No drivers match</h3>' +
+          '<p>Clear the search or the filters to see the full roster.</p>'));
+        window.dpPlannerRelayout();
+        return;
+      }
+
+      var totalEvents = 0;
+      drivers.forEach(function(d){
+        var list  = eventsFor(d.id, r);
+        var lanes = packLanes(list);
+        totalEvents += list.length;
+
+        var contentH = lanes * CHIP_H + (lanes - 1) * LANE_GAP;
+        var h = Math.max(ROW_MIN, contentH + ROW_PAD * 2);
+
+        rosterList.appendChild(driverCard(d, h));
+        tlRows.appendChild(timelineRow(d, list, h, r));
+      });
+
+      document.getElementById('periodSub').textContent =
+        drivers.length + (drivers.length === 1 ? ' driver' : ' drivers') +
+        ' · ' + totalEvents + ' scheduled';
+
+      window.dpPlannerRelayout();
+    }
+
+    function driverCard(d, h){
+      var card = el('div', 'driver-card');
+      card.style.height = h + 'px';
+      card.dataset.driver = d.id;
+      if(state.selected === d.id) card.classList.add('active');
+
+      var top = el('div', 'driver-top');
+      top.appendChild(el('div', 'avatar-md', initials(d.name)));
+      var idb = el('div', 'driver-id');
+      idb.appendChild(el('div', 'driver-name', d.name));
+      idb.appendChild(el('div', 'driver-loc', d.loc));
+      top.appendChild(idb);
+      if(d.reserved){
+        var b = el('span', 'badge', 'Reserved');
+        if(d.reserved === 'danger') b.setAttribute('data-variant', 'danger');
+        top.appendChild(b);
+      }
+      card.appendChild(top);
+
+      card.appendChild(el('div', 'driver-equip',
+        '<span class="equip">' + ICONS.truck   + d.truck   + '</span>' +
+        '<span class="equip">' + ICONS.trailer + d.trailer + '</span>'));
+
+      var foot = el('div', 'driver-foot');
+      foot.appendChild(el('div', 'driver-status',
+        '<span class="duty" data-tone="' + d.tone + '">' + d.duty + '</span>' +
+        '<span>' + d.status + '</span>'));
+      foot.querySelector('.driver-status').setAttribute('data-tone', d.tone);
+      var more = el('button', 'driver-more', ICONS.route + 'More');
+      more.type = 'button';
+      more.addEventListener('click', function(ev){
+        ev.stopPropagation();
+        window.dpToast('success', d.name, 'Opening the driver’s full schedule.');
+      });
+      foot.appendChild(more);
+      card.appendChild(foot);
+
+      card.addEventListener('click', function(){ selectDriver(d.id); });
+      return card;
+    }
+
+    function timelineRow(d, list, h, r){
+      var row = el('div', 'tl-row');
+      row.style.height = h + 'px';
+      row.dataset.driver = d.id;
+      if(state.selected === d.id) row.classList.add('active');
+
+      var gutter = el('div', 'tl-rowgutter');
+      var add = el('button', 'btn', ICONS.plus);
+      add.type = 'button';
+      add.setAttribute('data-variant', 'outline');
+      add.setAttribute('data-size', 'icon-sm');
+      add.setAttribute('aria-label', 'Add a schedule for ' + d.name);
+      add.addEventListener('click', function(ev){
+        ev.stopPropagation();
+        window.dpToast('success', 'New schedule', 'Starting a schedule for ' + d.name + '.');
+      });
+      gutter.appendChild(add);
+      row.appendChild(gutter);
+
+      var lanesBox = el('div', 'tl-lanes');
+
+      /* Today's tint sits under the chips. */
+      var today = new Date();
+      var ti = daysBetween(r.start, today);
+      if(ti >= 0 && ti < r.days){
+        var tint = el('div', 'tl-today');
+        tint.style.left  = (ti / r.days * 100) + '%';
+        tint.style.width = (1 / r.days * 100) + '%';
+        lanesBox.appendChild(tint);
+      }
+      for(var i = 1; i < r.days; i++){
+        var rule = el('div', 'tl-colrule');
+        rule.style.left = (i / r.days * 100) + '%';
+        lanesBox.appendChild(rule);
+      }
+
+      var totalMs = r.days * DAY_MS;
+      list.forEach(function(e){
+        var s = Math.max(e.start - r.start, 0);
+        var x = Math.min(e.end - r.start, totalMs);
+        var chip = el('button', 'chip');
+        chip.type = 'button';
+        chip.setAttribute('data-tone', e.tone);
+        chip.style.left  = (s / totalMs * 100) + '%';
+        chip.style.width = ((x - s) / totalMs * 100) + '%';
+        chip.style.top   = (ROW_PAD + e._lane * (CHIP_H + LANE_GAP)) + 'px';
+
+        chip.appendChild(el('span', 'chip-dot'));
+        if(e.kind === 'off'){
+          chip.appendChild(el('span', 'chip-a', e.title));
+        }else{
+          chip.appendChild(el('span', 'chip-a', e.from + ' ' + fmtTime(e.start)));
+          chip.appendChild(el('span', 'chip-b', e.ref));
+          chip.appendChild(el('span', 'chip-c', e.to + ' ' + fmtTime(e.end)));
+        }
+        chip.addEventListener('click', function(ev){
+          ev.stopPropagation();
+          openEventPopover(chip, e, d);
+        });
+        lanesBox.appendChild(chip);
+      });
+
+      row.appendChild(lanesBox);
+      row.addEventListener('click', function(){ selectDriver(d.id); });
+      return row;
+    }
+
+    /* Chips carry three labels and most are far too short for all three.
+       The breakpoint is the chip's own PAINTED width, so it is measured
+       after layout rather than guessed from the duration. */
+    window.dpPlannerRelayout = function(){
+      var chips = tlRows.querySelectorAll('.chip');
+      for(var i = 0; i < chips.length; i++){
+        var w = chips[i].getBoundingClientRect().width;
+        chips[i].setAttribute('data-fit', w >= 250 ? 'full' : (w >= 140 ? 'mid' : 'min'));
+      }
+    };
+
+    function selectDriver(id){
+      state.selected = state.selected === id ? null : id;
+      [rosterList, tlRows].forEach(function(root){
+        root.querySelectorAll('[data-driver]').forEach(function(n){
+          n.classList.toggle('active', n.dataset.driver === state.selected);
+        });
+      });
+    }
+
+    /* ---------- popover ---------- */
+    var openPop = null;
+    function closePop(){ if(openPop){ openPop.remove(); openPop = null; } }
+
+    function openEventPopover(trigger, e, d){
+      var wasOpen = openPop && openPop.dataset.for === e.id;
+      closePop();
+      if(wasOpen) return;
+
+      var pop = el('div', 'pop');
+      pop.dataset.for = e.id;
+      var span = e.kind === 'off'
+        ? fmtDay(e.start) + ' – ' + fmtDay(addDays(e.end, -1))
+        : fmtDay(e.start) + ' ' + fmtTime(e.start) + ' – ' + fmtDay(e.end) + ' ' + fmtTime(e.end);
+
+      var rows = e.kind === 'off'
+        ? [['Driver', d.name], ['Unit', d.truck + ' / ' + d.trailer], ['Window', span]]
+        : [['Driver', d.name], ['Reference', e.ref], ['Origin', e.from], ['Destination', e.to],
+           ['Window', span], ['Unit', d.truck + ' / ' + d.trailer]];
+
+      pop.innerHTML =
+        '<div class="pop-head">' +
+          '<div><h4 class="pop-title">' + (e.kind === 'off' ? e.title : e.ref) + '</h4>' +
+          '<p class="pop-sub">' + (e.kind === 'off' ? 'Time off' : e.from + ' → ' + e.to) + '</p></div>' +
+          '<span class="badge" data-variant="' +
+            ({ green:'success', orange:'warning', blue:'info', red:'danger', slate:'' })[e.tone] +
+          '">' + ({ drive:'Drive', duty:'On duty', off:'Off', load:'Sleeper', plan:'Planned' })[e.kind] + '</span>' +
+        '</div>' +
+        '<div class="pop-body">' + rows.map(function(kv){
+          return '<div class="pop-row"><span class="pop-key">' + kv[0] +
+                 '</span><span class="pop-val">' + kv[1] + '</span></div>';
+        }).join('') + '</div>' +
+        '<div class="pop-foot">' +
+          '<button class="btn" data-variant="outline" data-size="sm" data-act="close">Close</button>' +
+          '<button class="btn" data-size="sm" data-act="open">Open load</button>' +
+        '</div>';
+
+      /* Appended to <body>, not into the row: .roster-list carries a
+         transform for scroll sync, and any transformed ancestor would
+         become the containing block for this position:fixed panel and
+         throw the placement below off entirely. */
+      document.body.appendChild(pop);
+      openPop = pop;
+
+      pop.querySelector('[data-act="close"]').addEventListener('click', closePop);
+      pop.querySelector('[data-act="open"]').addEventListener('click', function(){
+        closePop();
+        window.dpToast('success', e.ref || 'Time off', 'Opening the record for ' + d.name + '.');
+      });
+      pop.addEventListener('click', function(ev){ ev.stopPropagation(); });
+
+      placePop(trigger, pop);
+    }
+
+    /* getBoundingClientRect() and innerWidth/Height are true screen
+       pixels, but the panel lives inside the page's zoom:0.8 and so
+       re-scales whatever px we assign it. Dividing by the ambient zoom
+       cancels that out - the same compensation the pay-profile
+       dropdowns use. */
+    function placePop(trigger, pop){
+      var zoom = parseFloat(getComputedStyle(document.body).zoom) || 1;
+      var r = trigger.getBoundingClientRect();
+      var w = pop.offsetWidth * zoom;
+      var h = pop.offsetHeight * zoom;
+
+      var left = r.left;
+      if(left + w > window.innerWidth - 10) left = window.innerWidth - w - 10;
+      if(left < 10) left = 10;
+
+      var top = r.bottom + 5;
+      if(top + h > window.innerHeight - 10 && r.top - h - 5 > 10) top = r.top - h - 5;
+
+      pop.style.left = (left / zoom) + 'px';
+      pop.style.top  = (top  / zoom) + 'px';
+    }
+
+    document.addEventListener('click', closePop);
+    window.addEventListener('keydown', function(e){ if(e.key === 'Escape') closePop(); });
+
+    /* ---------- calendar ---------- */
+    var calDays = document.getElementById('calDays');
+    document.getElementById('calWeekdays').innerHTML =
+      WD.map(function(w){ return '<div class="cal-wd">' + w + '</div>'; }).join('');
+
+    function renderCalendar(){
+      var m = state.calMonth;
+      document.getElementById('calLabel').textContent = MONTHS[m.getMonth()] + ' ' + m.getFullYear();
+
+      var first = new Date(m.getFullYear(), m.getMonth(), 1);
+      var gridStart = startOfWeek(first);
+      var r = range();
+      var rangeEnd = addDays(r.start, r.days - 1);
+      var today = new Date();
+
+      calDays.innerHTML = '';
+      for(var i = 0; i < 42; i++){
+        var d = addDays(gridStart, i);
+        var cell = el('div', 'cal-cell');
+        var isStart = sameDay(d, r.start);
+        var isEnd   = sameDay(d, rangeEnd);
+        var inside  = d >= r.start && d <= rangeEnd;
+
+        if(inside){
+          cell.setAttribute('data-range',
+            r.days === 1 ? 'solo' : (isStart ? 'start' : (isEnd ? 'end' : 'mid')));
+        }
+
+        var btn = el('button', 'cal-day', String(d.getDate()));
+        btn.type = 'button';
+        if(d.getMonth() !== m.getMonth()) btn.setAttribute('data-outside', 'true');
+        if(sameDay(d, today)) btn.setAttribute('data-today', 'true');
+        if(isStart || isEnd) btn.setAttribute('data-selected', 'true');
+
+        (function(day){
+          btn.addEventListener('click', function(){
+            state.anchor = day;
+            if(day.getMonth() !== state.calMonth.getMonth()){
+              state.calMonth = new Date(day.getFullYear(), day.getMonth(), 1);
+            }
+            syncAll();
+          });
+        })(d);
+
+        cell.appendChild(btn);
+        calDays.appendChild(cell);
+      }
+    }
+
+    /* ---------- rail lists ---------- */
+    function renderReminders(){
+      var box = document.getElementById('reminderList');
+      box.innerHTML = '';
+      REMINDERS.forEach(function(rm){
+        var item = el('div', 'rem-item');
+        item.innerHTML =
+          '<div class="rem-head">' +
+            '<div class="avatar-sm">' + initials(rm.name) + '</div>' +
+            '<div style="min-width:0">' +
+              '<div class="rem-name">' + rm.name + '</div>' +
+              '<div class="rem-sub">' + rm.sub + '</div>' +
+            '</div>' +
+          '</div>' +
+          '<div class="route">' +
+            '<span class="route-node">' + rm.stops[0] + '</span>' +
+            '<span class="route-line"></span>' +
+            '<span class="route-node" data-end="true">' + rm.stops[1] + '</span>' +
+          '</div>' +
+          '<div class="route-ends">' +
+            '<div class="route-end"><div class="route-place">' + rm.from + '</div>' +
+              '<div class="route-when">' + rm.fromAt + '</div></div>' +
+            '<div class="route-end" data-align="end"><div class="route-place">' + rm.to + '</div>' +
+              '<div class="route-when">' + rm.toAt + '</div></div>' +
+          '</div>';
+        box.appendChild(item);
+      });
+      document.getElementById('reminderCount').textContent = REMINDERS.length;
+    }
+
+    function renderMarkers(){
+      var box = document.getElementById('markerList');
+      box.innerHTML = '';
+      MARKERS.forEach(function(mk){
+        var row = el('div', 'marker-row');
+        var dot = el('span', 'marker-dot');
+        dot.style.background = mk.dot;
+        row.appendChild(dot);
+        row.appendChild(el('span', 'marker-label', mk.label));
+
+        var sw = el('button', 'switch', '<span class="switch-thumb"></span>');
+        sw.type = 'button';
+        sw.setAttribute('role', 'switch');
+        sw.setAttribute('aria-label', mk.label);
+        sw.setAttribute('aria-checked', state.markers[mk.kind] ? 'true' : 'false');
+        sw.addEventListener('click', function(){
+          state.markers[mk.kind] = !state.markers[mk.kind];
+          sw.setAttribute('aria-checked', state.markers[mk.kind] ? 'true' : 'false');
+          renderBoard();
+        });
+        row.appendChild(sw);
+        box.appendChild(row);
+      });
+    }
+
+    /* ---------- toolbar ---------- */
+    function syncAll(){
+      var r = range();
+      var end = addDays(r.start, r.days - 1);
+      var title = document.getElementById('periodTitle');
+
+      if(state.view === 'day'){
+        title.textContent = WD[(r.start.getDay() + 6) % 7] + ', ' + fmtDay(r.start) + ', ' + r.start.getFullYear();
+      }else if(state.view === 'month'){
+        title.textContent = MONTHS[r.start.getMonth()] + ' ' + r.start.getFullYear();
+      }else{
+        title.textContent = (r.start.getMonth() === end.getMonth())
+          ? MON_SHORT[r.start.getMonth()] + ' ' + r.start.getDate() + ' – ' + end.getDate() + ', ' + end.getFullYear()
+          : fmtDay(r.start) + ' – ' + fmtDay(end) + ', ' + end.getFullYear();
+      }
+
+      document.getElementById('rangeField').value =
+        fmtDay(r.start) + ', ' + r.start.getFullYear() + '  -  ' + fmtDay(end) + ', ' + end.getFullYear();
+
+      state.calMonth = new Date(r.start.getFullYear(), r.start.getMonth(), 1);
+      renderCalendar();
+      renderBoard();
+    }
+
+    function step(dir){
+      if(state.view === 'day')        state.anchor = addDays(state.anchor, dir);
+      else if(state.view === 'month') state.anchor = new Date(state.anchor.getFullYear(), state.anchor.getMonth() + dir, 1);
+      else                            state.anchor = addDays(state.anchor, dir * 7);
+      syncAll();
+    }
+
+    document.getElementById('btnPrev').addEventListener('click', function(){ step(-1); });
+    document.getElementById('btnNext').addEventListener('click', function(){ step(1); });
+    document.getElementById('btnToday').addEventListener('click', function(){
+      state.anchor = startOfDay(new Date());
+      syncAll();
+    });
+    document.getElementById('calPrev').addEventListener('click', function(){
+      state.calMonth = new Date(state.calMonth.getFullYear(), state.calMonth.getMonth() - 1, 1);
+      renderCalendar();
+    });
+    document.getElementById('calNext').addEventListener('click', function(){
+      state.calMonth = new Date(state.calMonth.getFullYear(), state.calMonth.getMonth() + 1, 1);
+      renderCalendar();
+    });
+
+    document.getElementById('viewSwitch').addEventListener('segchange', function(e){
+      state.view = e.detail.button.dataset.view;
+      syncAll();
+    });
+
+    document.getElementById('btnNewSchedule').addEventListener('click', function(){
+      window.dpToast('success', 'New schedule', 'Pick a driver row to place the new schedule on.');
+    });
+    document.getElementById('btnAddSchedule').addEventListener('click', function(){
+      window.dpToast('success', 'Add', 'Adding a planning entry to the selected range.');
+    });
+
+    var moreBtn = document.getElementById('btnMoreFilters');
+    var extra   = document.getElementById('filterExtra');
+    moreBtn.addEventListener('click', function(){
+      var open = extra.hidden;
+      extra.hidden = !open;
+      moreBtn.setAttribute('aria-expanded', open ? 'true' : 'false');
+    });
+
+    document.getElementById('driverSearch').addEventListener('input', function(){
+      state.search = this.value; renderBoard();
+    });
+    document.getElementById('onlyAvailable').addEventListener('change', function(){
+      state.onlyAvail = this.checked; renderBoard();
+    });
+    document.getElementById('fltStatus').addEventListener('change', function(){
+      state.status = this.value; renderBoard();
+    });
+    document.getElementById('fltFleet').addEventListener('change', function(){
+      state.terminal = this.value; renderBoard();
+    });
+
+    /* ---------- scroll sync ----------
+       The timeline is the scroller; the roster mirrors it so a driver
+       card always sits beside its own row. translateY rather than
+       scrollTop so the two cannot fight each other over a rounding
+       difference and oscillate. */
+    tlScroll.addEventListener('scroll', function(){
+      rosterList.style.transform = 'translateY(' + (-tlScroll.scrollTop) + 'px)';
+      closePop();
+    }, { passive:true });
+    document.getElementById('rosterScroll').addEventListener('wheel', function(e){
+      tlScroll.scrollTop += e.deltaY;
+      e.preventDefault();
+    }, { passive:false });
+
+    window.addEventListener('resize', function(){ window.dpPlannerRelayout(); closePop(); });
+
+    /* ---------- boot ---------- */
+    renderReminders();
+    renderMarkers();
+    syncAll();
+  })();
+  </script>
+</body>
+</html>

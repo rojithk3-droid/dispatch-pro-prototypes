@@ -1,0 +1,261 @@
+/* ============================================================
+   health-card-charts — design tokens
+   Copy verbatim into the target file. Drive every component
+   from these variables; no hardcoded hex in component CSS.
+
+   Values are calibrated from the Digcy Healthcare Cards kit.
+   ============================================================ */
+
+:root {
+  /* ---- surfaces ---- */
+  --canvas:       #F4F5F7;
+  --card:         #FFFFFF;
+  --card-sunken:  #FAFBFC;   /* nested wells inside a card */
+  --border:       rgba(0, 0, 0, .06);
+  --track:        #EFF1F4;   /* the unfilled rail behind any bar  */
+  --chip:         #F2F3F5;   /* the ··· overflow button background */
+  --shadow:       0 1px 2px rgba(16, 24, 40, .04),
+                  0 8px 24px rgba(16, 24, 40, .06);
+
+  /* ---- text ---- */
+  --fg:           #0A0A0B;
+  --fg-secondary: #51565E;
+  --fg-muted:     #8A8F98;   /* units, captions */
+  --fg-faint:     #A8ADB6;   /* axis ticks, gridline labels */
+  --grid:         #E4E7EC;   /* dotted gridlines */
+
+  /* ---- accents ----
+     Each accent has 5 steps so stacked bars, heatmaps and dot
+     matrices can ramp WITHIN one hue rather than across hues.  */
+
+  /* blue — the workhorse: volume, counts, neutral metrics */
+  --blue-600: #1B63D8;
+  --blue-500: #2F7EF5;
+  --blue-400: #6BA8F8;
+  --blue-300: #A9CCFB;
+  --blue-200: #DCE9FD;
+  --blue-100: #EFF5FE;
+
+  /* red — alarm, exceptions, cardiac/critical */
+  --red-600:  #C92A2A;
+  --red-500:  #EF4444;
+  --red-400:  #F87171;
+  --red-300:  #FCA5A5;
+  --red-200:  #FEDCDC;
+  --red-100:  #FEF0F0;
+
+  /* orange — load, heat, effort */
+  --orange-600: #C2410C;
+  --orange-500: #F4651E;
+  --orange-400: #FB923C;
+  --orange-300: #FDBA8C;
+  --orange-200: #FEE3CE;
+  --orange-100: #FFF3EA;
+
+  /* amber — caution, pending */
+  --amber-600: #B45309;
+  --amber-500: #F5B800;
+  --amber-400: #FACC15;
+  --amber-300: #FDE68A;
+  --amber-200: #FEF3C7;
+  --amber-100: #FFFBEB;
+
+  /* green — in range, healthy, on target */
+  --green-600: #15803D;
+  --green-500: #22C55E;
+  --green-400: #4ADE80;
+  --green-300: #A7F3C0;
+  --green-200: #D6F5E1;
+  --green-100: #F0FDF4;
+
+  /* purple — depth, rest, idle, dwell */
+  --purple-600: #5B34E0;
+  --purple-500: #7C5CFC;
+  --purple-400: #A78BFA;
+  --purple-300: #C9BAFD;
+  --purple-200: #E6DFFE;
+  --purple-100: #F5F2FF;
+
+  /* pink — intensity peaks, regularity */
+  --pink-600: #C0246B;
+  --pink-500: #F0338A;
+  --pink-400: #F871AC;
+  --pink-300: #FBA9CC;
+  --pink-200: #FDD8E7;
+  --pink-100: #FEF1F6;
+
+  /* ---- semantic aliases: use THESE in components ---- */
+  --accent:       var(--blue-500);
+  --accent-soft:  var(--blue-200);
+  --pos:          var(--green-500);   /* positive delta */
+  --neg:          var(--red-500);     /* negative delta */
+  --warn:         var(--amber-500);
+  --crit:         var(--red-500);
+
+  /* ---- geometry ---- */
+  --r-card: 20px;
+  --r-md:   12px;
+  --r-sm:   8px;
+  --r-pill: 999px;          /* every bar cap, no exceptions */
+  --pad-card: 22px;
+  --gap-grid: 16px;
+
+  /* ---- type ---- */
+  --font: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  --fs-hero:    34px;
+  --fs-hero-sm: 26px;       /* when 3 triplets share a row */
+  --fs-unit:    14px;       /* ~40% of the hero it follows */
+  --fs-title:   13px;
+  --fs-caption: 11px;
+  --fs-tick:    10px;
+}
+
+/* ============================================================
+   Dark mode — a RE-THEME, not an inversion.
+   Surfaces go near-black; accents get MORE saturated so they
+   still pop off the dark card. Radius, padding and every chart
+   dimension stay identical to light.
+   ============================================================ */
+
+:root[data-theme="dark"] {
+  --canvas:       #000000;
+  --card:         #111113;
+  --card-sunken:  #17171A;
+  --border:       rgba(255, 255, 255, .08);
+  --track:        #2A2A2C;
+  --chip:         #1E1E21;
+  --shadow:       0 1px 2px rgba(0, 0, 0, .6),
+                  0 8px 24px rgba(0, 0, 0, .45);
+
+  --fg:           #FFFFFF;
+  --fg-secondary: #C4C8CE;
+  --fg-muted:     #8A8F98;
+  --fg-faint:     #6B7078;
+  --grid:         #26262A;
+
+  /* The ramp FLIPS on dark. In light, -600 is the darkest and therefore the
+     strongest step; on a black card the strongest step is the BRIGHTEST one.
+     So every ramp below runs dim (-100) → bright (-600), which keeps a
+     low→high stacked bar or heatmap reading in the same direction as light.
+     The palest steps stay legible mid-tones rather than sliding to near-black,
+     because in a ramp they carry data — they are not background tints. */
+  --blue-600: #7DB6FF; --blue-500: #3B8BFF; --blue-400: #3A72C9;
+  --blue-300: #2C5596; --blue-200: #24406B; --blue-100: #1B2C45;
+
+  --red-600: #FF8F8F; --red-500: #FF5A5A; --red-400: #C24444;
+  --red-300: #8C3535; --red-200: #5E2626; --red-100: #3A1A1A;
+
+  --orange-600: #FFA76B; --orange-500: #FF7A33; --orange-400: #C26A28;
+  --orange-300: #8C4D1E; --orange-200: #5E3416; --orange-100: #3A2210;
+
+  --amber-600: #FFDD77; --amber-500: #FFC933; --amber-400: #C29A23;
+  --amber-300: #8C701A; --amber-200: #5E4B12; --amber-100: #3A2F0B;
+
+  --green-600: #74E89C; --green-500: #2FD96C; --green-400: #26A05F;
+  --green-300: #1C7245; --green-200: #145030; --green-100: #0E3320;
+
+  --purple-600: #B79BFF; --purple-500: #9070FF; --purple-400: #6248C9;
+  --purple-300: #483596; --purple-200: #34266B; --purple-100: #241B45;
+
+  --pink-600: #FF87BF; --pink-500: #FF4D9E; --pink-400: #C2367A;
+  --pink-300: #8C2857; --pink-200: #5E1C3B; --pink-100: #3A1226;
+}
+
+/* Follow the OS only when no explicit theme is set, so a UI
+   toggle can always override it. */
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --canvas: #000000; --card: #111113; --card-sunken: #17171A;
+    --border: rgba(255,255,255,.08); --track: #2A2A2C; --chip: #1E1E21;
+    --shadow: 0 1px 2px rgba(0,0,0,.6), 0 8px 24px rgba(0,0,0,.45);
+    --fg: #FFFFFF; --fg-secondary: #C4C8CE; --fg-muted: #8A8F98;
+    --fg-faint: #6B7078; --grid: #26262A;
+    --blue-600: #7DB6FF; --blue-500: #3B8BFF; --blue-400: #3A72C9;
+    --blue-300: #2C5596; --blue-200: #24406B; --blue-100: #1B2C45;
+    --red-600: #FF8F8F; --red-500: #FF5A5A; --red-400: #C24444;
+    --red-300: #8C3535; --red-200: #5E2626; --red-100: #3A1A1A;
+    --orange-600: #FFA76B; --orange-500: #FF7A33; --orange-400: #C26A28;
+    --orange-300: #8C4D1E; --orange-200: #5E3416; --orange-100: #3A2210;
+    --amber-600: #FFDD77; --amber-500: #FFC933; --amber-400: #C29A23;
+    --amber-300: #8C701A; --amber-200: #5E4B12; --amber-100: #3A2F0B;
+    --green-600: #74E89C; --green-500: #2FD96C; --green-400: #26A05F;
+    --green-300: #1C7245; --green-200: #145030; --green-100: #0E3320;
+    --purple-600: #B79BFF; --purple-500: #9070FF; --purple-400: #6248C9;
+    --purple-300: #483596; --purple-200: #34266B; --purple-100: #241B45;
+    --pink-600: #FF87BF; --pink-500: #FF4D9E; --pink-400: #C2367A;
+    --pink-300: #8C2857; --pink-200: #5E1C3B; --pink-100: #3A1226;
+  }
+}
+
+/* ============================================================
+   Base + the shared card shell.
+   Every card in the system is this frame; only the chart inside
+   it changes. Keeping the frame in one place is what makes 50
+   different cards read as one system.
+   ============================================================ */
+
+body {
+  margin: 0;
+  background: var(--canvas);
+  color: var(--fg);
+  font-family: var(--font);
+  -webkit-font-smoothing: antialiased;
+}
+
+.card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--r-card);
+  box-shadow: var(--shadow);
+  padding: var(--pad-card);
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.card-hd { display: flex; align-items: center; gap: 8px; }
+.card-hd svg { width: 16px; height: 16px; stroke: var(--fg); stroke-width: 1.5;
+               fill: none; stroke-linecap: round; stroke-linejoin: round; }
+.card-hd h3 { margin: 0; font-size: var(--fs-title); font-weight: 500; letter-spacing: -.01em; }
+.card-hd .more {
+  margin-left: auto; width: 28px; height: 28px; border: 0; cursor: pointer;
+  border-radius: var(--r-pill); background: var(--chip); color: var(--fg-muted);
+  font-size: 14px; line-height: 1; display: grid; place-items: center;
+}
+
+/* the metric triplet — number · small unit · muted caption */
+.mtr-row { display: flex; gap: 28px; flex-wrap: wrap; }
+.mtr-v {
+  font-size: var(--fs-hero); font-weight: 500; letter-spacing: -.02em;
+  font-variant-numeric: tabular-nums; line-height: 1.1;
+}
+.mtr-u { font-size: var(--fs-unit); font-weight: 400; color: var(--fg-muted); margin-left: 4px; }
+.mtr-c { font-size: var(--fs-caption); color: var(--fg-muted); margin-top: 4px; }
+.mtr-d { font-size: var(--fs-caption); font-weight: 500; margin-top: 4px; }
+.mtr-d.up   { color: var(--pos); }
+.mtr-d.down { color: var(--neg); }
+
+/* footer stat strip — same triplet, smaller hero */
+.stat-strip { display: flex; gap: 28px; }
+.stat-strip .mtr-v { font-size: 22px; }
+.stat-strip .mtr-u { font-size: 11px; }
+
+/* axis ticks */
+.ticks { display: flex; justify-content: space-between;
+         font-size: var(--fs-tick); color: var(--fg-faint);
+         text-transform: uppercase; letter-spacing: .04em; }
+
+/* dot legend — the only legend style this system uses.
+   Only the dot carries the hue; the label stays muted, so a legend never
+   competes with the chart it is labelling. Set the hue per item: <i style="--c:var(--blue-500)"> */
+.legend { display: flex; gap: 16px; font-size: var(--fs-caption); }
+.legend span { display: inline-flex; align-items: center; gap: 6px; color: var(--fg-muted); }
+.legend i { width: 6px; height: 6px; border-radius: var(--r-pill);
+            background: var(--c, var(--accent)); flex: none; }
+
+/* bento grid the cards drop into */
+.grid {
+  display: grid; gap: var(--gap-grid); padding: var(--gap-grid);
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  align-items: start;
+}

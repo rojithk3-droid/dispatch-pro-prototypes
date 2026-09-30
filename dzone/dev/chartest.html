@@ -1,0 +1,37 @@
+<!doctype html><html><head><meta charset="utf-8"><title>Char test</title><style>body{margin:0;background:#1b1f27}</style></head><body>
+<script type="importmap">{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.170.0/build/three.module.js","three/addons/":"https://cdn.jsdelivr.net/npm/three@0.170.0/examples/jsm/"}}</script>
+<script type="module">
+import * as THREE from 'three';
+import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+import { loadSoldier } from '../js/assets.js';
+import { initModelMats } from '../js/models.js';
+import { Avatar } from '../js/character.js';
+initModelMats();
+const r = new THREE.WebGLRenderer({ antialias: true }); r.setSize(innerWidth, innerHeight); document.body.appendChild(r.domElement);
+r.toneMapping = THREE.ACESFilmicToneMapping;
+const s = new THREE.Scene(); s.add(new THREE.HemisphereLight(0xffffff, 0x445566, 2.2)); const dl = new THREE.DirectionalLight(0xffffff, 2); dl.position.set(3, 5, 4); s.add(dl);
+s.add(new THREE.GridHelper(10, 10));
+const c = new THREE.PerspectiveCamera(40, innerWidth / innerHeight, 0.05, 100); c.position.set(2.2, 1.6, -2.8);
+const oc = new OrbitControls(c, r.domElement); oc.target.set(0, 1.1, 0); oc.update();
+const g = await loadSoldier();
+const avs = [];
+const states = [
+  { stance: 'stand', gun: 'm416', aiming: true, speed: 0 },
+  { stance: 'crouch', gun: 'akm', aiming: true, speed: 0 },
+  { stance: 'stand', gun: 'p92', aiming: true, speed: 0 },
+  { stance: 'stand', gun: 'm416', aiming: false, speed: 6, fwd: 1 },
+  { stance: 'prone', gun: 'kar98k', aiming: true, speed: 0 },
+  { stance: 'stand', gun: null, mode: 'freefall' },
+];
+states.forEach((st, i) => {
+  const a = new Avatar(g, { outfit: ['classic', 'urban', 'desert', 'jungle', 'midnight', 'saffron'][i], cosmetic: ['monkeycap', 'coolingglass', 'thorthu', 'himachali', 'visor', 'none'][i] });
+  a.root.position.set((i - 2.5) * 1.6, st.mode === 'freefall' ? 1 : 0, 0);
+  a.setWeapon(st.gun, { sight: i === 0 ? 'x4' : i === 1 ? 'reddot' : null, muzzle: i === 0 ? 'suppressor' : null });
+  a.setBackGuns(['scar', 'sks']);
+  if (i < 3) { a.setGear('helmet', i + 1); a.setGear('vest', i + 1); a.setGear('pack', i + 1); }
+  s.add(a.root); avs.push([a, st]);
+});
+window.__c = { c, oc, avs, r, s };
+const ck = new THREE.Clock();
+r.setAnimationLoop(() => { const dt = ck.getDelta(); for (const [a, st] of avs) a.update(dt, { speed: st.speed || 0, fwd: st.fwd || 0, side: 0, stance: st.stance, aiming: st.aiming, pitch: window.__pitch || 0, mode: st.mode || 'ground' }); r.render(s, c); });
+</script></body></html>

@@ -1,0 +1,172 @@
+/* ============================================================
+   Dispatch Pro design tokens — shadcn/ui geometry at 80%.
+
+   Paste this whole block. Drive every value from these custom
+   properties; a hardcoded hex inside a component is what makes
+   the second half of a screen drift from the first.
+
+   The page is presented at 80% (body{zoom:0.8}) to match the
+   topbar and sidebar, which are NOT scaled and keep their own
+   values. Every size here is round(shadcn_px x 0.8) x 1.25,
+   which is why the numbers look odd and the rendering never is.
+   ============================================================ */
+
+:root{
+  /* ---- Brand + text -------------------------------------- */
+  --blue:            #0F6FFF;   /* the one accent; every hover lands here */
+  --blue-dark:       #1667CA;
+  --blue-bg:         #EFF6FF;
+  --blue-border:     #DBEAFE;
+  --red:             #E7000B;
+  --text-dark:       #101828;
+  --text-heading:    #1E2939;
+  --text-body:       #364153;
+  --text-muted:      #6A7282;
+  --text-faint:      #99A1AF;
+  --border:          #E5E7EB;
+  --border-soft:     #F3F4F6;
+  --page-bg:         #F9FAFB;
+  --sidebar-bg:      #FFFFFF;
+
+  --navy-deep:       #101B33;
+  --card-navy:       #16274A;
+  --blue-pill:       #2E7DF7;
+  --icon-muted-dark: #66739A;
+  --hairline-dark:   rgba(255,255,255,0.08);
+
+  --surface:         #FFFFFF;
+  --segmented-track: #F3F4F6;
+  --input-border:    #E4E7EC;
+  --icon-default:    #4A5468;
+
+  /* ---- shadcn neutral semantics --------------------------- */
+  /* --accent is the menu/option hover fill: neutral, NOT the blue tint. */
+  --accent:          #F4F4F5;
+  --accent-fg:       #18181B;
+  --popover:         #FFFFFF;
+  --muted-fg:        #71717A;
+
+  --ring:            rgba(15,111,255,0.50);
+  --ring-danger:     rgba(231,0,11,0.20);
+
+  /* ---- Elevation: OFF ------------------------------------- */
+  /* Every elevation surface resolves these, so nulling them here turns
+     all of it off in one place and keeps it trivially reversible.
+     Focus RINGS are unaffected — they are spread-only `0 0 0 Npx`
+     box-shadows written inline, not elevation. */
+  --shadow-xs:       none;
+  --shadow-sm:       none;
+  --shadow-md:       none;
+  --shadow-lg:       none;
+
+  /* ---- Content palette ------------------------------------ */
+  --green:           #047857;
+  --green-bg:        #ECFDF5;
+  --green-border:    #A7F3D0;
+  --amber:           #B45309;
+  --amber-bg:        #FFFBEB;
+  --amber-border:    #FDE68A;
+  --red-bg:          #FEF2F2;
+  --red-border:      #FFE2E2;
+  --row-hover:       #FAFAFA;
+
+  /* ---- Type scale ----------------------------------------- */
+  /* Rendered size in the comment (declared x 0.8), all whole pixels.
+     Every LINE-HEIGHT also renders EVEN — a line box is constantly
+     centred against a container, and an odd line box inside an even
+     box centres onto a half-pixel. */
+  --fs-xs:    12.5px;   --lh-xs:   17.5px;   /* 10 / 14 */
+  --fs-sm:    13.75px;  --lh-sm:   20px;     /* 11 / 16 — body copy */
+  --fs-base:  16.25px;  --lh-base: 25px;     /* 13 / 20 */
+  --fs-lg:    17.5px;   --lh-lg:   27.5px;   /* 14 / 22 */
+  --fs-xl:    20px;     --lh-xl:   27.5px;   /* 16 / 22 */
+  --fs-2xl:   23.75px;  --lh-2xl:  32.5px;   /* 19 / 26 */
+
+  /* ---- Control heights + radii ---------------------------- */
+  --h-8:      32.5px;   /* 26 - shadcn size="sm"  */
+  --h-9:      37.5px;   /* 30 - shadcn default; 30 not 29, so it centres
+                               an even child exactly */
+  --h-10:     40px;     /* 32 - shadcn size="lg"  */
+  --r-sm:     3.75px;   /* 3  - rounded-sm  */
+  --r-md:     6.25px;   /* 5  - rounded-md  */
+  --r-lg:     7.5px;    /* 6  - rounded-lg  */
+  --r-xl:     12.5px;   /* 10 - rounded-xl  */
+  --ring-w:   2.5px;    /* 2  - ring        */
+}
+
+[data-theme="dark"]{
+  --page-bg:         #0B1220;
+  --surface:         #121B2E;
+  --segmented-track: #17202F;
+  --border:          #263248;
+  --border-soft:     #1C2537;
+  --input-border:    #2A3346;
+  --text-dark:       #F3F5F9;
+  --text-heading:    #E9EDF4;
+  --text-body:       #A6B0C3;
+  --text-muted:      #8B96AC;
+  --text-faint:      #7C879B;
+  --blue-bg:         #16233A;
+  /* The blue accent needs a dark border of its own, exactly as green,
+     amber and red get one. Without it the light #DBEAFE leaks through
+     and paints a near-white outline on the navy fill. */
+  --blue-border:     #2C3E60;
+  --icon-default:    #AEB6C7;
+
+  --accent:          #27272A;
+  --accent-fg:       #FAFAFA;
+  --popover:         #121B2E;
+  --muted-fg:        #8B96AC;
+
+  --ring:            rgba(58,140,255,0.55);
+  --ring-danger:     rgba(248,113,113,0.26);
+  --shadow-xs:       none;
+  --shadow-sm:       none;
+  --shadow-md:       none;
+  --shadow-lg:       none;
+
+  --green:           #6EE7B7;
+  --green-bg:        #0E2A22;
+  --green-border:    #1C4638;
+  --amber:           #FCD34D;
+  --amber-bg:        #2A2113;
+  --amber-border:    #4A3A18;
+  --red-bg:          #2C1416;
+  --red-border:      #4A1F24;
+  --row-hover:       rgba(255,255,255,0.03);
+}
+
+/* ---- Required base rules ---------------------------------- */
+
+*{ box-sizing:border-box; }
+
+/* Form controls do NOT inherit font-family. A <button>/<input>/<select>
+   with no explicit family falls back to the UA default — Arial on
+   Windows — so a chunk of the UI silently renders outside Inter. */
+button, input, select, textarea, optgroup{ font-family:inherit; }
+
+/* The 80% block. body must also carry an explicit font-size: inheriting
+   the UA's 16px paints 12.8px, which is off the grid. */
+body{
+  zoom:0.8;
+  font-family:'Inter', system-ui, sans-serif;
+  font-size:var(--fs-sm);
+  line-height:var(--lh-sm);
+  color:var(--text-body);
+  background:var(--page-bg);
+}
+
+/* One focus ring for everything interactive. Spread-only, so it survives
+   the nulled elevation tokens. */
+.btn:focus-visible,
+.btn-primary:focus-visible,
+.btn-outline:focus-visible,
+.text-input:focus-visible,
+.select-input:focus-visible,
+.dropdown-trigger:focus-visible,
+.icon-action-btn:focus-visible,
+.add-line-btn:focus-visible,
+.segmented button:focus-visible{
+  outline:none;
+  box-shadow:0 0 0 var(--ring-w) var(--ring);
+}

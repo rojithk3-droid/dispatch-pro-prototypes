@@ -1,0 +1,3148 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Dispatch Pro TMS — Home</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@500;600;700&family=Inter:wght@400;450;500;600;700&display=swap" rel="stylesheet">
+<style>
+/* ============================================================================
+   DISPATCH PRO TMS — HOME
+   Type + ink ramp + radius + shadow: Trailer Entry screen.
+   Structural blues: the Dispatch Pro screenshots.
+   Entrance motion: the Valor 2026 KPI reveal system.
+   ========================================================================= */
+:root{
+  --canvas:#F4F6F9;
+  --surface:#FFFFFF;
+  --header:#1E5FB8;
+  --header-2:#17497F;
+  --navy:#0E2A47;
+  --ink:#0D1526;
+  --ink-2:#4B5568;
+  --ink-3:#6B7585;
+  --line:#E2E6EC;
+  --line-2:#EFF2F6;
+  --blue:#398BFF;
+  --blue-hover:#1F76F5;
+  --blue-soft:#E6F4FF;
+  --blue-line:#9AC4FF;
+  --blue-lift:#7EB4FF;
+  --blue-ink:#0F6BEA;
+  --scroll:#C9CFD8;
+  --green:#0E9F6E;
+  --amber:#B45309;
+  --orange:#E86C24;
+  --red:#D92D20;
+  --red-soft:#FEECEB;
+  --r:9px;
+  --sh:0 1px 2px rgba(13,21,38,.04),0 1px 3px rgba(13,21,38,.05);
+  --sh-lift:0 10px 30px rgba(13,21,38,.12),0 2px 6px rgba(13,21,38,.06);
+  --sh-menu:0 12px 34px rgba(13,21,38,.16),0 2px 6px rgba(13,21,38,.08);
+  --btn-blue:#0F6BEA;
+  --btn-blue-hover:#0B5CCB;
+  --hairline:#E0E0E0;
+  --track:#E8EBEF;
+  --tint:#FBFCFE;
+  --muted:#C6CEDA;
+  --warm-soft:#FFF1EA;
+  --warm-line:#F8D2BC;
+  --warm-ink:#C2500F;
+  --t-sms-bg:#E4F6EF;  --t-sms-ink:#0A7A55;
+  --t-chat-bg:#E6F4FF; --t-chat-ink:#0D63D9;
+  --t-mail-bg:#FEF3E2; --t-mail-ink:#8A5107;
+  --t-grp-bg:#EEF1F6;  --t-grp-ink:#4B5568;
+  --row-hover:#EAF3FF;
+  --toast-bg:#0D1526;
+  --toast-ink:#FFFFFF;
+  --roll-ms:1500;
+  --rail-w:52px;
+  --gap:14px;
+}
+/* ---------- dark theme -------------------------------------------------
+   Same tokens, different values — nothing below this block is theme-aware. */
+:root[data-theme="dark"]{
+  --canvas:#0E141D;
+  --surface:#161F2B;
+  --header:#111A25;
+  --header-2:#0B121B;
+  --navy:#0B1724;
+  --ink:#E7EDF5;
+  --ink-2:#A7B4C6;
+  --ink-3:#7E8EA3;
+  --line:#28323F;
+  --line-2:#1F2833;
+  --btn-blue:#2E6FD0;
+  --btn-blue-hover:#1F5CB4;
+  --hairline:#2B3644;
+  --track:#232E3C;
+  --tint:#131C27;
+  --muted:#3E4C60;
+  --blue:#4A96FF;
+  --blue-hover:#6FADFF;
+  --blue-soft:#15273D;
+  --blue-line:#2F4D74;
+  --blue-lift:#8FC0FF;
+  --blue-ink:#83B8FF;
+  --green:#31B98A;
+  --orange:#F08A4B;
+  --red:#F1706A;
+  --red-soft:#341A1C;
+  --warm-soft:#2C1F17;
+  --warm-line:#4A3524;
+  --warm-ink:#F0A970;
+  --t-sms-bg:#12291F;  --t-sms-ink:#4FCF9C;
+  --t-chat-bg:#15273D; --t-chat-ink:#83B8FF;
+  --t-mail-bg:#2C2114; --t-mail-ink:#E0A860;
+  --t-grp-bg:#1E2833;  --t-grp-ink:#A7B4C6;
+  --row-hover:#17263A;
+  --toast-bg:#28323F;
+  --toast-ink:#E7EDF5;
+  --scroll:#39465A;
+  --sh:0 1px 2px rgba(0,0,0,.34),0 1px 3px rgba(0,0,0,.28);
+  --sh-lift:0 10px 30px rgba(0,0,0,.5),0 2px 6px rgba(0,0,0,.34);
+  --sh-menu:0 12px 34px rgba(0,0,0,.56),0 2px 6px rgba(0,0,0,.36);
+}
+:root[data-theme="dark"] .modalwrap{background:rgba(0,0,0,.6)}
+:root[data-theme="dark"] .card.dragging{
+  box-shadow:0 20px 48px rgba(0,0,0,.6),0 4px 12px rgba(0,0,0,.4)}
+:root[data-theme="dark"] .swatch{filter:saturate(.85) brightness(1.05)}
+html{color-scheme:light}
+html[data-theme="dark"]{color-scheme:dark}
+
+*{box-sizing:border-box}
+html,body{height:100%}
+body{
+  margin:0;background:var(--canvas);color:var(--ink);font-size:13px;line-height:1.5;
+  font-family:Inter,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+  -webkit-font-smoothing:antialiased;overflow:hidden;
+}
+h1,h2,h3,h4{font-family:Archivo,Inter,sans-serif;margin:0;letter-spacing:-.02em}
+p{margin:0}
+a{color:inherit;text-decoration:none}
+button,input,select{font-family:inherit;font-size:13px;color:inherit}
+.hide{display:none !important}
+:focus-visible{outline:2px solid var(--blue);outline-offset:2px;border-radius:4px}
+.tnum{font-variant-numeric:tabular-nums}
+
+/* ---------- motion (Valor) ---------------------------------------------- */
+@keyframes barIn{from{transform:scaleY(0)}to{transform:scaleY(1)}}
+@keyframes barInH{from{transform:scaleX(0)}to{transform:scaleX(1)}}
+@keyframes lineIn{from{stroke-dashoffset:1}to{stroke-dashoffset:0}}
+@keyframes fadeIn{from{opacity:0}to{opacity:1}}
+@keyframes growW{from{width:0}to{width:var(--w)}}
+@keyframes cardIn{from{opacity:0;transform:translateY(9px)}to{opacity:1;transform:none}}
+.anim-bar{transform-box:fill-box;transform-origin:bottom;transform:scaleY(0)}
+.anim-barh{transform-box:fill-box;transform-origin:left;transform:scaleX(0)}
+.anim-line{stroke-dasharray:1;stroke-dashoffset:1}
+.anim-dot,.anim-txt{opacity:0}
+.in .anim-bar{animation:barIn .8s cubic-bezier(.22,.9,.3,1) both}
+.in .anim-barh{animation:barInH .8s cubic-bezier(.22,.9,.3,1) both}
+.in .anim-line{animation:lineIn 1.1s cubic-bezier(.4,.6,.3,1) both}
+.in .anim-dot{animation:fadeIn .4s ease .55s both}
+.in .anim-txt{animation:fadeIn .45s ease .75s both}
+.card.fresh{animation:cardIn .42s cubic-bezier(.22,.9,.3,1) both}
+.rail-bar{position:relative;height:13px;border-radius:3px;background:var(--line-2);overflow:hidden}
+.rail-bar i{position:absolute;inset:0 auto 0 0;width:var(--w);border-radius:3px;background:var(--blue);display:block}
+.in .rail-bar i{animation:growW 1s cubic-bezier(.22,.9,.3,1) both}
+
+@media (prefers-reduced-motion:reduce){
+  .anim-bar,.anim-barh{transform:none}
+  .anim-line{stroke-dasharray:none;stroke-dashoffset:0}
+  .anim-dot,.anim-txt{opacity:1}
+  .in .anim-bar,.in .anim-barh,.in .anim-line,.in .anim-dot,.in .anim-txt,
+  .card.fresh,.in .rail-bar i{animation:none}
+  *{transition:none !important}
+}
+
+/* ---------- scrollbars ---------------------------------------------------
+   Thumb ends are square, the track is 9px (10% off the usual 10px) and the
+   thumb is a light grey that only firms up while you are actually scrolling. */
+*{scrollbar-width:thin;scrollbar-color:var(--scroll) transparent}
+::-webkit-scrollbar{width:9px;height:9px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:var(--scroll);border-radius:0}
+::-webkit-scrollbar-thumb:hover{background:var(--muted)}
+::-webkit-scrollbar-corner{background:transparent}
+
+/* ---------- app shell ---------------------------------------------------- */
+.app{display:flex;flex-direction:column;height:100%}
+
+/* top blue bar */
+.appbar{
+  background:var(--header);color:#fff;height:54px;flex:0 0 54px;
+  display:flex;align-items:center;gap:16px;padding:0 16px;z-index:70}
+.logo{display:flex;align-items:center;background:#FFFFFF;border-radius:5px;padding:4px 5px 4px 9px;gap:6px}
+.logo b{font-family:Archivo;font-weight:700;font-size:13.5px;color:#12395F;letter-spacing:-.02em}
+.logo i{font-style:normal;background:var(--blue);color:#fff;font-family:Archivo;font-weight:700;
+  font-size:12px;padding:2px 7px;border-radius:3px;letter-spacing:.02em}
+.tenant{font-size:13.5px;font-weight:500;padding-left:16px;border-left:1px solid rgba(255,255,255,.26);
+  white-space:nowrap}
+.gsearch{position:relative;margin-left:auto;width:min(390px,34vw)}
+.gsearch input{width:100%;height:33px;border:0;border-radius:5px;background:var(--surface);padding:0 40px 0 12px;color:var(--ink)}
+.gsearch input::placeholder{color:var(--ink-3)}
+.gsearch button{position:absolute;right:0;top:0;height:33px;width:34px;border:0;border-radius:0 5px 5px 0;
+  background:var(--btn-blue);color:#fff;display:grid;place-items:center;cursor:pointer;transition:.14s background}
+.gsearch button:hover{background:var(--btn-blue-hover)}
+.abicons{display:flex;align-items:center;gap:3px;margin-left:auto}
+.abicons button{width:34px;height:34px;border:0;border-radius:7px;background:transparent;color:#fff;
+  display:grid;place-items:center;cursor:pointer;position:relative;transition:.14s background}
+.abicons button:hover{background:rgba(255,255,255,.15)}
+.abicons .pip{position:absolute;top:6px;right:7px;width:7px;height:7px;border-radius:50%;
+  background:#F04438;border:1.5px solid var(--header)}
+.me{display:flex;align-items:center;gap:9px;padding-left:10px;cursor:pointer;white-space:nowrap}
+.me img,.me .face{width:32px;height:32px;border-radius:50%;background:#E8A33D;display:grid;place-items:center;
+  font-family:Archivo;font-weight:700;font-size:12px;color:#6B3F05;border:2px solid rgba(255,255,255,.55)}
+.me span{font-size:13px;font-weight:500}
+
+/* module nav */
+.modnav{background:var(--surface);border-bottom:1px solid var(--line);height:36px;flex:0 0 36px;
+  display:flex;align-items:stretch;padding:0 14px 0 calc(var(--rail-w) + 14px);gap:2px;overflow-x:auto;z-index:60}
+.modnav a{display:flex;align-items:center;padding:0 15px;font-size:13px;font-weight:500;color:var(--ink-2);
+  border-bottom:2px solid transparent;white-space:nowrap;transition:.14s color,.14s border-color}
+.modnav a:hover{color:var(--blue-ink)}
+.modnav a.on{color:var(--blue-ink);font-weight:600;border-bottom-color:var(--blue-ink)}
+
+/* left icon rail */
+.rail{position:fixed;left:0;top:54px;bottom:0;width:var(--rail-w);background:var(--surface);
+  border-right:1px solid var(--line);display:flex;flex-direction:column;align-items:center;
+  padding:9px 0;gap:2px;z-index:65}
+.rail button{width:36px;height:36px;border:0;border-radius:8px;background:transparent;color:var(--ink-3);
+  display:grid;place-items:center;cursor:pointer;transition:.14s background,.14s color}
+.rail button:hover{background:var(--blue-soft);color:var(--blue-ink)}
+.rail button.on{background:var(--blue-soft);color:var(--blue-ink)}
+.rail .sp{flex:1}
+
+/* main scroll region */
+.main{flex:1;min-height:0;overflow:auto;padding:0 0 40px calc(var(--rail-w));scroll-behavior:smooth}
+.pad{padding:0 18px}
+
+/* ---------- page head ---------------------------------------------------- */
+.pagehead{display:flex;align-items:flex-end;gap:14px;flex-wrap:wrap;padding:18px 18px 14px}
+.pagehead .ttl h1{font-size:22px;font-weight:700}
+.pagehead .ttl p{font-size:12.5px;color:var(--ink-3);margin-top:3px}
+.controls{margin-left:auto;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+
+.fld{display:flex;flex-direction:column;gap:4px}
+.fld label{font-size:10.5px;font-weight:600;color:var(--ink-3);letter-spacing:.02em}
+.sel,.dat{
+  height:34px;border:1px solid var(--line);border-radius:7px;background:var(--surface);padding:0 30px 0 11px;
+  font-size:12.5px;font-weight:500;cursor:pointer;appearance:none;min-width:132px;
+  background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%238A94A6' stroke-width='2.4'><path d='m6 9 6 6 6-6'/></svg>");
+  background-repeat:no-repeat;background-position:right 10px center;
+  transition:.14s border-color,.14s box-shadow}
+.dat{appearance:auto;background-image:none;padding:0 9px;min-width:0;width:132px;cursor:text}
+.sel:hover,.dat:hover{border-color:var(--muted)}
+.sel:focus,.dat:focus{outline:0;border-color:var(--blue);box-shadow:0 0 0 3px rgba(57,139,255,.2)}
+
+.btn{
+  display:inline-flex;align-items:center;justify-content:center;gap:7px;height:34px;padding:0 13px;
+  border-radius:7px;border:1px solid var(--line);background:var(--surface);color:var(--ink);
+  font-size:12.5px;font-weight:600;cursor:pointer;white-space:nowrap;
+  transition:.14s background,.14s border-color,.14s color,.14s box-shadow}
+.btn:hover{background:var(--surface);border-color:var(--blue);color:var(--blue-ink)}
+/* Message-style action: plain until you aim at it, then it reads as clickable. */
+.btn.ghost{border-color:var(--hairline);background:var(--surface);color:var(--ink)}
+.btn.ghost:hover{border-color:var(--blue);color:var(--blue-ink);background:var(--surface);
+  box-shadow:0 0 0 3px rgba(57,139,255,.12)}
+.btn.ghost:active{background:var(--blue-soft)}
+.btn.pri{background:var(--btn-blue);border-color:var(--btn-blue);color:#fff}
+.btn.pri:hover{background:var(--btn-blue-hover);border-color:var(--btn-blue-hover);color:#fff;
+  box-shadow:0 2px 10px rgba(57,139,255,.34)}
+.btn.out{border-color:var(--blue-line);color:var(--blue-ink);background:var(--surface)}
+.btn.out:hover{background:var(--blue-soft);border-color:var(--blue)}
+.btn.sm{height:28px;padding:0 10px;font-size:12px;border-radius:6px}
+.btn[disabled]{opacity:.45;cursor:not-allowed}
+
+/* split button: Create Profile ▾ */
+.split{display:flex;position:relative}
+.split>.btn{background:var(--surface);border-color:var(--hairline);color:var(--blue-ink);font-weight:600}
+.split>.btn:hover{background:var(--blue-soft);border-color:var(--hairline);color:var(--blue-ink)}
+.split>.btn:first-child{border-radius:7px 0 0 7px;border-right:1px solid var(--hairline);padding:0 15px}
+.split>.btn.cap{border-radius:0 7px 7px 0;width:32px;padding:0;border-left:0}
+.split>.btn.cap svg{transition:transform .16s}
+.split.open>.btn.cap svg{transform:rotate(180deg)}
+
+/* menus */
+.menu{
+  position:absolute;top:calc(100% + 6px);right:0;min-width:230px;background:var(--surface);border:1px solid var(--line);
+  border-radius:9px;box-shadow:var(--sh-menu);padding:6px;z-index:120;
+  max-height:min(72vh,580px);overflow:auto;
+  opacity:0;transform:translateY(-5px);pointer-events:none;transition:.15s opacity,.15s transform}
+.menu.show{opacity:1;transform:none;pointer-events:auto}
+.menu h5{font-family:Inter;font-size:10.5px;font-weight:700;color:var(--ink-3);letter-spacing:.04em;
+  padding:7px 9px 5px;margin:0}
+.menu button{
+  width:100%;display:flex;align-items:center;gap:9px;padding:8px 9px;border:0;border-radius:6px;
+  background:transparent;text-align:left;font-size:12.5px;font-weight:500;cursor:pointer;color:var(--ink);
+  transition:.12s background,.12s color}
+.menu button:hover{background:var(--blue-soft);color:var(--blue-ink)}
+.menu button .tick{margin-left:auto;color:var(--blue-ink);opacity:0}
+.menu button.on .tick{opacity:1}
+.menu button.on{font-weight:600;color:var(--blue-ink)}
+.menu hr{border:0;border-top:1px solid var(--line);margin:5px 3px}
+.menu .sub{font-size:11px;color:var(--ink-3);font-weight:450;display:block;margin-top:1px}
+.menu button .txt{display:flex;flex-direction:column;min-width:0}
+
+/* ---------- board -------------------------------------------------------- */
+.board{
+  display:grid;grid-template-columns:repeat(12,minmax(0,1fr));gap:var(--gap);
+  align-items:start;padding:0 18px;position:relative}
+.card{
+  grid-column:span 3;background:var(--surface);border:1px solid var(--line);border-radius:var(--r);
+  box-shadow:var(--sh);display:flex;flex-direction:column;min-width:0;overflow:hidden;position:relative;
+  transition:box-shadow .16s,border-color .16s}
+.card:hover{border-color:var(--muted)}
+/* The dragged card leaves the grid and follows the pointer at full opacity —
+   a half-transparent card sitting over its neighbours is what made the text
+   look doubled. A dashed placeholder holds the slot it will drop into. */
+.card.dragging{
+  position:fixed;margin:0;z-index:200;pointer-events:none;opacity:1;cursor:grabbing;
+  will-change:transform;border-color:var(--blue-line);
+  box-shadow:0 20px 48px rgba(13,21,38,.26),0 4px 12px rgba(13,21,38,.14)}
+.card-ph{
+  border:1.5px dashed var(--blue-line);border-radius:var(--r);
+  background:rgba(57,139,255,.055);box-shadow:none;min-width:0}
+/* neighbours glide to their new places instead of snapping */
+.card.shifting{transition:transform .22s cubic-bezier(.22,.9,.3,1)}
+.card.landing{transition:transform .19s cubic-bezier(.22,.9,.3,1),box-shadow .19s ease}
+body.dragging *{cursor:grabbing !important}
+body.dragging,body.dragging *{
+  user-select:none !important;-webkit-user-select:none !important}
+.card.resizing{box-shadow:var(--sh-lift);border-color:var(--blue-line);user-select:none}
+
+.chead{display:flex;align-items:center;gap:8px;padding:11px 12px 9px;cursor:grab;flex:0 0 auto;
+  user-select:none;-webkit-user-select:none;touch-action:none}
+.chead:active{cursor:grabbing}
+.chead h3{font-size:14px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+  margin-right:auto;min-width:0;text-align:left}
+.chead .grip{color:var(--muted);flex:0 0 auto;opacity:0;transition:.14s opacity,.14s color;
+  display:inline-grid;place-items:center;cursor:grab;margin-left:1px}
+.chead .grip:hover{color:var(--blue)}
+.chead .grip:active{cursor:grabbing}
+.card:hover .chead .grip,.card:hover .copt,
+.card:focus-within .chead .grip,.card:focus-within .copt,
+.card.menuopen .chead .grip,.card.menuopen .copt,
+.card.dragging .chead .grip,.card.resizing .chead .grip{opacity:1}
+.cbody{flex:1;min-height:0;overflow:auto;padding:0 12px 12px;container-type:inline-size}
+/* Communication Center now defaults to a quarter width, so the load details
+   drop beneath the message instead of being squeezed against it. */
+}
+.cbody.flush{padding:0}
+
+/* resize handle */
+.rsz{position:absolute;right:0;bottom:0;width:16px;height:16px;cursor:nwse-resize;z-index:6;opacity:0;
+  transition:.14s opacity}
+.card:hover .rsz{opacity:1}
+.rsz::after{content:"";position:absolute;right:3px;bottom:3px;width:8px;height:8px;
+  border-right:2px solid var(--muted);border-bottom:2px solid var(--muted);border-radius:0 0 3px 0}
+.ghosthint{
+  position:fixed;z-index:200;background:var(--toast-bg);color:var(--toast-ink);font-size:11.5px;font-weight:600;
+  padding:4px 8px;border-radius:5px;pointer-events:none;opacity:0;transition:opacity .12s}
+.ghosthint.show{opacity:1}
+
+/* ---------- card internals ---------------------------------------------- */
+/* tabs */
+.tabs{display:flex;gap:16px;padding:0 12px;border-bottom:1px solid var(--line);margin-bottom:9px;flex:0 0 auto}
+.tabs button{background:0;border:0;padding:0 0 8px;font-size:12px;font-weight:600;color:var(--ink-3);
+  cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-1px;transition:.14s}
+.tabs button.on{color:var(--blue-ink);border-bottom-color:var(--blue-ink)}
+.tabs button:hover{color:var(--ink)}
+
+/* one hover treatment for every row-based card */
+.msg:hover,.mlist .r:hover,.hb:hover,.fp:hover,.goalrow:hover{background:var(--row-hover)}
+body.dragging .msg:hover,body.dragging .mlist .r:hover,body.dragging .hb:hover,
+body.dragging .fp:hover{background:transparent}
+table.dt tbody tr:hover{background:var(--row-hover)}
+
+/* communication center */
+.msg{display:flex;align-items:center;gap:9px;padding:5px 8px;margin:0 -8px;
+  border-bottom:1px solid var(--line-2);border-radius:6px;transition:background .12s}
+.msg:last-child{border-bottom:0}
+.av{position:relative;width:28px;height:28px;border-radius:50%;flex:0 0 28px;
+  display:grid;place-items:center;font-family:Archivo;font-size:10.5px;font-weight:600;color:#fff}
+/* presence sits on the lower-right of the initials, ringed in the card colour */
+.av .pres{position:absolute;right:-1px;bottom:-1px;width:8px;height:8px;border-radius:50%;
+  background:var(--green);border:2px solid var(--surface);box-sizing:content-box}
+.av .pres.off{background:var(--muted)}
+.msg .who{min-width:0;flex:1 1 40%}
+.msg .who b{font-size:12.5px;font-weight:600;line-height:1.3;display:flex;align-items:center;gap:6px}
+.msg .who b em{font-style:normal;font-size:11px;color:var(--ink-3);font-weight:500}
+.ctype{font-size:9.5px;font-weight:700;letter-spacing:.02em;padding:1px 6px;border-radius:4px;
+  line-height:1.6;flex:0 0 auto}
+.ctype.sms{background:var(--t-sms-bg);color:var(--t-sms-ink)}
+.ctype.chat{background:var(--t-chat-bg);color:var(--t-chat-ink)}
+.ctype.mail{background:var(--t-mail-bg);color:var(--t-mail-ink)}
+.ctype.grp{background:var(--t-grp-bg);color:var(--t-grp-ink)}
+.msg .who p{font-size:11.5px;color:var(--ink-2);white-space:nowrap;overflow:hidden;
+  text-overflow:ellipsis;margin-top:1px;line-height:1.35}
+.msg{cursor:pointer}
+/* Load details ride above the row rather than displacing the message. */
+.mtip{position:fixed;z-index:220;background:var(--surface);border:1px solid var(--line);
+  color:var(--ink-2);font-size:11.5px;font-weight:500;padding:6px 10px;border-radius:7px;
+  box-shadow:0 8px 22px rgba(13,21,38,.14);pointer-events:none;opacity:0;white-space:nowrap;
+  transition:opacity .13s}
+.mtip.on{opacity:1}
+.mtip b{font-weight:600;color:var(--ink-2)}
+
+/* Reply and Message read as one column */
+.msg .act .btn{min-width:78px;justify-content:center}
+.msg .act{flex:0 0 auto;display:flex;align-items:center;gap:8px}
+.pipn{width:18px;height:18px;border-radius:50%;background:var(--surface);
+  border:1.5px solid var(--blue);color:var(--blue-ink);font-size:10px;
+  font-weight:700;display:grid;place-items:center;font-family:Archivo;flex:0 0 17px}
+
+/* calendar */
+.cal{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:2px;text-align:center}
+.cal .dw{font-size:11px;font-weight:600;color:var(--ink-2);padding:4px 0}
+.cal .dw,.cal .d{min-width:0}
+.cal .d{height:26px;display:grid;place-items:center;font-size:12px;border-radius:6px;
+  font-variant-numeric:tabular-nums;cursor:pointer;transition:.12s background}
+.cal .d.mut{color:var(--ink-3)}
+.cal .d.mark{background:var(--line-2);font-weight:600}
+.cal .d.sel{background:var(--btn-blue);color:#fff;font-weight:600}
+.cal .d:hover:not(.sel){background:var(--line-2)}
+.toff-foot{position:sticky;bottom:-12px;background:var(--surface);padding:6px 0 12px;
+  margin-top:2px;box-shadow:0 -10px 12px -10px rgba(13,21,38,.22)}
+.balance{margin-top:0;font-size:10.5px;color:var(--ink-3);font-weight:500}
+.balrow{display:flex;align-items:center;gap:8px;margin-top:6px}
+.balpill{display:flex;align-items:center;gap:9px;background:var(--blue-soft);border:1px solid var(--blue-line);
+  border-radius:7px;padding:6px 10px;font-size:12px;color:var(--blue-ink);font-weight:600;flex:1}
+.balpill em{font-style:normal;margin-left:auto;font-variant-numeric:tabular-nums}
+
+/* shortcut tiles */
+.tiles{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+.tile{border:1px solid var(--line);border-radius:8px;padding:11px 4px 9px;cursor:pointer;background:var(--surface);
+  display:flex;flex-direction:column;align-items:center;gap:6px;
+  transition:.14s border-color,.14s background,.14s transform}
+.tile:hover{border-color:var(--blue-line);background:var(--blue-soft);transform:translateY(-1px)}
+.tile svg{color:var(--blue-ink)}
+.tile span{font-size:11px;font-weight:500;color:var(--ink-2);line-height:1.2;text-align:center}
+.tile:hover span{color:var(--blue-ink)}
+
+/* ---------- Dawson News: rotating clock + bulletins + ticker ------------- */
+.newscard{background:#0B1724;border-color:#0B1724}
+.newscard:hover{border-color:#22344A}
+.newscard .cbody{padding:0;position:relative;background:transparent;overflow:hidden}
+
+/* A "bare" card has no header strip — the artwork runs the full height and the
+   controls float on top, appearing only on hover. The title stays in the DOM
+   for screen readers and for the Options menu. */
+.card.bare .chead{position:absolute;top:0;left:0;right:0;z-index:5;justify-content:flex-end;
+  padding:8px 9px;cursor:grab;
+  background:linear-gradient(rgba(0,0,0,.42),rgba(0,0,0,0));
+  opacity:0;transition:opacity .16s}
+.card.bare:hover .chead,.card.bare:focus-within .chead,.card.bare.menuopen .chead,
+.card.bare.dragging .chead,.card.bare.resizing .chead{opacity:1}
+.card.bare .chead h3{position:absolute;width:1px;height:1px;overflow:hidden;
+  clip-path:inset(50%);white-space:nowrap;margin:0}
+.card.bare .copt{color:#fff;background:rgba(255,255,255,.18)}
+.card.bare .copt:hover{background:rgba(255,255,255,.34);color:#fff}
+.card.bare.menuopen .copt{background:rgba(255,255,255,.4);color:#fff}
+.card.bare .chead .grip{color:rgba(255,255,255,.8)}
+.card.bare .chead .grip:hover{color:#FFFFFF}
+.card.bare .cbody{padding:0}
+.nw{position:absolute;inset:0;display:flex;flex-direction:column}
+.nw-stage{position:relative;flex:1;min-height:0;overflow:hidden}
+.nw-page{position:absolute;inset:0;opacity:0;pointer-events:none;
+  transition:opacity .5s ease;display:flex;flex-direction:column;justify-content:center}
+.nw-page.on{opacity:1;pointer-events:auto}
+.nw-sky{position:absolute;inset:0;width:100%;height:100%}
+.nw-in{position:relative;z-index:2;padding:0 16px;color:#fff}
+
+/* clock */
+.nw-date{font-size:11.5px;font-weight:600;color:#E4EDF8;display:flex;align-items:center;gap:8px}
+.nw-date .sp{flex:1}
+.nw-tz{display:inline-flex;align-items:center;gap:5px;background:rgba(255,255,255,.16);
+  border:1px solid rgba(255,255,255,.2);border-radius:20px;padding:2px 8px;font-size:10.5px;
+  font-weight:700;color:#fff;cursor:pointer;transition:.14s background}
+.nw-tz:hover{background:rgba(255,255,255,.3)}
+.nw-tiles{display:flex;gap:10px;margin-top:10px}
+.nw-tile{flex:1;background:rgba(255,255,255,.17);border:1px solid rgba(255,255,255,.22);
+  border-radius:14px;backdrop-filter:blur(6px);display:grid;place-items:center;
+  padding:6px 0;min-height:0}
+.nw-tile b{font-family:Archivo;font-weight:700;font-size:clamp(30px,7.5cqw,58px);
+  line-height:1;color:#fff;font-variant-numeric:tabular-nums;letter-spacing:-.02em}
+.nw-ap{font-size:10.5px;font-weight:700;color:#E4EDF8;margin-top:7px;letter-spacing:.06em}
+
+/* bulletin */
+.nw-tag{display:inline-flex;align-items:center;gap:6px;font-size:9.5px;font-weight:700;
+  letter-spacing:.06em;background:var(--btn-blue);color:#fff;padding:2px 7px;border-radius:4px}
+.nw-story{background:0;border:0;padding:0;text-align:left;cursor:pointer;color:#fff;width:100%}
+.nw-story h4{font-size:15px;font-weight:600;line-height:1.34;margin-top:9px}
+.nw-story:hover h4{text-decoration:underline;text-underline-offset:3px}
+.nw-story .when{display:block;font-size:11px;color:#BACBE0;margin-top:6px}
+
+/* arrows, dots, hover bubble */
+.narw{position:absolute;top:50%;transform:translateY(-50%);z-index:4;width:24px;height:24px;
+  border-radius:50%;background:rgba(255,255,255,.18);border:0;color:#fff;display:grid;
+  place-items:center;cursor:pointer;opacity:0;transition:.14s opacity,.14s background}
+.newscard:hover .narw{opacity:1}
+.narw:hover{background:rgba(255,255,255,.36)}
+.narw.l{left:8px}.narw.r{right:8px}
+.nw-dots{position:relative;z-index:4;display:flex;gap:6px;justify-content:center;padding:7px 0 6px}
+.nw-dots i{width:7px;height:7px;border-radius:50%;background:rgba(255,255,255,.4);cursor:pointer;
+  transition:.16s width,.16s background}
+.nw-dots i.on{background:#FFFFFF;width:18px;border-radius:4px}
+.nw-bub{position:absolute;bottom:100%;left:50%;transform:translate(-50%,-7px);z-index:6;
+  background:rgba(10,20,32,.94);color:#fff;font-size:11px;font-weight:600;white-space:nowrap;
+  padding:5px 9px;border-radius:6px;opacity:0;pointer-events:none;transition:opacity .14s;
+  box-shadow:0 6px 18px rgba(0,0,0,.4)}
+.nw-bub.on{opacity:1}
+
+/* news ticker — a lower-third band, paused while you read it */
+.nw-ticker{position:relative;z-index:4;display:flex;align-items:stretch;height:26px;flex:0 0 26px;
+  background:rgba(7,15,25,.92);border-top:1px solid rgba(255,255,255,.12);overflow:hidden}
+.nw-ticker .lbl{display:grid;place-items:center;padding:0 9px;background:var(--btn-blue);color:#fff;
+  font-size:9.5px;font-weight:800;letter-spacing:.07em;flex:0 0 auto;z-index:2}
+.nw-win{position:relative;flex:1;overflow:hidden}
+.nw-track{display:flex;align-items:center;gap:0;white-space:nowrap;height:100%;
+  animation:tick 30s linear infinite;will-change:transform}
+.nw-ticker:hover .nw-track{animation-play-state:paused}
+@keyframes tick{from{transform:translateX(0)}to{transform:translateX(-50%)}}
+.nw-track button{background:0;border:0;color:#D8E6F5;font-size:11px;font-weight:500;cursor:pointer;
+  padding:0 16px;display:inline-flex;align-items:center;gap:9px;white-space:nowrap}
+.nw-track button:hover{color:#fff;text-decoration:underline;text-underline-offset:3px}
+.nw-track .sep{color:var(--blue);flex:0 0 auto}
+@media (prefers-reduced-motion:reduce){
+  .nw-track{animation:none}
+  .nw-win{overflow-x:auto}
+  .nw-page{transition:none}
+}
+
+/* metric lists (Analytics / Status) */
+.mlist .r{display:flex;align-items:center;padding:8.5px 8px;margin:0 -8px;
+  border-bottom:1px solid var(--line-2);border-radius:6px;transition:background .12s}
+.mlist .r:last-child{border-bottom:0}
+.mlist .r .k{font-size:13px;color:var(--ink-2)}
+.mlist .r .v{margin-left:auto}
+.drill{
+  font-family:Archivo;font-weight:600;font-size:13.5px;font-variant-numeric:tabular-nums;color:var(--blue-ink);
+  background:0;border:0;padding:0 0 1px;border-bottom:1px solid var(--blue-line);cursor:pointer;
+  transition:.14s color,.14s border-color}
+.drill:hover{color:var(--blue-hover);border-bottom-color:var(--blue-ink)}
+.mlist .r.warn .drill{color:var(--orange);border-bottom-color:var(--warm-line)}
+
+/* horizontal rails */
+.hb{display:flex;align-items:center;gap:10px;padding:5.5px 8px;margin:0 -8px;
+  border-radius:6px;transition:background .12s}
+.hb .k{font-size:11px;color:var(--ink-2);flex:0 0 58px}
+.hb .rail-bar{flex:1}
+.hb .v{font-size:11px;color:var(--ink-2);font-variant-numeric:tabular-nums;flex:0 0 46px;text-align:right;
+  font-family:Archivo;font-weight:500}
+.fp{display:flex;align-items:center;gap:10px;padding:7px 8px;margin:0 -8px;
+  border-radius:6px;transition:background .12s}
+.fp .who{flex:0 0 84px;min-width:0}
+.fp .who b{font-family:Archivo;font-size:12px;font-weight:700;display:block}
+.fp .who span{font-size:10.5px;color:var(--ink-3);display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.fp .rail-bar{flex:1}
+.fp .v{font-size:12px;font-family:Archivo;font-weight:600;font-variant-numeric:tabular-nums;
+  flex:0 0 62px;text-align:right}
+
+.kpi{display:flex;align-items:center;gap:9px;padding:1px 0 9px;flex:0 0 auto}
+.kpi .v{font-family:Archivo;font-size:23px;font-weight:700;letter-spacing:-.03em;
+  font-variant-numeric:tabular-nums;line-height:1.1}
+.kpi .pill{display:inline-flex;align-items:center;gap:5px;background:var(--blue-soft);
+  color:var(--blue-ink);border:1px solid var(--blue-line);border-radius:8px;padding:3px 9px;
+  font-size:12px;font-weight:600;font-variant-numeric:tabular-nums}
+.kpi .pill.dn{background:var(--warm-soft);color:var(--warm-ink);border-color:var(--warm-line)}
+
+/* charts */
+.cbody.chartbody{display:flex;flex-direction:column}
+.chart-wrap{position:relative;width:100%;flex:1;min-height:110px}
+.chart-wrap svg{display:block;overflow:visible}
+.legend{display:flex;gap:14px;padding:0 0 8px;font-size:11px;color:var(--ink-2);flex-wrap:wrap}
+.legend span{display:inline-flex;align-items:center;gap:6px}
+.legend i{width:9px;height:9px;border-radius:2px;display:inline-block}
+.ax,.axv{font-size:9.5px;fill:var(--ink-3);font-family:Inter}
+.axv{font-variant-numeric:tabular-nums}
+.pt-label{font-size:9.5px;fill:var(--ink-2);font-family:Archivo;font-weight:500;font-variant-numeric:tabular-nums}
+.gl{stroke:var(--line-2);stroke-width:1}
+.bar-rect{transition:fill .13s ease}
+.dotm{transition:r .13s ease, stroke-width .13s ease;fill:var(--surface)}
+.guide{stroke:var(--blue-line);stroke-width:1;stroke-dasharray:3 3;opacity:0;transition:opacity .13s}
+.guide.on{opacity:.9}
+.ctip{
+  position:absolute;z-index:9;pointer-events:none;opacity:0;transform:translate(-50%,-118%) scale(.97);
+  background:var(--surface);border:1px solid var(--line);border-radius:9px;padding:8px 11px;
+  box-shadow:0 8px 24px rgba(13,21,38,.16),0 1px 3px rgba(13,21,38,.08);
+  transition:opacity .13s ease, transform .13s cubic-bezier(.22,.9,.3,1);white-space:nowrap}
+.ctip.on{opacity:1;transform:translate(-50%,-128%) scale(1)}
+.ctip .th{font-size:10.5px;font-weight:600;color:var(--ink-3);margin-bottom:5px;letter-spacing:.02em}
+.ctip .tr{display:flex;align-items:center;gap:9px;line-height:1.7}
+.ctip .tr i{width:10px;height:10px;border-radius:2px;flex:0 0 10px}
+.ctip .tr span{font-size:12px;color:var(--ink-2)}
+.ctip .tr b{margin-left:auto;font-family:Archivo;font-size:12.5px;font-weight:700;
+  font-variant-numeric:tabular-nums;padding-left:14px}
+.statgrid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px}
+.stat{border:1px solid var(--line);border-radius:8px;padding:10px 11px}
+.stat b{display:block;font-family:Archivo;font-size:19px;font-weight:700;font-variant-numeric:tabular-nums}
+.stat span{font-size:11px;color:var(--ink-3);font-weight:500}
+.stat.up b{color:var(--green)} .stat.dn b{color:var(--orange)}
+
+/* empty board */
+.emptyboard{grid-column:span 12;border:1.5px dashed var(--line);border-radius:var(--r);background:var(--surface);
+  padding:46px 20px;text-align:center;color:var(--ink-3)}
+.emptyboard b{display:block;font-family:Archivo;font-size:15px;color:var(--ink);margin-bottom:5px}
+
+/* ---------- graphs drawer ------------------------------------------------ */
+.scrim{position:fixed;inset:0;background:rgba(13,21,38,.28);z-index:130;opacity:0;pointer-events:none;
+  transition:opacity .2s}
+.scrim.show{opacity:1;pointer-events:auto}
+.drawer{
+  position:fixed;top:0;right:0;bottom:0;width:330px;max-width:92vw;background:var(--surface);z-index:140;
+  border-left:1px solid var(--line);box-shadow:-12px 0 34px rgba(13,21,38,.14);
+  display:flex;flex-direction:column;transform:translateX(104%);transition:transform .24s cubic-bezier(.22,.9,.3,1)}
+.drawer.show{transform:none}
+.dhead{display:flex;align-items:center;gap:9px;padding:14px 14px 12px;border-bottom:1px solid var(--line);
+  flex:0 0 auto}
+.dhead b{font-family:Archivo;font-size:15px;font-weight:600;color:var(--blue-ink);display:flex;align-items:center;gap:7px}
+.dhead .x{margin-left:auto;width:26px;height:26px;border-radius:50%;border:0;background:var(--btn-blue);color:#fff;
+  display:grid;place-items:center;cursor:pointer;transition:.14s background}
+.dhead .x:hover{background:var(--btn-blue-hover)}
+.dnote{padding:10px 14px;font-size:11.5px;color:var(--ink-3);border-bottom:1px solid var(--line-2)}
+.dlist{flex:1;overflow:auto;padding:2px 0 16px}
+.gitem{display:flex;align-items:center;gap:12px;padding:11px 14px;border-bottom:1px solid var(--line-2);
+  cursor:pointer;transition:.12s background}
+.gitem:hover{background:var(--blue-soft)}
+.gitem .gi{width:26px;flex:0 0 26px;display:grid;place-items:center;color:var(--blue-ink)}
+.gitem .gn{font-size:12.5px;font-weight:600;flex:1;min-width:0}
+.gitem .chev{color:var(--blue-ink);flex:0 0 auto;transition:transform .16s}
+.gitem.open .chev{transform:rotate(90deg)}
+.gitem .add{flex:0 0 auto;opacity:0;transition:.14s opacity}
+.gitem:hover .add{opacity:1}
+.gsub{display:none;background:var(--tint);border-bottom:1px solid var(--line-2)}
+.gsub.show{display:block}
+.gsub .gitem{padding-left:36px;border-bottom:1px solid var(--line-2)}
+.gsub .gitem:last-child{border-bottom:0}
+.gsub .gitem .gn{font-weight:500}
+.gitem.added{background:#F3F8F5}
+.gitem.added .gn{color:var(--ink-3)}
+
+/* ---------- drill-down detail view --------------------------------------- */
+.detail{padding:18px 18px 0}
+.dtop{display:flex;align-items:center;gap:12px;margin-bottom:14px;flex-wrap:wrap}
+.crumb{display:flex;align-items:center;gap:7px;font-size:12px;color:var(--ink-3)}
+.crumb button{background:0;border:0;color:var(--blue-ink);font-weight:600;cursor:pointer;font-size:12px;padding:0}
+.crumb button:hover{text-decoration:underline}
+.dtop h2{font-size:17px;font-weight:700}
+.dtools{display:flex;align-items:center;gap:9px;margin-left:auto}
+.linky{display:inline-flex;align-items:center;gap:7px;background:0;border:0;color:var(--ink-2);font-size:12.5px;
+  font-weight:500;cursor:pointer;padding:0}
+.linky:hover{color:var(--blue-ink)}
+.dsearch{position:relative;flex:1;max-width:470px}
+.dsearch input{width:100%;height:36px;border:1px solid var(--line);border-radius:7px;background:var(--surface);padding:0 34px 0 12px}
+.dsearch input:focus{outline:0;border-color:var(--blue);box-shadow:0 0 0 3px rgba(57,139,255,.2)}
+.dsearch svg{position:absolute;right:11px;top:10px;color:var(--blue-ink);pointer-events:none}
+.subbar{display:flex;align-items:center;gap:10px;padding:11px 13px;border:1px solid var(--line);
+  border-bottom:0;border-radius:var(--r) var(--r) 0 0;background:var(--surface);flex-wrap:wrap}
+.subbar .cnt{display:flex;align-items:center;gap:8px;font-size:12.5px;font-weight:600}
+.subbar .cnt .dot{width:17px;height:17px;border-radius:50%;background:var(--btn-blue);color:#fff;
+  display:grid;place-items:center}
+.subbar .cnt em{font-style:normal;color:var(--ink-3);font-weight:600;font-variant-numeric:tabular-nums}
+.subbar .rt{margin-left:auto;display:flex;align-items:center;gap:9px}
+
+.tablewrap{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);overflow:auto;box-shadow:var(--sh)}
+.tablewrap.joined{border-radius:0 0 var(--r) var(--r)}
+table.dt{width:100%;border-collapse:collapse;font-size:12px;white-space:nowrap}
+table.dt th{
+  text-align:left;font-weight:600;color:var(--ink-2);font-size:11.5px;padding:10px 12px;
+  border-bottom:1px solid var(--line);background:var(--tint);position:sticky;top:0;z-index:2;cursor:pointer;
+  user-select:none;transition:.12s background}
+table.dt th:hover{background:var(--blue-soft);color:var(--blue-ink)}
+table.dt th .car{color:var(--ink-3);margin-left:5px;font-size:9px}
+table.dt th.sorted{color:var(--blue-ink)}
+table.dt td{padding:9px 12px;border-bottom:1px solid var(--line-2);color:var(--ink)}
+table.dt tbody tr:last-child td{border-bottom:0}
+table.dt tbody tr{transition:.1s background}
+
+table.dt a,.lnk{color:var(--blue-ink);text-decoration:underline;text-underline-offset:2px;cursor:pointer}
+table.dt a:hover,.lnk:hover{color:var(--blue-hover)}
+td.tnum{font-variant-numeric:tabular-nums}
+.assign{color:var(--blue-ink);font-weight:500;cursor:pointer;text-decoration:none}
+.assign:hover{text-decoration:underline}
+.swatch{width:15px;height:15px;border-radius:50%;display:inline-block;vertical-align:-3px;
+  background:conic-gradient(#F0B429 0 25%,#0E9F6E 0 50%,#398BFF 0 75%,#E86C24 0)}
+.pager{display:flex;align-items:center;gap:12px;padding:11px 13px;border:1px solid var(--line);border-top:0;
+  border-radius:0 0 var(--r) var(--r);background:var(--surface);font-size:12px}
+.pager .mid{margin:0 auto;display:flex;align-items:center;gap:8px}
+.pager button{background:0;border:0;color:var(--ink-2);font-size:12px;font-weight:500;cursor:pointer;
+  display:inline-flex;align-items:center;gap:5px;padding:3px 5px;border-radius:5px}
+.pager button:hover:not([disabled]){color:var(--blue-ink);background:var(--blue-soft)}
+.pager button[disabled]{opacity:.4;cursor:not-allowed}
+.pgsel{height:28px;min-width:62px;padding:0 24px 0 9px}
+.norows{padding:38px;text-align:center;color:var(--ink-3);font-size:12.5px}
+
+/* ---------- toast -------------------------------------------------------- */
+.toast{
+  position:fixed;left:50%;bottom:26px;transform:translate(-50%,14px);z-index:250;background:var(--toast-bg);
+  color:var(--toast-ink);font-size:12.5px;font-weight:500;padding:10px 16px;border-radius:8px;
+  box-shadow:0 10px 30px rgba(13,21,38,.3);opacity:0;pointer-events:none;transition:.2s opacity,.2s transform;
+  display:flex;align-items:center;gap:9px;max-width:min(460px,90vw)}
+.toast.show{opacity:1;transform:translate(-50%,0)}
+.toast b{color:#8FD6B8}
+
+/* ---------- responsive --------------------------------------------------- */
+@media (max-width:1180px){
+  .card{grid-column:span 4}
+  .gsearch{width:220px}
+  .tenant{display:none}
+}
+@media (max-width:900px){
+  .card{grid-column:span 6 !important}
+  .rsz{display:none}
+  .controls{width:100%}
+}
+@media (max-width:640px){
+  :root{--rail-w:0px}
+  .rail{display:none}
+  .card{grid-column:span 12 !important}
+  .gsearch{display:none}
+  .abicons button:nth-child(-n+2){display:none}
+  .me span{display:none}
+  .modnav{padding-left:14px}
+}
+
+/* ---------- page-head control labels ------------------------------------ */
+.fld label{text-transform:uppercase;letter-spacing:.06em}
+/* Graphs sits on the page rather than on a plate; the card count is a hover
+   tip so the control stays quiet until you need it. */
+.btn.bare{background:transparent;border-color:transparent;color:var(--blue-ink);padding:0 10px}
+.btn.bare:hover{background:var(--blue-soft);border-color:transparent;color:var(--blue-ink)}
+.btn.bare[aria-expanded="true"]{background:var(--blue-soft)}
+.btn.bare[data-tip]::after{
+  content:attr(data-tip);position:absolute;top:calc(100% + 7px);right:0;
+  background:var(--ink);color:#fff;font-size:11.5px;font-weight:500;white-space:nowrap;
+  padding:5px 9px;border-radius:6px;box-shadow:0 4px 14px rgba(13,21,38,.22);
+  opacity:0;pointer-events:none;transition:opacity .14s;z-index:160}
+.btn.bare[data-tip]:hover::after{opacity:1}
+.btn.bare[aria-expanded="true"]::after{opacity:0 !important}
+
+/* ---------- Graphs picker (show / hide every card) ---------------------- */
+.gwrap{position:relative}
+#btnGraphs{position:relative}
+.gpanel{
+  position:absolute;top:calc(100% + 8px);right:0;width:336px;background:var(--surface);border:1px solid var(--line);
+  border-radius:11px;box-shadow:var(--sh-menu);z-index:150;overflow:hidden;
+  opacity:0;transform:translateY(-6px);pointer-events:none;transition:.16s opacity,.16s transform}
+.gpanel.show{opacity:1;transform:none;pointer-events:auto}
+.gp-top{display:flex;gap:20px;padding:13px 16px 12px;border-bottom:1px solid var(--line-2)}
+.gp-top button{background:0;border:0;color:var(--blue-ink);font-size:13px;font-weight:500;cursor:pointer;padding:0}
+.gp-top button:hover{text-decoration:underline}
+.gp-list{max-height:336px;overflow:auto;padding:5px 0}
+.gp-sec{font-size:10px;font-weight:700;color:var(--ink-3);letter-spacing:.06em;padding:10px 16px 5px}
+.gp-row{display:flex;align-items:flex-start;gap:11px;padding:9px 16px;cursor:pointer;transition:.12s background}
+.gp-row:hover{background:var(--blue-soft)}
+.gp-row input{accent-color:var(--blue);width:15px;height:15px;margin:1px 0 0;flex:0 0 15px;cursor:pointer}
+.gp-row span{font-size:12.5px;font-weight:600;color:var(--blue-ink);line-height:1.34}
+.gp-row.off span{color:var(--ink-3);font-weight:500}
+.gp-foot{border-top:1px solid var(--line-2);padding:10px 16px}
+.gp-foot button{background:0;border:0;color:var(--blue-ink);font-size:12.5px;font-weight:600;cursor:pointer;
+  padding:0;display:inline-flex;align-items:center;gap:7px}
+.gp-foot button:hover{text-decoration:underline}
+
+/* ---------- Master Controls modal --------------------------------------- */
+.modalwrap{position:fixed;inset:0;z-index:200;display:grid;place-items:center;padding:20px;
+  background:rgba(13,21,38,.45);opacity:0;pointer-events:none;transition:opacity .18s}
+.modalwrap.show{opacity:1;pointer-events:auto}
+.modal{background:var(--surface);border-radius:14px;box-shadow:0 24px 60px rgba(13,21,38,.32);
+  width:min(524px,94vw);max-height:90vh;overflow:auto;padding:22px 24px 18px;
+  transform:translateY(10px) scale(.98);transition:transform .2s cubic-bezier(.22,.9,.3,1)}
+.modalwrap.show .modal{transform:none}
+.modal h3{font-size:19px;font-weight:700;margin-bottom:9px}
+.modal .lead{font-size:12.5px;color:var(--ink-2);line-height:1.62;margin-bottom:6px}
+.mrow{display:flex;align-items:center;gap:14px;padding:14px 0;border-top:1px solid var(--line-2)}
+.mrow>b{font-size:13px;font-weight:600;display:inline-flex;align-items:center;gap:6px}
+.mrow>b .info{width:14px;height:14px;border-radius:50%;background:var(--line);color:var(--ink-2);
+  font-size:9.5px;font-weight:700;display:grid;place-items:center;cursor:help}
+.mrow .rt{margin-left:auto;display:flex;align-items:center;gap:8px;flex-wrap:wrap;justify-content:flex-end}
+.mrow.link b{color:var(--blue-ink);cursor:pointer}
+.mrow.link b:hover{text-decoration:underline}
+.chk{display:inline-flex;align-items:center;gap:7px;cursor:pointer;font-size:12.5px;font-weight:600;
+  border:1px solid var(--line);border-radius:7px;padding:0 11px;height:34px;background:var(--surface);
+  transition:.14s border-color}
+.chk:hover{border-color:var(--blue)}
+.chk input{accent-color:var(--blue);width:14px;height:14px;margin:0;cursor:pointer}
+.mfoot{display:flex;gap:9px;align-items:center;padding-top:16px;border-top:1px solid var(--line-2);margin-top:4px}
+.mfoot .sp{flex:1}
+
+/* ---------- per-card Options flyout (Time Period / Chart Type / Labels) -- */
+.copt{display:grid;place-items:center;width:26px;height:26px;padding:0;border:0;border-radius:6px;
+  background:transparent;color:var(--ink-3);cursor:pointer;flex:0 0 auto;
+  opacity:0;transition:.14s opacity,.14s background,.14s color}
+.copt:hover{background:var(--line-2);color:var(--ink)}
+.card.menuopen .copt{background:var(--blue-soft);color:var(--blue-ink)}
+.optmenu{position:fixed;z-index:190;display:flex;background:var(--surface);border:1px solid var(--line);
+  border-radius:10px;box-shadow:var(--sh-menu);overflow:hidden;
+  opacity:0;pointer-events:none;transform:translateY(-5px);transition:.14s opacity,.14s transform}
+.optmenu.show{opacity:1;pointer-events:auto;transform:none}
+.opt-l{width:154px;padding:6px;border-right:1px solid var(--line-2);background:var(--tint);
+  overflow-y:auto;min-height:0}
+.opt-l button{width:100%;display:flex;align-items:center;gap:8px;padding:9px 10px;border:0;border-radius:6px;
+  background:0;font-size:12.5px;font-weight:500;cursor:pointer;text-align:left;color:var(--ink);
+  transition:.12s background,.12s color}
+.opt-l button .c{margin-left:auto;color:var(--ink-3)}
+.opt-l button:hover{background:var(--line-2)}
+.opt-l button.on{background:var(--blue-soft);color:var(--blue-ink);font-weight:600}
+.opt-l button[disabled]{opacity:.4;cursor:not-allowed}
+.opt-r{width:196px;padding:6px;overflow-y:auto;min-height:0}
+.opt-h{font-size:10px;font-weight:700;color:var(--ink-3);letter-spacing:.06em;padding:9px 10px 6px}
+.opt-r button{width:100%;display:flex;align-items:center;padding:9px 10px;border:0;border-radius:6px;
+  background:0;font-size:12.5px;font-weight:500;cursor:pointer;text-align:left;color:var(--ink);
+  transition:.12s background,.12s color}
+.opt-r button:hover{background:var(--line-2)}
+.opt-r button.on{background:var(--blue-soft);color:var(--blue-ink);font-weight:600}
+
+/* ---------- Goals card: bright blue fill on a grey track ---------------- */
+/* Five measures share the card height evenly, each centred in its band. The
+   label, bar and value keep the CPM row's type; the figures sit under the bar
+   in smaller grey. */
+.goals{display:flex;flex-direction:column;height:100%;gap:8px}
+.goalrow{flex:1 1 0;min-height:40px;display:grid;
+  grid-template-columns:66px minmax(0,1fr) 46px;column-gap:10px;row-gap:4px;
+  align-content:center;padding:4px 8px;margin:0 -8px;border-radius:6px;
+  transition:background .12s}
+.goalrow .k{font-size:11px;color:var(--ink-2)}
+.goalrow .v{font-size:11px;color:var(--ink-2);font-variant-numeric:tabular-nums;
+  text-align:right;font-family:Archivo;font-weight:500}
+.goalrow .gsub{grid-column:2 / span 2;font-size:10px;color:var(--ink-3);
+  font-variant-numeric:tabular-nums;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+}
+
+/* area fill under a line, as on the reference MPOD chart */
+.anim-area{opacity:1}
+.in .anim-area{animation:fadeIn .85s ease .2s both}
+@media (prefers-reduced-motion:reduce){
+  .in .anim-area{animation:none}
+}
+</style>
+</head>
+<body>
+
+<div class="app">
+
+  <!-- ============ TOP BAR ============ -->
+  <header class="appbar">
+    <span class="logo"><b>Dispatch</b><i>PRO</i></span>
+    <span class="tenant">Dawson Truck Lines</span>
+
+    <div class="gsearch">
+      <input type="text" placeholder="Search" aria-label="Search Dispatch Pro">
+      <button aria-label="Search">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+      </button>
+    </div>
+
+    <div class="abicons">
+      <button title="Create new" aria-label="Create new">
+        <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg>
+      </button>
+      <button title="ProChat" aria-label="ProChat">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M21 11.5a8.4 8.4 0 0 1-9 8.4L3 21l1.1-3.4A8.4 8.4 0 1 1 21 11.5Z"/></svg>
+      </button>
+      <button title="Support" aria-label="Support">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 14v-2a8 8 0 1 1 16 0v2"/><rect x="2.5" y="13" width="4.5" height="6" rx="1.6"/><rect x="17" y="13" width="4.5" height="6" rx="1.6"/></svg>
+      </button>
+      <button title="Mail" aria-label="Mail"><span class="pip"></span>
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="2.5" y="5" width="19" height="14" rx="2"/><path d="m3 7 9 6 9-6"/></svg>
+      </button>
+      <button title="Alerts" aria-label="Alerts"><span class="pip"></span>
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M18 9a6 6 0 1 0-12 0c0 5-2 6-2 6h16s-2-1-2-6Z"/><path d="M13.7 20a2 2 0 0 1-3.4 0"/></svg>
+      </button>
+      <button id="btnTheme" title="Switch to dark mode" aria-label="Switch to dark mode" aria-pressed="false">
+        <svg id="themeIcon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M20 14.5A8.5 8.5 0 0 1 9.5 4a8.5 8.5 0 1 0 10.5 10.5Z"/></svg>
+      </button>
+      <span class="me"><span class="face">CS</span><span>Christian Snead</span>
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="m9 18 6-6-6-6"/></svg>
+      </span>
+    </div>
+  </header>
+
+  <!-- ============ MODULE NAV ============ -->
+  <nav class="modnav" id="modnav"></nav>
+
+  <!-- ============ LEFT RAIL ============ -->
+  <aside class="rail" id="rail"></aside>
+
+  <!-- ============ MAIN ============ -->
+  <main class="main" id="main">
+
+    <!-- HOME VIEW -->
+    <section id="viewHome">
+      <div class="pagehead">
+        <div class="ttl">
+          <h1>Dispatch Pro TMS Home page</h1>
+          <p id="phSub">General View · showing today</p>
+        </div>
+
+        <div class="controls">
+          <div class="fld">
+            <label>Everything at once</label>
+            <button class="btn pri" id="btnMaster">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 7h10M18 7h2M4 12h4M12 12h8M4 17h12M20 17h0"/><circle cx="16" cy="7" r="1.8"/><circle cx="10" cy="12" r="1.8"/><circle cx="18" cy="17" r="1.8"/></svg>
+              Master Controls
+            </button>
+          </div>
+
+          <div class="fld">
+            <label>Report profile</label>
+            <div class="split" id="splitCreate">
+              <button class="btn" id="btnCreate">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>
+                Create Profile
+              </button>
+              <button class="btn cap" id="btnCreateCap" aria-label="Profile options" aria-haspopup="true" aria-expanded="false">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="m6 9 6 6 6-6"/></svg>
+              </button>
+              <div class="menu" id="menuCreate" role="menu"></div>
+            </div>
+          </div>
+
+          <div class="fld gwrap">
+            <label>Cards on this page</label>
+            <button class="btn bare" id="btnGraphs" aria-haspopup="true" aria-expanded="false">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 20V10M10 20V4M16 20v-7M21 20H3"/></svg>
+              Graphs
+            </button>
+            <div class="gpanel" id="gpanel" role="menu"></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="board" id="board"></div>
+    </section>
+
+    <!-- DRILL-DOWN VIEW -->
+    <section id="viewDetail" class="detail hide"></section>
+  </main>
+</div>
+
+<!-- ============ GRAPHS DRAWER ============ -->
+<div class="scrim" id="scrim"></div>
+<aside class="drawer" id="drawer" aria-label="Graphs">
+  <div class="dhead">
+    <b>Graphs
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 20V10M10 20V4M16 20v-7M21 20H3"/></svg>
+    </b>
+    <button class="x" id="drawerClose" aria-label="Close graphs">
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6"><path d="M18 6 6 18M6 6l12 12"/></svg>
+    </button>
+  </div>
+  <p class="dnote">Pick a graph to add it to your landing page. Items with an arrow break down further.</p>
+  <div class="dlist" id="dlist"></div>
+</aside>
+
+<!-- ============ MASTER CONTROLS ============ -->
+<div class="modalwrap" id="masterWrap">
+  <div class="modal" role="dialog" aria-modal="true" aria-labelledby="masterTitle">
+    <h3 id="masterTitle">Master Controls</h3>
+    <p class="lead">Master control changes apply to every graph on the page at once. Individual
+      graphs can still be changed from their own headers, and those changes stay until you save a
+      new master setting. Save your changes as a profile to keep your custom setup.</p>
+
+    <div class="mrow">
+      <b>Master Date Calendar <span class="info" title="Sets the period every card reports on">i</span></b>
+      <span class="rt">
+        <select class="sel" id="cRange" style="min-width:150px">
+          <option value="today">Today</option>
+          <option value="yest">Yesterday</option>
+          <option value="wtd">Week to date</option>
+          <option value="mtd">Month to date</option>
+          <option value="qtd">Quarter to date</option>
+          <option value="ytd">This Year</option>
+          <option value="custom">Custom range</option>
+        </select>
+      </span>
+    </div>
+    <div class="mrow hide" id="mCustom">
+      <b>Custom range</b>
+      <span class="rt"><input class="dat" type="date" id="cFrom"><input class="dat" type="date" id="cTo"></span>
+    </div>
+
+    <div class="mrow">
+      <b>Master Graph Type</b>
+      <span class="rt">
+        <select class="sel" id="mType" style="min-width:186px">
+          <option value="">Apply to all charts&hellip;</option>
+          <option value="line">Line Graph (Simple)</option>
+          <option value="curve">Line Graph (Curved)</option>
+          <option value="area">Area Graph</option>
+          <option value="hbar">Bar Graph (Horizontal)</option>
+          <option value="bar">Bar Graph (Vertical)</option>
+          <option value="combo">Combo (Bar + Line)</option>
+          <option value="scatter">Scattergram</option>
+        </select>
+      </span>
+    </div>
+
+    <div class="mrow">
+      <b>Master Time Period</b>
+      <span class="rt">
+        <select class="sel" id="mPeriod" style="min-width:150px">
+          <option>Days</option><option selected>Weeks</option>
+          <option>Months</option><option>Quarters</option>
+        </select>
+      </span>
+    </div>
+
+    <div class="mrow">
+      <b>Data Labels</b>
+      <span class="rt">
+        <label class="chk"><input type="checkbox" id="mLabOn" checked> On</label>
+        <select class="sel" id="mLabPos" style="min-width:142px">
+          <option value="out">Outside End</option>
+          <option value="in">Inside End</option>
+          <option value="center">Center</option>
+        </select>
+      </span>
+    </div>
+
+    <div class="mrow link"><b id="mFilters">Filters</b></div>
+
+    <div class="mfoot">
+      <button class="btn" id="mRestore">Restore to Default</button>
+      <span class="sp"></span>
+      <button class="btn" id="mCancel">Cancel</button>
+      <button class="btn pri" id="mSave">Save</button>
+    </div>
+  </div>
+</div>
+
+<div class="ghosthint" id="hint"></div>
+<div class="toast" id="toast"></div>
+
+<script>
+/* ===========================================================================
+   0. UTILITIES
+   ======================================================================== */
+const $  = (s,r=document)=>r.querySelector(s);
+const $$ = (s,r=document)=>[...r.querySelectorAll(s)];
+const REDUCED = ()=>matchMedia('(prefers-reduced-motion:reduce)').matches;
+const esc = s => String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const usd0 = v => '$ '+Math.round(v).toLocaleString('en-US');
+const usd2 = v => '$ '+v.toFixed(2);
+const money = v => '$'+v.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2});
+const clamp = (v,a,b)=>Math.max(a,Math.min(b,v));
+
+/* deterministic pseudo-random so generated tables are stable between renders */
+function seeded(seed){ let s=seed; return ()=>{ s=(s*1664525+1013904223)>>>0; return s/4294967296; }; }
+const pick = (rnd,arr)=>arr[Math.floor(rnd()*arr.length)];
+
+let toastT;
+function toast(html){
+  const t=$('#toast'); t.innerHTML=html; t.classList.add('show');
+  clearTimeout(toastT); toastT=setTimeout(()=>t.classList.remove('show'),2600);
+}
+
+/* count-up, ported from the Valor dashboard */
+function rollNumbers(nodes,dur){
+  if(REDUCED()) return;
+  const items=[...nodes].map(el=>{
+    const final=el.textContent;
+    const toks=[...final.matchAll(/\d[\d,]*(?:\.\d+)?/g)].map(m=>({
+      i:m.index,s:m[0],v:parseFloat(m[0].replace(/,/g,'')),
+      dec:(m[0].split('.')[1]||'').length,grp:m[0].includes(',')}));
+    return {el,final,toks};
+  }).filter(o=>o.toks.length);
+  if(!items.length) return;
+  const t0=performance.now(),ease=t=>1-Math.pow(1-t,3);
+  (function step(now){
+    const k=Math.min(1,(now-t0)/dur),e=ease(k);
+    items.forEach(o=>{
+      if(k>=1){o.el.textContent=o.final;return;}
+      let out='',last=0;
+      o.toks.forEach(t=>{
+        out+=o.final.slice(last,t.i);
+        const v=t.v*e;
+        out+=t.grp?v.toLocaleString('en-US',{minimumFractionDigits:t.dec,maximumFractionDigits:t.dec})
+                  :v.toFixed(t.dec);
+        last=t.i+t.s.length;
+      });
+      o.el.textContent=out+o.final.slice(last);
+    });
+    if(k<1) requestAnimationFrame(step);
+  })(performance.now());
+}
+
+/* storage with in-memory fallback when the host provides none */
+const MEM={};
+const Store={
+  async get(k){
+    try{ const r=await window.storage.get(k); return r? JSON.parse(r.value):null; }
+    catch(e){ return k in MEM? MEM[k]:null; }
+  },
+  async set(k,v){
+    try{ await window.storage.set(k,JSON.stringify(v)); MEM[k]=v; }
+    catch(e){ MEM[k]=v; }
+  }
+};
+
+/* ===========================================================================
+   1. ICONS
+   ======================================================================== */
+const I={
+  grid:'<rect x="3" y="3" width="7.5" height="7.5" rx="1.5"/><rect x="13.5" y="3" width="7.5" height="7.5" rx="1.5"/><rect x="3" y="13.5" width="7.5" height="7.5" rx="1.5"/><rect x="13.5" y="13.5" width="7.5" height="7.5" rx="1.5"/>',
+  doc:'<path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8l-5-5Z"/><path d="M14 3v5h5M9 13h6M9 17h4"/>',
+  truck:'<path d="M3 7h11v9H3z"/><path d="M14 10h4l3 3v3h-7z"/><circle cx="7" cy="18" r="1.8"/><circle cx="17.5" cy="18" r="1.8"/>',
+  user:'<circle cx="12" cy="8" r="3.6"/><path d="M5 20a7 7 0 0 1 14 0"/>',
+  cal:'<rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/>',
+  chat:'<path d="M21 11.5a8.4 8.4 0 0 1-9 8.4L3 21l1.1-3.4A8.4 8.4 0 1 1 21 11.5Z"/>',
+  bag:'<rect x="3" y="7" width="18" height="13" rx="2"/><path d="M9 7V5a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v2"/>',
+  pin:'<circle cx="12" cy="7" r="3.4"/><path d="M12 10.5V21M8 14h8"/>',
+  gear:'<circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.6 1.6 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.6 1.6 0 0 0-1.8-.3 1.6 1.6 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1A1.6 1.6 0 0 0 9 19.4a1.6 1.6 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.6 1.6 0 0 0 .3-1.8 1.6 1.6 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1A1.6 1.6 0 0 0 4.6 9a1.6 1.6 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.6 1.6 0 0 0 1.8.3H9a1.6 1.6 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.6 1.6 0 0 0 1 1.5 1.6 1.6 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.6 1.6 0 0 0-.3 1.8V9a1.6 1.6 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.6 1.6 0 0 0-1.5 1Z"/>',
+  list:'<path d="M8 6h13M8 12h13M8 18h13M3.5 6h.01M3.5 12h.01M3.5 18h.01"/>',
+  clock:'<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>',
+  shield:'<path d="M12 3 5 6v5c0 4.4 3 8.2 7 9 4-.8 7-4.6 7-9V6l-7-3Z"/><path d="m9 12 2 2 4-4"/>',
+  cash:'<rect x="3" y="6" width="18" height="12" rx="2"/><circle cx="12" cy="12" r="2.5"/><path d="M6 12h.01M18 12h.01"/>',
+  hub:'<rect x="3" y="4" width="18" height="5" rx="1.5"/><rect x="3" y="13" width="8" height="7" rx="1.5"/><rect x="14" y="13" width="7" height="7" rx="1.5"/>',
+  book:'<path d="M4 5a2 2 0 0 1 2-2h13v18H6a2 2 0 0 1-2-2V5Z"/><path d="M9 8h7M9 12h5"/>',
+  pie:'<path d="M12 3a9 9 0 1 0 9 9h-9V3Z"/><path d="M15 3.5A9 9 0 0 1 20.5 9H15V3.5Z"/>',
+  wheel:'<circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="3.2"/><path d="M12 3v5.8M4.6 16.5l5-2.9M19.4 16.5l-5-2.9"/>',
+  chart:'<path d="M4 20V10M10 20V4M16 20v-7M21 20H3"/>',
+  pct:'<circle cx="12" cy="12" r="9"/><path d="M8.5 8.5h.01M15.5 15.5h.01M15.5 8.5 8.5 15.5"/>',
+  trailer:'<rect x="2.5" y="8" width="15" height="7" rx="1.5"/><path d="M17.5 13h4"/><circle cx="7" cy="17" r="1.6"/><circle cx="12" cy="17" r="1.6"/>',
+  people:'<circle cx="9" cy="8" r="3.2"/><path d="M3 19a6 6 0 0 1 12 0"/><path d="M16 6.2a3.2 3.2 0 0 1 0 5.6M17.5 19a6 6 0 0 0-2-4.4"/>',
+  usercash:'<circle cx="12" cy="12" r="9"/><path d="M12 7.5v9M14.2 9.8c-.5-.6-1.3-.9-2.2-.9-1.3 0-2.2.7-2.2 1.6 0 2.2 4.4 1.1 4.4 3.3 0 .9-.9 1.6-2.2 1.6-.9 0-1.7-.3-2.2-.9"/>',
+  target:'<circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="4.6"/><circle cx="12" cy="12" r=".9" fill="currentColor"/>',
+  goal:'<circle cx="12" cy="12" r="9"/><path d="M12 7.6v8.8M9.4 10.2h5.2M9.4 13.8h5.2"/>',
+  transit:'<path d="M2.5 7h11v8h-11z"/><path d="M13.5 10h4l3 3v2h-7z"/><circle cx="6.5" cy="17" r="1.5"/><circle cx="17" cy="17" r="1.5"/><path d="M2 11h-1.5M2 13H0"/>',
+  team:'<circle cx="12" cy="7" r="3"/><circle cx="5.5" cy="12" r="2.4"/><circle cx="18.5" cy="12" r="2.4"/><path d="M7 20a5 5 0 0 1 10 0"/>',
+  eye:'<path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/>',
+  filter:'<path d="M3 5h18l-7 8v6l-4 2v-8Z"/>',
+  refresh:'<path d="M21 12a9 9 0 1 1-2.6-6.4"/><path d="M21 4v5h-5"/>',
+  search:'<circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/>',
+  grip:'<circle cx="9" cy="6" r="1.4"/><circle cx="15" cy="6" r="1.4"/><circle cx="9" cy="12" r="1.4"/><circle cx="15" cy="12" r="1.4"/><circle cx="9" cy="18" r="1.4"/><circle cx="15" cy="18" r="1.4"/>',
+  dots:'<circle cx="12" cy="5" r="1.6"/><circle cx="12" cy="12" r="1.6"/><circle cx="12" cy="19" r="1.6"/>',
+  chev:'<path d="m9 18 6-6-6-6"/>',
+  plus:'<path d="M12 5v14M5 12h14"/>',
+  back:'<path d="m15 18-6-6 6-6"/>',
+  up:'<path d="m3 17 6-6 4 4 8-8"/><path d="M15 7h6v6"/>',
+  dn:'<path d="m3 7 6 6 4-4 8 8"/><path d="M15 17h6v-6"/>',
+  moon:'<path d="M20 14.5A8.5 8.5 0 0 1 9.5 4a8.5 8.5 0 1 0 10.5 10.5Z"/>',
+  sun:'<circle cx="12" cy="12" r="4"/><path d="M12 2v2.5M12 19.5V22M2 12h2.5M19.5 12H22M4.9 4.9l1.8 1.8M17.3 17.3l1.8 1.8M19.1 4.9l-1.8 1.8M6.7 17.3l-1.8 1.8"/>',
+  star:'<path d="m12 3.5 2.6 5.6 6 .8-4.4 4.2 1.1 6-5.3-2.9L6.3 20l1.1-6L3 9.9l6-.8Z"/>'
+};
+const svg=(n,sz=18,sw=1.7)=>`<svg width="${sz}" height="${sz}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="${sw}" stroke-linecap="round" stroke-linejoin="round">${I[n]}</svg>`;
+
+/* ===========================================================================
+   2. SOURCE DATA  (from the Dispatch Pro screens)
+   ======================================================================== */
+const EQUIP=[['Box Truck',6750],['Container',5150],['Dry Van',1425],['Flat Bed',5225],
+             ['Reefer',6375],['RGN',5300],['Step Deck',1500]];
+const FLEET=[['DTL88','Bill Falin',7200],['DTL20','Richard, Nicole',5900],['DTL12','Steve Hobi',4120],
+             ['DTL29','James Madison',4075],['DTL17','George Washington',4025]];
+
+/* Goal vs actual, read off the Fleet Scan KPI panel. */
+const GOALS=[
+  {k:'Revenue',   actual:'$679,755', goal:'$572,928', pct:119},
+  {k:'Mileage',   actual:'253,776',  goal:'271,480',  pct:93},
+  {k:'Occupancy', actual:'57%',      goal:'75%',      pct:76},
+  {k:'MPOD',      actual:'411',      goal:'440',      pct:93},
+  {k:'RPOD',      actual:'$1,102',   goal:'$929',     pct:119}
+];
+const ANALYTICS=[
+  {k:'Trucks',v:47,ds:'trucks'},{k:'Trailer',v:47,ds:'trailers'},{k:'Drivers',v:47,ds:'drivers'},
+  {k:'Dispatcher',v:8,ds:'dispatchers'},{k:'Teams',v:3,ds:'teams'},{k:'Managers',v:1,ds:'managers'},
+  {k:'OOS',v:3,ds:'oos'}
+];
+const STATUS=[
+  {k:'Available Loads',v:21,ds:'loads'},{k:'Available Trucks',v:13,ds:'availTrucks'},
+  {k:'Pending Confirmation',v:22,ds:'pending'},{k:'In Transit',v:64,ds:'inTransit'},
+  {k:'Service Failures',v:2,ds:'serviceFail'},{k:'On Hold',v:1,ds:'onHold'},
+  {k:'Missing Paperwork',v:72,ds:'missingPaper',warn:true}
+];
+const CITIES=[['Salem','VA'],['Canton','OH'],['Jacksonville','FL'],['Delaware','OH'],
+              ['Roanoke','VA'],['Millville','PA'],['Atlanta','GA'],['Memphis','TN']];
+
+/* Four notifications come straight from the screenshots; the rest are built
+   from a fixed seed so the list is long enough to scroll and identical on
+   every load. */
+const MSG_SEED=[
+  {ch:'SMS',cc:'sms',n:'Darryl Johnson',i:'DJ',c:'#C2410C',on:1,t:'02:45 PM',pip:1,
+   m:'Pick up the I have tried calling 5 times. I need a pickup number.',
+   load:'190273',stop:'Stop 02',state:'In Transit',loc:'Roanoke, VA',ago:'50 Minutes Ago'},
+  {ch:'ProChat',cc:'chat',n:'Alicia Keys',i:'AK',c:'#7C3AED',on:1,t:'02:45 PM',
+   m:'Can I please get a load....',
+   load:'19040S',stop:'Stop 99',state:'In Transit',loc:'Millville, PA',ago:'22 Minutes Ago'},
+  {ch:'Email',cc:'mail',n:'Micheal Scott',i:'MS',c:'#0E9F6E',on:1,t:'02:45 PM',
+   m:'Rejected, Pictures....',
+   load:'190389',stop:'Stop 04',state:'On Site',loc:'Atlanta, GA',ago:'11 Minutes Ago'},
+  {ch:'Group',cc:'grp',n:'Kevin Malone',i:'KM',c:'#398BFF',on:0,t:'02:45 PM',
+   m:"Great Load! I'm on my way....",
+   load:'190405',stop:'Stop 02',state:'In Transit',loc:'Millville, PA',ago:'22 Minutes Ago'}
+];
+const MSG_PEOPLE=[
+  ['Bill Falin','BF'],['Nicole Richard','NR'],['Steve Hobi','SH'],['James Madison','JM'],
+  ['George Washington','GW'],['Nathan Singer','NS'],['Robert Selby','RS'],['Daniel Oscar','DO'],
+  ['Michelle Logsdon','ML'],['Lindsay Friedrich','LF'],['Broadus Whiteside','BW'],
+  ['Micheal Quesenberry','MQ'],['Pam Beesly','PB'],['Jim Halpert','JH'],['Angela Martin','AM'],
+  ['Oscar Martinez','OM'],['Stanley Hudson','SD'],['Phyllis Vance','PV'],['Toby Flenderson','TF'],
+  ['Meredith Palmer','MP'],['Creed Bratton','CB'],['Kelly Kapoor','KK'],['Erin Hannon','EH'],
+  ['Andy Bernard','AB'],['Dwight Schrute','DK'],['Ryan Howard','RH']
+];
+const MSG_TEXT=[
+  'Detained at the shipper, going on three hours now.',
+  'Need a reset, I run out of hours before the next stop.',
+  'BOL is signed and the photos are uploaded.',
+  'Scale ticket attached, came in heavy on the drives.',
+  'Lumper paid $185, receipt is in the app.',
+  'Truck is due for a PM in about 800 miles.',
+  'Receiver says my appointment is tomorrow at 06:00.',
+  'Can I get fuel authorization in Knoxville?',
+  'Rear axle tire on the trailer is low, getting it checked.',
+  'Reefer is pre-cooled to 34F and ready to load.',
+  'Running roughly 40 minutes behind on this delivery.',
+  'Empty and ready for dispatch whenever you are.',
+  'What is the gate code for the yard?',
+  'I never got the rate confirmation on this one.',
+  'Weather through the pass is bad, slowing it down.',
+  'Customer is asking for an updated ETA.',
+  'Shipper loaded me early, rolling now.',
+  'Dock is backed up, six trucks ahead of me.',
+  'Got the reload, heading to the second pickup.',
+  'Need a hotel tonight, out of hours in Bristol.',
+  'Seal number matches the paperwork.',
+  'Detention started at 14:30, keeping the clock.',
+  'Check engine light came on outside Roanoke.',
+  'Delivered and empty, send the next one.',
+  'Missing lumper receipt, the shipper would not give me one.',
+  'Can you push my appointment back two hours?'
+];
+const MESSAGES=(function(){
+  const r=seeded(9137), out=[...MSG_SEED];
+  const chans=[['SMS','sms'],['ProChat','chat'],['Email','mail'],['Group','grp']];
+  const states=['In Transit','On Site','Arrived','Loading','Unloading'];
+  const cols=['#C2410C','#7C3AED','#0E9F6E','#398BFF','#B45309','#0F766E','#9333EA','#BE123C'];
+  let mins=52;
+  MSG_PEOPLE.forEach(([n,i],k)=>{
+    const city=pick(r,CITIES);
+    mins+=3+Math.floor(r()*9);
+    const hh=2-Math.floor(mins/60), mm=(105-mins%60)%60;
+    const ch=chans[Math.floor(r()*chans.length)];
+    const pip=r()<.2?1+Math.floor(r()*3):0;
+    out.push({ch:ch[0],cc:ch[1],n,i,c:cols[k%cols.length],on:r()<.55?1:0,
+      t:`${String(hh<1?hh+12:hh).padStart(2,'0')}:${String(mm).padStart(2,'0')} PM`,
+      pip, m:MSG_TEXT[k%MSG_TEXT.length],
+      load:'190'+(410+k*7), stop:'Stop 0'+(1+Math.floor(r()*5)),
+      state:states[Math.floor(r()*states.length)],
+      loc:city[0]+', '+city[1], ago:(4+Math.floor(r()*110))+' Minutes Ago'});
+  });
+  return out.slice(0,30);
+})();
+const TILES=[['Time Off','clock'],['Compliance','shield'],['Payroll','cash'],
+             ['Dispatch Hub','hub'],['Reports','doc'],['Accounts','book'],
+             ['Quarter End','pie'],['Drivers','wheel'],['Maintenance','gear']];
+const NEWS=[
+  {d:'06/12/2022',t:'Target Achievement Review',tag:'Performance',
+   who:'Operations',body:'Q2 lane targets reviewed against actual revenue per mile.'},
+  {d:'06/05/2022',t:'Q2 Compliance Scorecard Released',tag:'Safety',
+   who:'Safety',body:'Driver scorecards are posted. Three units flagged for MVR renewal.'},
+  {d:'05/29/2022',t:'New Reefer Lane: Atlanta to Millville',tag:'Sales',
+   who:'Sales',body:'Weekly committed volume from a new shipper starting Monday.'},
+  {d:'05/22/2022',t:'Fuel Surcharge Table Updated',tag:'Accounting',
+   who:'Accounting',body:'Effective on all loads booked from the first of the month.'}
+];
+/* Clock face settings live next to the news card. */
+const TZONES=[['America/New_York','Eastern'],['America/Chicago','Central'],
+              ['America/Denver','Mountain'],['America/Los_Angeles','Pacific'],['UTC','UTC']];
+let CLOCK={tz:'America/New_York',h24:false};
+const MONTHS=['Jan','Feb','Mar','Apr','May','Jun'];
+const WEEKS=['Week 1','Week 2','Week 3','Week 4'];
+const CPMX=['1/7','1/14','1/21','1/28','2/4','2/11','2/18','2/25','3/3','3/10','3/17','3/24','3/31','4/7','4/14','4/21','4/28'];
+const CPM_OPEN=[0.01,1.51,0.74,1.58,1.46,0.20,2.47,2.20,3.78,3.47,2.56,0.64,1.38,1.38,3.45,1.30,0.02];
+const CPM_BOX =[1.40,1.55,1.27,2.46,0.50,2.28,2.46,1.90,1.00,2.31,2.76,0.50,0.95,0.03,2.47,1.78,2.71];
+
+/* ===========================================================================
+   3. DRILL-DOWN DATASETS
+   Every hyperlinked figure on the board resolves to one of these.
+   ======================================================================== */
+const CUSTOMERS=['Yoke Transportation DBA Akule Transport Corp','GRANITE 3PL LLC','BEEMAC LOGISTICS',
+  'Paul Logistics Inc','TRANSLOOP LOGISTICS. LLC','SUNTECK TRANSPORT CO LLC','M.D.S. LOGISTICS. INC.'];
+const DRIVERNAMES=['Falin, Bill','Johnson, Darryl','Keys, Alicia','Scott, Micheal','Malone, Kevin',
+  'Madison, James','Hobi, Steve','Washington, George','Richard, Nicole','Singer, Nathan',
+  'Selby, Robert','Oscar, Daniel','Logsdon, Michelle','Friedrich, Lindsay','Quesenberry, Micheal',
+  'Whiteside, Broadus'];
+const TRAILERTYPES=['Box Truck','Container','Dry Van','Flat Bed','Reefer','RGN','Step Deck'];
+
+/* ---- exact tables from the screenshots --------------------------------- */
+const DISPATCHERS=[
+  ['Falin, Bill','Salem, VA','falin926'],
+  ['Friedrich, Lindsay','Canton, OH','friedrich8355'],
+  ['Logsdon, Michelle','Jacksonville, FL','logsdon0266'],
+  ['Oscar, Daniel','Delaware, OH','oscar386'],
+  ['Quesenberry, Micheal','Salem, VA','quesenberry254'],
+  ['Whiteside, Broadus','Canton, OH','whiteside0233'],
+  ['Singer, Nathan','Jacksonville, FL','singer2661'],
+  ['Selby, Robert','Delaware, OH','selby0422']
+].map(([n,l,p])=>({name:n,loc:l,chat:p,phone:'(804) 728-8477',email:'michealgscott@gmail.com'}));
+
+const LOADROWS=[
+  ['DTL-44824','23385','Yoke Transportation DBA Akule Transport Corp','09/20/2024 09:15','09/21/2024 08:00','Salem, VA','Delaware, OH'],
+  ['DTL-44811','53R2408','GRANITE 3PL LLC','09/21/2024 15:00','09/22/2024 09:00','Canton, OH','Jacksonville, FL'],
+  ['DTL-44811','V5366','BEEMAC LOGISTICS','09/20/2024 09:00','09/22/2024 09:00','Canton, OH','Jacksonville, FL'],
+  ['DTL-44811','V5367','Paul Logistics Inc','09/20/2024 04:00','09/22/2024 09:00','Canton, OH','Jacksonville, FL'],
+  ['DTL-44811','W21988','TRANSLOOP LOGISTICS. LLC','09/21/2024 07:00','09/22/2024 09:00','Canton, OH','Jacksonville, FL'],
+  ['DTL-44811','5621249','SUNTECK TRANSPORT CO LLC','09/24/2024 09:41','09/22/2024 09:00','Canton, OH','Jacksonville, FL'],
+  ['DTL-44811','V5367','M.D.S. LOGISTICS. INC.','09/26/2024 10:00','09/22/2024 09:00','Canton, OH','Jacksonville, FL'],
+  ['DTL-44811','W21988','TRANSLOOP LOGISTICS. LLC','09/21/2024 07:00','09/22/2024 09:00','Canton, OH','Jacksonville, FL'],
+  ['DTL-44811','5621249','SUNTECK TRANSPORT CO LLC','09/24/2024 09:41','09/22/2024 09:00','Canton, OH','Jacksonville, FL'],
+  ['DTL-44811','V5367','M.D.S. LOGISTICS. INC.','09/26/2024 10:00','09/22/2024 09:00','Canton, OH','Jacksonville, FL']
+].map(([ln,tr,cu,pd,dd,o,d])=>({
+  load:ln,trailer:tr,customer:cu,pickup:pd,delivery:dd,origin:o,dest:d,
+  miles:795,rate:'$ 2,100.00',cpm:'$ 2.64',crep:'Mike Jones Jr',carrier:'Chris Taylor',left:'1hr 52min'
+}));
+/* the card reports 21 available loads, so the table carries 21 */
+(function padLoads(){
+  const r=seeded(17);
+  while(LOADROWS.length<21){
+    const b=LOADROWS[LOADROWS.length%10], a=pick(r,CITIES), z=pick(r,CITIES);
+    LOADROWS.push({...b,
+      load:'DTL-448'+(30+LOADROWS.length),
+      customer:pick(r,CUSTOMERS),
+      origin:a[0]+', '+a[1], dest:z[0]+', '+z[1],
+      miles:400+Math.floor(r()*900),
+      rate:money(1400+Math.floor(r()*2400)),
+      cpm:'$ '+(1.8+r()*1.4).toFixed(2),
+      left:Math.floor(1+r()*7)+'hr '+Math.floor(r()*59)+'min'});
+  }
+})();
+
+/* ---- generated tables for the remaining links -------------------------- */
+function genRows(n,seed,fn){ const r=seeded(seed); return Array.from({length:n},(_,i)=>fn(r,i)); }
+
+const DATASETS={
+  dispatchers:{
+    title:'Available Dispatchers', count:DISPATCHERS.length,
+    cols:[
+      {k:'name',h:'Dispatcher Name'},{k:'loc',h:'Location'},
+      {k:'chat',h:'ProChat ID',link:1},{k:'phone',h:'Phone',link:1},{k:'email',h:'Email',link:1},
+      {k:'_who',h:'',render:()=>svg('user',15,1.8),cls:'',plain:1}
+    ],
+    rows:()=>DISPATCHERS
+  },
+  loads:{
+    title:'Available Loads', count:21, showCount:'Available Loads',
+    cols:[
+      {k:'_assign',h:'Status',render:()=>'<span class="assign">Assign</span>',plain:1},
+      {k:'load',h:'Load No.',link:1},{k:'trailer',h:'Trailer'},{k:'customer',h:'Customer'},
+      {k:'pickup',h:'Pickup Date'},{k:'delivery',h:'Delivery Date'},
+      {k:'origin',h:'Origin'},{k:'dest',h:'Destination'},
+      {k:'miles',h:'Miles',num:1},{k:'rate',h:'Rate',num:1},{k:'cpm',h:'CPM',num:1},
+      {k:'crep',h:'Customer Rep'},{k:'carrier',h:'Carrier Rep.'},{k:'left',h:'Time Left'},
+      {k:'_ref',h:'',render:()=>'<span class="lnk">Refresh</span>',plain:1},
+      {k:'_sw',h:'',render:()=>'<span class="swatch"></span>',plain:1},
+      {k:'_car',h:'',render:()=>'<span style="color:var(--ink-3)">&#9662;</span>',plain:1}
+    ],
+    rows:()=>LOADROWS
+  },
+  trucks:{
+    title:'Trucks', count:47,
+    cols:[{k:'unit',h:'Unit',link:1},{k:'make',h:'Make / Model'},{k:'year',h:'Year',num:1},
+          {k:'plate',h:'Plate'},{k:'status',h:'Status'},{k:'loc',h:'Last Location'},
+          {k:'driver',h:'Assigned Driver'},{k:'odo',h:'Odometer',num:1}],
+    rows:()=>genRows(47,11,(r,i)=>{const c=pick(r,CITIES);return{
+      unit:'DTL'+(10+i), make:pick(r,['Freightliner Cascadia','Kenworth T680','Peterbilt 579','Volvo VNL 760','International LT']),
+      year:2019+Math.floor(r()*6), plate:'VA-'+(4000+Math.floor(r()*5000)),
+      status:pick(r,['Active','Active','Active','In Shop','Available']),
+      loc:c[0]+', '+c[1], driver:pick(r,DRIVERNAMES),
+      odo:(120000+Math.floor(r()*480000)).toLocaleString('en-US')};})
+  },
+  trailers:{
+    title:'Trailers', count:47,
+    cols:[{k:'unit',h:'Unit',link:1},{k:'type',h:'Type'},{k:'year',h:'Year',num:1},
+          {k:'plate',h:'Plate'},{k:'status',h:'Status'},{k:'loc',h:'Last Location'},
+          {k:'insp',h:'Last Inspection'}],
+    rows:()=>genRows(47,23,(r,i)=>{const c=pick(r,CITIES);return{
+      unit:'TR'+(2200+i*3), type:pick(r,TRAILERTYPES), year:2016+Math.floor(r()*9),
+      plate:'OH-'+(1200+Math.floor(r()*7000)),
+      status:pick(r,['Loaded','Empty','Empty','In Shop','Loaded']),
+      loc:c[0]+', '+c[1],
+      insp:'0'+(1+Math.floor(r()*9))+'/'+(10+Math.floor(r()*18))+'/2024'};})
+  },
+  drivers:{
+    title:'Drivers', count:47,
+    cols:[{k:'name',h:'Driver',link:1},{k:'type',h:'Type'},{k:'phone',h:'Phone',link:1},
+          {k:'term',h:'Home Terminal'},{k:'status',h:'Status'},{k:'hos',h:'Hours Left',num:1},
+          {k:'load',h:'Current Load',link:1}],
+    rows:()=>genRows(47,37,(r,i)=>{const c=pick(r,CITIES);return{
+      name:DRIVERNAMES[i%DRIVERNAMES.length]+(i>=DRIVERNAMES.length?' '+(1+Math.floor(i/DRIVERNAMES.length)):''),
+      type:pick(r,['Company','Company','Owner Operator']), phone:'(804) 728-8477',
+      term:c[0]+', '+c[1], status:pick(r,['On Duty','Driving','Off Duty','Sleeper']),
+      hos:(r()*11).toFixed(1), load:'190'+(200+Math.floor(r()*400))};})
+  },
+  teams:{
+    title:'Teams', count:3,
+    cols:[{k:'team',h:'Team',link:1},{k:'mgr',h:'Manager'},{k:'disp',h:'Dispatchers',num:1},
+          {k:'drv',h:'Drivers',num:1},{k:'trk',h:'Trucks',num:1},{k:'rev',h:'Revenue MTD',num:1}],
+    rows:()=>[
+      {team:'Team East',mgr:'Falin, Bill',disp:3,drv:18,trk:18,rev:'$ 186,400.00'},
+      {team:'Team Central',mgr:'Oscar, Daniel',disp:3,drv:17,trk:17,rev:'$ 214,100.00'},
+      {team:'Team South',mgr:'Singer, Nathan',disp:2,drv:12,trk:12,rev:'$ 168,900.00'}]
+  },
+  managers:{
+    title:'Managers', count:1,
+    cols:[{k:'name',h:'Name',link:1},{k:'role',h:'Role'},{k:'loc',h:'Location'},
+          {k:'phone',h:'Phone',link:1},{k:'email',h:'Email',link:1},{k:'teams',h:'Teams',num:1}],
+    rows:()=>[{name:'Snead, Christian',role:'Operations Manager',loc:'Salem, VA',
+      phone:'(804) 728-8477',email:'michealgscott@gmail.com',teams:3}]
+  },
+  oos:{
+    title:'Out of Service', count:3,
+    cols:[{k:'unit',h:'Unit',link:1},{k:'type',h:'Type'},{k:'reason',h:'Reason'},
+          {k:'since',h:'Out Since'},{k:'loc',h:'Location'},{k:'eta',h:'ETA Back'}],
+    rows:()=>[
+      {unit:'DTL34',type:'Truck',reason:'DOT inspection — brakes',since:'09/18/2024 14:20',loc:'Canton, OH',eta:'09/22/2024'},
+      {unit:'DTL41',type:'Truck',reason:'Engine fault code',since:'09/19/2024 08:05',loc:'Salem, VA',eta:'09/23/2024'},
+      {unit:'TR2318',type:'Trailer',reason:'Reefer unit failure',since:'09/19/2024 16:45',loc:'Atlanta, GA',eta:'09/21/2024'}]
+  },
+  availTrucks:{
+    title:'Available Trucks', count:13, showCount:'Available Trucks',
+    cols:[{k:'unit',h:'Unit',link:1},{k:'driver',h:'Driver',link:1},{k:'loc',h:'Current Location'},
+          {k:'avail',h:'Available From'},{k:'trailer',h:'Trailer'},{k:'term',h:'Home Terminal'},
+          {k:'hos',h:'Hours Left',num:1}],
+    rows:()=>genRows(13,53,(r,i)=>{const c=pick(r,CITIES),c2=pick(r,CITIES);return{
+      unit:'DTL'+(10+i*3), driver:pick(r,DRIVERNAMES), loc:c[0]+', '+c[1],
+      avail:'09/2'+Math.floor(r()*9)+'/2024 0'+(1+Math.floor(r()*8))+':00',
+      trailer:pick(r,TRAILERTYPES), term:c2[0]+', '+c2[1], hos:(r()*11).toFixed(1)};})
+  },
+  pending:{
+    title:'Pending Confirmation', count:22, showCount:'Pending Confirmation',
+    cols:[{k:'load',h:'Load No.',link:1},{k:'customer',h:'Customer'},{k:'origin',h:'Origin'},
+          {k:'dest',h:'Destination'},{k:'pickup',h:'Pickup Date'},{k:'rate',h:'Rate',num:1},
+          {k:'sent',h:'Sent'},{k:'rep',h:'Customer Rep'}],
+    rows:()=>genRows(22,71,(r,i)=>{const a=pick(r,CITIES),b=pick(r,CITIES);return{
+      load:'DTL-448'+(10+i), customer:pick(r,CUSTOMERS), origin:a[0]+', '+a[1], dest:b[0]+', '+b[1],
+      pickup:'09/2'+Math.floor(r()*9)+'/2024 0'+(1+Math.floor(r()*8))+':00',
+      rate:money(1400+Math.floor(r()*2200)), sent:Math.floor(1+r()*9)+'hr ago',
+      rep:pick(r,['Mike Jones Jr','Chris Taylor','Nathan Singer'])};})
+  },
+  inTransit:{
+    title:'Loads In Transit', count:64, showCount:'In Transit',
+    cols:[{k:'load',h:'Load No.',link:1},{k:'driver',h:'Driver',link:1},{k:'stop',h:'Stop'},
+          {k:'origin',h:'Origin'},{k:'dest',h:'Destination'},{k:'eta',h:'ETA'},
+          {k:'loc',h:'Last Location'},{k:'upd',h:'Updated'}],
+    rows:()=>genRows(64,97,(r,i)=>{const a=pick(r,CITIES),b=pick(r,CITIES),c=pick(r,CITIES);return{
+      load:'190'+(200+i*3), driver:pick(r,DRIVERNAMES),
+      stop:'Stop 0'+(1+Math.floor(r()*5)), origin:a[0]+', '+a[1], dest:b[0]+', '+b[1],
+      eta:'09/2'+Math.floor(r()*9)+'/2024 '+(10+Math.floor(r()*12))+':00',
+      loc:c[0]+', '+c[1], upd:Math.floor(2+r()*58)+' Minutes Ago'};})
+  },
+  serviceFail:{
+    title:'Service Failures', count:2, showCount:'Service Failures',
+    cols:[{k:'load',h:'Load No.',link:1},{k:'customer',h:'Customer'},{k:'type',h:'Type'},
+          {k:'stop',h:'Stop'},{k:'sched',h:'Scheduled'},{k:'actual',h:'Actual'},{k:'reason',h:'Reason'}],
+    rows:()=>[
+      {load:'190271',customer:'BEEMAC LOGISTICS',type:'Late Delivery',stop:'Stop 03',
+       sched:'09/19/2024 08:00',actual:'09/19/2024 13:40',reason:'Detained at shipper'},
+      {load:'190302',customer:'GRANITE 3PL LLC',type:'Missed Pickup',stop:'Stop 01',
+       sched:'09/20/2024 06:00',actual:'—',reason:'Truck out of service'}]
+  },
+  onHold:{
+    title:'Loads On Hold', count:1, showCount:'On Hold',
+    cols:[{k:'load',h:'Load No.',link:1},{k:'customer',h:'Customer'},{k:'reason',h:'Reason'},
+          {k:'since',h:'On Hold Since'},{k:'rep',h:'Customer Rep'},{k:'rate',h:'Rate',num:1}],
+    rows:()=>[{load:'190355',customer:'SUNTECK TRANSPORT CO LLC',reason:'Credit hold — AR past due',
+      since:'09/18/2024 11:05',rep:'Mike Jones Jr',rate:'$ 2,100.00'}]
+  },
+  bulletins:{
+    title:'Dawson News', count:NEWS.length, showCount:'Bulletins',
+    cols:[{k:'d',h:'Date'},{k:'t',h:'Headline',link:1},{k:'tag',h:'Category'},
+          {k:'who',h:'Posted By'},{k:'body',h:'Summary'}],
+    rows:()=>NEWS
+  },
+  missingPaper:{
+    title:'Missing Paperwork', count:72, showCount:'Missing Paperwork',
+    cols:[{k:'load',h:'Load No.',link:1},{k:'driver',h:'Driver',link:1},{k:'customer',h:'Customer'},
+          {k:'delivered',h:'Delivered'},{k:'missing',h:'Missing Document'},
+          {k:'days',h:'Days Open',num:1},{k:'value',h:'Invoice Value',num:1}],
+    rows:()=>genRows(72,131,(r,i)=>({
+      load:'190'+(100+i*2), driver:pick(r,DRIVERNAMES), customer:pick(r,CUSTOMERS),
+      delivered:'09/'+(10+Math.floor(r()*18))+'/2024',
+      missing:pick(r,['Signed BOL','Lumper receipt','Scale ticket','POD photo','Rate confirmation']),
+      days:1+Math.floor(r()*14), value:money(900+Math.floor(r()*2600))}))
+  }
+};
+
+/* ===========================================================================
+   4. CHART ENGINE — hand-rolled SVG, redrawn at true pixel size on resize
+   ======================================================================== */
+const NS='http://www.w3.org/2000/svg';
+const C_BLUE='#398BFF', C_ORANGE='#E86C24', C_TEAL='#0E9F6E';
+function e(t,a,kids){
+  const n=document.createElementNS(NS,t);
+  for(const k in a) if(a[k]!=null) n.setAttribute(k,a[k]);
+  (kids||[]).forEach(c=>n.appendChild(typeof c==='string'?document.createTextNode(c):c));
+  return n;
+}
+function autoTicks(vals,opt={}){
+  const zero = opt.zero!==false;
+  let lo = zero?0:Math.min(...vals), hi=Math.max(...vals);
+  if(hi===lo) hi=lo+1;
+  if(!zero){ const pad=(hi-lo)*.18; lo=Math.max(0,lo-pad); }
+  const raw=(hi-lo)/(opt.count||4);
+  const mag=Math.pow(10,Math.floor(Math.log10(raw)));
+  const step=[1,2,2.5,5,10].map(m=>m*mag).find(s=>s>=raw)||mag*10;
+  const start=Math.floor(lo/step)*step, out=[];
+  for(let t=start;t<hi+step*.001;t+=step) out.push(+t.toFixed(6));
+  if(out[out.length-1]<hi) out.push(+(out[out.length-1]+step).toFixed(6));
+  return out;
+}
+function frame(svg,{W,H,L,R,T,B,ticks,fmt}){
+  const span=ticks[ticks.length-1]-ticks[0];
+  ticks.forEach(t=>{
+    const y=T+(H-T-B)*(1-(t-ticks[0])/span);
+    svg.appendChild(e('line',{x1:L,x2:W-R,y1:y,y2:y,class:'gl'}));
+    svg.appendChild(e('text',{x:L-6,y:y+3.4,'text-anchor':'end',class:'axv'},[fmt(t)]));
+  });
+  return t=>T+(H-T-B)*(1-(t-ticks[0])/span);
+}
+function xAxis(svg,names,{L,R,W,H,B},skip){
+  const step=(W-R-L)/names.length;
+  names.forEach((n,i)=>{
+    if(skip && i%skip) return;
+    svg.appendChild(e('text',{x:L+step*i+step/2,y:H-B+13,'text-anchor':'middle',class:'ax'},[n]));
+  });
+  return {step,at:i=>L+step*i+step/2};
+}
+function fitSkip(count,W){ const per=(W-60)/count; return per<30?Math.ceil(30/per):1; }
+
+/* Mix a hex toward white — the hovered bar lift seen in the reference clip. */
+function lighten(hex,t){
+  const n=parseInt(hex.replace('#',''),16);
+  const r=(n>>16)&255,g=(n>>8)&255,b=n&255,m=v=>Math.round(v+(255-v)*t);
+  return `rgb(${m(r)},${m(g)},${m(b)})`;
+}
+
+/* Catmull-Rom through the points, converted to cubic beziers — the curved
+   line option. Straight segments are used when there are too few points. */
+function smoothPath(pts){
+  if(pts.length<3) return pts.map((q,i)=>`${i?'L':'M'}${q[0]},${q[1]}`).join(' ');
+  let d=`M${pts[0][0]},${pts[0][1]}`;
+  for(let i=0;i<pts.length-1;i++){
+    const p0=pts[i-1]||pts[i], p1=pts[i], p2=pts[i+1], p3=pts[i+2]||p2;
+    d+=` C${p1[0]+(p2[0]-p0[0])/6},${p1[1]+(p2[1]-p0[1])/6}`
+      +` ${p2[0]-(p3[0]-p1[0])/6},${p2[1]-(p3[1]-p1[1])/6}`
+      +` ${p2[0]},${p2[1]}`;
+  }
+  return d;
+}
+
+function drawChart(host,spec,W,H){
+  host.innerHTML='';
+  W=Math.max(160,Math.round(W)); H=Math.max(110,Math.round(H));
+  const svg=e('svg',{width:W,height:H,viewBox:`0 0 ${W} ${H}`,role:'img',
+                     'aria-label':spec.alt||'chart'});
+  const tiny=H<190;
+  const L=spec.L??46, R=spec.R??10, T=tiny?14:22, B=24;
+  const showLab = spec.labels!==false && !tiny && W/(spec.names?spec.names.length:6) > 42;
+  const lp=spec.labelPos||'out';
+  const barLab=(cx,top,base,txt,delay)=>{
+    let y=top-5,fill='';
+    const tall=Math.abs(base-top)>22;
+    if(lp==='in'&&tall){ y=top+13; fill=';fill:#fff'; }
+    else if(lp==='center'&&tall){ y=(top+base)/2+4; fill=';fill:#fff'; }
+    return e('text',{x:cx,y,'text-anchor':'middle',class:'pt-label anim-txt',
+      style:`animation-delay:${delay}ms`+fill},[txt]);
+  };
+  const hits=[];                 // one entry per category
+  /* p = position along the hit-test axis; tx/ty anchor the tooltip */
+  const mark=(i,p,tx,ty,items)=>{
+    const h=hits[i]||(hits[i]={p,tx,ty:1e9,name:spec.names[i],items:[]});
+    h.p=p; h.tx=tx; h.ty=Math.min(h.ty,ty); h.items.push(...items);
+  };
+  let step=40, guide=null, axis='x';
+
+  if(spec.type==='bar'){
+    const ticks=spec.ticks||autoTicks(spec.data,{count:tiny?3:4});
+    const y=frame(svg,{W,H,L,R,T,B,ticks,fmt:spec.fmt});
+    const x=xAxis(svg,spec.names,{L,R,W,H,B},fitSkip(spec.names.length,W)); step=x.step;
+    const base=y(ticks[0]), bw=Math.min(x.step*.55,54), fill=spec.color||C_BLUE;
+    spec.data.forEach((v,i)=>{
+      const top=y(v);
+      svg.appendChild(e('rect',{x:x.at(i)-bw/2,y:Math.min(top,base),width:bw,
+        height:Math.abs(base-top),rx:2,fill,'data-i':i,'data-f':fill,
+        class:'bar-rect anim-bar',style:`animation-delay:${i*55}ms`}));
+      if(showLab) svg.appendChild(barLab(x.at(i),top,base,spec.lab(v),560+i*55));
+      mark(i,x.at(i),x.at(i),top,[{label:spec.slabel||'Value',color:fill,text:spec.lab(v)}]);
+    });
+  }
+
+  /* horizontal bars: categories down the left, values across */
+  if(spec.type==='hbar'){
+    axis='y';
+    const ser=spec.series&&spec.series.length?spec.series
+             :[{v:spec.data,c:spec.color||C_BLUE,label:spec.slabel||'Value'}];
+    const all=ser.flatMap(s2=>s2.v);
+    const ticks=spec.ticks||autoTicks(all,{count:tiny?3:4});
+    const LL=Math.min(120,Math.max(58,Math.round(W*.26))), RR=spec.R??14, TT=10, BB=22;
+    const span=ticks[ticks.length-1]-ticks[0];
+    const x=t=>LL+(W-RR-LL)*((t-ticks[0])/span);
+    ticks.forEach(t=>{
+      svg.appendChild(e('line',{x1:x(t),x2:x(t),y1:TT,y2:H-BB,class:'gl'}));
+      svg.appendChild(e('text',{x:x(t),y:H-BB+13,'text-anchor':'middle',class:'axv'},[spec.fmt(t)]));
+    });
+    const n=spec.names.length, slot=(H-BB-TT)/n;
+    step=slot;
+    const bh=Math.min(slot/(ser.length+0.6),26);
+    spec.names.forEach((nm,i)=>{
+      const cy=TT+slot*i+slot/2;
+      svg.appendChild(e('text',{x:LL-8,y:cy+3.4,'text-anchor':'end',class:'ax'},[nm]));
+      ser.forEach((s2,si)=>{
+        const v=s2.v[i], off=(si-(ser.length-1)/2)*(bh+2);
+        const x0=x(ticks[0]), x1=x(v);
+        svg.appendChild(e('rect',{x:Math.min(x0,x1),y:cy+off-bh/2,
+          width:Math.abs(x1-x0),height:bh,rx:2,fill:s2.c,'data-i':i,'data-f':s2.c,
+          class:'bar-rect anim-barh',style:`animation-delay:${(i*ser.length+si)*50}ms`}));
+        if(showLab&&ser.length===1)
+          svg.appendChild(e('text',{x:x1+6,y:cy+3.4,class:'pt-label anim-txt',
+            style:`animation-delay:${540+i*50}ms`},[spec.lab(v)]));
+        mark(i,cy,x1,cy-bh/2-4,[{label:s2.label||'Value',color:s2.c,text:spec.lab(v)}]);
+      });
+    });
+  }
+
+  if(spec.type==='grouped'){
+    const ticks=spec.ticks||autoTicks([...spec.a,...spec.b],{count:tiny?3:4});
+    const y=frame(svg,{W,H,L,R,T,B,ticks,fmt:spec.fmt});
+    const x=xAxis(svg,spec.names,{L,R,W,H,B},fitSkip(spec.names.length,W)); step=x.step;
+    const base=y(ticks[0]), bw=Math.min(x.step*.30,26);
+    spec.names.forEach((_,i)=>{
+      const cx=x.at(i);
+      [[spec.a[i],C_BLUE,-bw*.56,spec.aLabel||'A'],[spec.b[i],C_ORANGE,bw*.56,spec.bLabel||'B']]
+      .forEach(([v,cc,off,lb],j)=>{
+        const top=y(v);
+        svg.appendChild(e('rect',{x:cx+off-bw/2,y:Math.min(top,base),width:bw,
+          height:Math.abs(base-top),rx:2,fill:cc,'data-i':i,'data-f':cc,
+          class:'bar-rect anim-bar',style:`animation-delay:${(i*2+j)*45}ms`}));
+        if(showLab&&v>0) svg.appendChild(barLab(cx+off,top,base,spec.lab(v),580+i*45));
+        mark(i,cx,cx,top,[{label:lb,color:cc,text:spec.lab(v)}]);
+      });
+    });
+  }
+
+  if(spec.type==='combo'){
+    const ticks=spec.ticks||autoTicks([...spec.bars,...spec.line],{count:tiny?3:4});
+    const y=frame(svg,{W,H,L,R,T,B,ticks,fmt:spec.fmt});
+    const x=xAxis(svg,spec.names,{L,R,W,H,B},fitSkip(spec.names.length,W)); step=x.step;
+    const base=y(ticks[0]), bw=Math.min(x.step*.42,44), lc=spec.lineColor||C_ORANGE;
+    guide=e('line',{y1:T,y2:H-B,class:'guide'}); svg.appendChild(guide);
+    spec.bars.forEach((v,i)=>{
+      const top=y(v);
+      svg.appendChild(e('rect',{x:x.at(i)-bw/2,y:Math.min(top,base),width:bw,
+        height:Math.abs(base-top),rx:2,fill:C_BLUE,'data-i':i,'data-f':C_BLUE,
+        class:'bar-rect anim-bar',style:`animation-delay:${i*55}ms`}));
+      if(showLab) svg.appendChild(barLab(x.at(i),top,base,spec.lab(v),560+i*55));
+      mark(i,x.at(i),x.at(i),top,[{label:spec.barLabel||'Actual',color:C_BLUE,text:spec.lab(v)}]);
+    });
+    const pts=spec.line.map((v,i)=>[x.at(i),y(v)]);
+    svg.appendChild(e('path',{d:spec.curve?smoothPath(pts):pts.map((q,i)=>`${i?'L':'M'}${q[0]},${q[1]}`).join(' '),
+      fill:'none',stroke:lc,'stroke-width':2,'stroke-linecap':'round','stroke-linejoin':'round',
+      pathLength:1,class:'anim-line'}));
+    spec.line.forEach((v,i)=>{
+      svg.appendChild(e('circle',{cx:x.at(i),cy:y(v),r:3.2,stroke:lc,'stroke-width':2,
+        'data-i':i,'data-r':3.2,class:'dotm anim-dot',style:`animation-delay:${540+i*45}ms`}));
+      if(showLab) svg.appendChild(e('text',{x:x.at(i),y:y(v)+15,'text-anchor':'middle',
+        class:'pt-label anim-txt',style:`animation-delay:${620+i*45}ms`},
+        [spec.lab2?spec.lab2(v):spec.lab(v)]));
+      mark(i,x.at(i),x.at(i),y(v),[{label:spec.lineLabel||'Goal',color:lc,
+        text:(spec.lab2||spec.lab)(v)}]);
+    });
+  }
+
+  if(spec.type==='multiline'){
+    const ticks=spec.ticks||autoTicks(spec.series.flatMap(s2=>s2.v),{count:tiny?3:5});
+    const y=frame(svg,{W,H,L,R,T,B,ticks,fmt:spec.fmt});
+    const x=xAxis(svg,spec.names,{L,R,W,H,B},fitSkip(spec.names.length,W)); step=x.step;
+    guide=e('line',{y1:T,y2:H-B,class:'guide'}); svg.appendChild(guide);
+    const path=s2=>{
+      const pts=s2.v.map((v,i)=>[x.at(i),y(v)]);
+      return spec.curve?smoothPath(pts):pts.map((q,i)=>`${i?'L':'M'}${q[0]},${q[1]}`).join(' ');
+    };
+    if(spec.area && spec.series.length && !spec.dotsOnly){
+      const s0=spec.series[0], gid='ag'+Math.random().toString(36).slice(2,7);
+      svg.appendChild(e('defs',{},[e('linearGradient',{id:gid,x1:0,y1:0,x2:0,y2:1},[
+        e('stop',{offset:0,'stop-color':s0.c,'stop-opacity':.30}),
+        e('stop',{offset:1,'stop-color':s0.c,'stop-opacity':0})])]));
+      svg.appendChild(e('path',{d:path(s0)+` L${x.at(s0.v.length-1)},${H-B} L${x.at(0)},${H-B} Z`,
+        fill:`url(#${gid})`,class:'anim-area'}));
+    }
+    if(!spec.dotsOnly) spec.series.forEach((s2,si)=>{
+      svg.appendChild(e('path',{d:path(s2),fill:'none',stroke:s2.c,'stroke-width':2.1,
+        'stroke-linecap':'round','stroke-linejoin':'round',pathLength:1,
+        class:'anim-line',style:`animation-delay:${si*130}ms`}));
+    });
+    const top0=T+4, bot=H-B-6, dense=x.step<44;
+    spec.series.forEach((s2,si)=>{
+      s2.v.forEach((v,i)=>{
+        const py=y(v), r=spec.dotsOnly?4:2.8;
+        svg.appendChild(e('circle',{cx:x.at(i),cy:py,r,stroke:s2.c,
+          'stroke-width':spec.dotsOnly?2.2:1.9,'data-i':i,'data-r':r,
+          class:'dotm anim-dot',style:`animation-delay:${560+i*22}ms`}));
+        if(showLab && !dense){
+          let ly=si?py+15:py-8;
+          if(ly>bot) ly=py-8;
+          if(ly<top0) ly=py+15;
+          svg.appendChild(e('text',{x:x.at(i),y:ly,'text-anchor':'middle',class:'pt-label anim-txt',
+            style:`animation-delay:${660+i*22}ms`},[spec.lab(v)]));
+        }
+        mark(i,x.at(i),x.at(i),py,[{label:s2.label||('Series '+(si+1)),color:s2.c,text:spec.lab(v)}]);
+      });
+    });
+  }
+
+  host.appendChild(svg);
+  const tip=document.createElement('div');
+  tip.className='ctip';
+  host.appendChild(tip);
+  host._chart={hits,step,svg,tip,guide,W,H,axis,at:-1};
+}
+
+/* ---- master + per-card chart settings ----------------------------------
+   Master Controls set the page default; a card's own Options menu overrides
+   it for that card only, exactly as the Master Controls dialog describes. */
+const MASTER_DEF={period:'Weeks',type:'',labOn:true,labPos:'out'};
+function master(){ return Object.assign({},MASTER_DEF,STATE.master||{}); }
+function effOpt(card){
+  const M=master();
+  let co={}; try{ co=JSON.parse((card&&card.dataset.opt)||'{}'); }catch(err){}
+  return {
+    period: co.period || M.period,
+    type:   co.type   || M.type,
+    labels: co.labels || (M.labOn ? M.labPos : 'none'),
+    range:  co.range  || STATE.range || 'today'
+  };
+}
+function seriesOf(sp){
+  if(sp.type==='multiline') return sp.series;
+  if(sp.type==='bar')   return [{v:sp.data,c:sp.color||C_BLUE,label:sp.slabel||'Value'}];
+  if(sp.type==='grouped')return [{v:sp.a,c:C_BLUE,label:sp.aLabel||'A'},
+                                 {v:sp.b,c:C_ORANGE,label:sp.bLabel||'B'}];
+  if(sp.type==='combo') return [{v:sp.bars,c:C_BLUE,label:sp.barLabel||'Actual'},
+                                {v:sp.line,c:C_ORANGE,label:sp.lineLabel||'Goal'}];
+  return [];
+}
+function morphSpec(sp,type){
+  if(!type) return sp;                        // Chart Default
+  const ser=seriesOf(sp); if(!ser.length) return sp;
+  if(type==='line')    return {...sp,type:'multiline',series:ser,area:false,curve:false,dotsOnly:false};
+  if(type==='curve')   return {...sp,type:'multiline',series:ser,area:false,curve:true,dotsOnly:false};
+  if(type==='area')    return {...sp,type:'multiline',series:ser,area:true,curve:true,dotsOnly:false};
+  if(type==='scatter') return {...sp,type:'multiline',series:ser,area:false,curve:false,dotsOnly:true};
+  if(type==='hbar')    return {...sp,type:'hbar',series:ser,L:null};
+  if(type==='bar'){
+    if(ser.length>1) return {...sp,type:'grouped',a:ser[0].v,b:ser[1].v,
+      aLabel:ser[0].label,bLabel:ser[1].label};
+    return {...sp,type:'bar',data:ser[0].v,color:ser[0].c,slabel:ser[0].label};
+  }
+  if(type==='combo'&&ser.length>1)
+    return {...sp,type:'combo',bars:ser[0].v,line:ser[1].v,
+      barLabel:ser[0].label,lineLabel:ser[1].label};
+  return sp;
+}
+
+/* ---- date range: each card can follow the master calendar or hold its own.
+   The range picks the window of periods the card reports on. --------------- */
+const RANGE_OPTS=[
+  ['','Follow Master Date Calendar'],
+  ['wtd','This Week'],['mtd','This Month'],['qtd','This Quarter'],['ytd','This Year'],
+  ['lw','Last Week'],['lm','Last Month'],['lq','Last Quarter'],['ly','Last Year']
+];
+const RANGE_NAME=Object.fromEntries(RANGE_OPTS.map(([k,v])=>[k,v]));
+const WIN={today:{n:2},yest:{n:2,lag:2},wtd:{n:2},mtd:{n:4},qtd:{n:13},ytd:{n:0},custom:{n:0},
+           lw:{n:2,lag:2},lm:{n:4,lag:4},lq:{n:13,lag:13},ly:{n:0}};
+function applyRange(sp,range){
+  const w=WIN[range];
+  if(!w||!w.n) return sp;
+  const ser=seriesOf(sp); if(!ser.length) return sp;
+  const len=ser[0].v.length;
+  const n=Math.max(2,Math.min(len,w.n));
+  let end=len-(w.lag?Math.min(w.lag,len-n):0);
+  let start=Math.max(0,end-n);
+  if(end-start<2){ start=Math.max(0,len-2); end=len; }
+  if(start===0&&end===len) return sp;
+  const cut=a=>a.slice(start,end), s2={...sp};
+  if(s2.data) s2.data=cut(s2.data);
+  if(s2.a){ s2.a=cut(s2.a); s2.b=cut(s2.b); }
+  if(s2.bars){ s2.bars=cut(s2.bars); s2.line=cut(s2.line); }
+  if(s2.series) s2.series=s2.series.map(x=>({...x,v:cut(x.v)}));
+  s2.names=cut(s2.names);
+  s2.ticks=undefined;
+  return s2;
+}
+function bucket(arr,n,avg){
+  const out=[];
+  for(let i=0;i<arr.length;i+=n){
+    const g=arr.slice(i,i+n), t=g.reduce((a,b)=>a+b,0);
+    out.push(avg? t/g.length : t);
+  }
+  return out;
+}
+function applyPeriod(sp,period){
+  const size={Days:1,Weeks:1,Months:4,Quarters:13}[period]||1;
+  const ser=seriesOf(sp), len=ser.length?ser[0].v.length:0;
+  if(size<2 || len<=size) return sp;          // nothing to gain from re-bucketing
+  const avg=sp.agg==='avg', s2={...sp};
+  if(s2.data) s2.data=bucket(s2.data,size,avg);
+  if(s2.a){ s2.a=bucket(s2.a,size,avg); s2.b=bucket(s2.b,size,avg); }
+  if(s2.bars){ s2.bars=bucket(s2.bars,size,avg); s2.line=bucket(s2.line,size,avg); }
+  if(s2.series) s2.series=s2.series.map(x=>({...x,v:bucket(x.v,size,avg)}));
+  const MON=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  s2.names=Array.from({length:Math.ceil(len/size)},(_,i)=>
+    period==='Months' ? MON[i%12] : 'Q'+((i%4)+1));
+  s2.ticks=undefined;
+  return s2;
+}
+
+/* ---- hover: lift the hovered bar, park a tooltip above it --------------- */
+function clearHover(wrap){
+  const c=wrap._chart; if(!c||c.at===-1) return;
+  c.at=-1;
+  $$('[data-i]',c.svg).forEach(n=>{
+    if(n.tagName==='rect') n.setAttribute('fill',n.dataset.f);
+    else { n.setAttribute('r',n.dataset.r); n.setAttribute('stroke-width',
+      n.getAttribute('class').includes('dotm')?1.9:2); }
+  });
+  if(c.guide) c.guide.setAttribute('class','guide');
+  c.tip.classList.remove('on');
+}
+function setHover(wrap,i){
+  const c=wrap._chart, h=c.hits[i];
+  if(!h || c.at===i) return;
+  clearHover(wrap); c.at=i;
+  $$(`[data-i="${i}"]`,c.svg).forEach(n=>{
+    if(n.tagName==='rect') n.setAttribute('fill',lighten(n.dataset.f,.38));
+    else { n.setAttribute('r',+n.dataset.r+2.2); n.setAttribute('stroke-width',2.6); }
+  });
+  if(c.guide){ c.guide.setAttribute('x1',h.p); c.guide.setAttribute('x2',h.p);
+               c.guide.setAttribute('class','guide on'); }
+  c.tip.innerHTML =
+    (h.name?`<div class="th">${esc(h.name)}</div>`:'') +
+    h.items.map(it=>`<div class="tr"><i style="background:${it.color}"></i>`+
+      `<span>${esc(it.label)}</span><b>${esc(it.text)}</b></div>`).join('');
+  const tw=c.tip.offsetWidth, th=c.tip.offsetHeight;
+  c.tip.style.left=clamp(h.tx,tw/2+3,c.W-tw/2-3)+'px';
+  let ty=h.ty-th-10;
+  if(ty<2) ty=Math.min(c.H-th-4,h.ty+14);
+  c.tip.style.top=ty+'px';
+  c.tip.classList.add('on');
+}
+function wireHover(wrap){
+  wrap.addEventListener('pointermove',ev=>{
+    const c=wrap._chart; if(!c||!c.hits.length) return;
+    const r=wrap.getBoundingClientRect();
+    const pos = c.axis==='y' ? ev.clientY-r.top : ev.clientX-r.left;
+    let idx=-1,best=1e9;
+    c.hits.forEach((h,i)=>{ if(!h) return; const d=Math.abs(pos-h.p); if(d<best){best=d;idx=i;} });
+    if(idx<0 || best>c.step*0.8) clearHover(wrap); else setHover(wrap,idx);
+  });
+  wrap.addEventListener('pointerleave',()=>clearHover(wrap));
+}
+
+/* ===========================================================================
+   5. METRIC REGISTRY
+   Every card on the board — and every graph in the drawer — is one entry.
+   kind 'chart' cards redraw themselves whenever the card is resized.
+   ======================================================================== */
+const K$ = v => '$ '+(v/1000).toFixed(0)+'k';
+const PCT = v => v+'%';
+
+const METRICS={
+
+/* ---- the nine cards from the Dispatch Pro home screen ------------------ */
+comm:{ title:'Communication Center', span:3, h:252, period:1,
+  tabs:[`Notification (${MESSAGES.length})`,'Invitations (4)'],
+  body:()=> MESSAGES.map(m=>`
+    <div class="msg" data-row
+         data-tip="Load ${m.load} ${esc(m.stop)} (${esc(m.state)}) · ${esc(m.loc)}, ${m.ago.toLowerCase()}">
+      <span class="av" style="background:${m.c}">${m.i}<i class="pres ${m.on?'':'off'}"></i></span>
+      <span class="who">
+        <b>${esc(m.n)} <em>${m.t}</em> <span class="ctype ${m.cc}">${m.ch}</span></b>
+        <p>${esc(m.m)}</p>
+      </span>
+      <span class="act">
+        ${m.pip?'<span class="pipn">1</span>':''}
+        <button class="btn ${m.btn==='Reply'?'pri':'ghost'} sm">${m.btn}</button>
+      </span>
+    </div>`).join('')
+},
+
+timeoff:{ title:'My Time Off', span:3, h:336,
+  body:()=>{
+    const dw=['Sun','Mon','Tue','Wed','Thu','Fri','Sat'].map(d=>`<div class="dw">${d}</div>`).join('');
+    const rows=[
+      [[29,'mut'],[30,'mut'],[31,'mut'],[1,''],[2,''],[3,''],[4,'mark']],
+      [[5,''],[6,''],[7,''],[8,''],[9,''],[10,''],[11,'']],
+      [[12,''],[13,''],[14,''],[15,'mark'],[16,'sel'],[17,''],[18,'']],
+      [[19,'mark'],[20,''],[21,''],[22,'mark'],[23,''],[24,''],[25,'']],
+      [[26,''],[27,''],[28,''],[29,''],[30,''],[1,'mut'],[2,'mut']]
+    ].flat().map(([d,c])=>`<div class="d ${c}">${d}</div>`).join('');
+    return `<div class="cal">${dw}${rows}</div>
+      <div class="toff-foot">
+        <p class="balance">Balance as of 06/01/2023</p>
+        <div class="balrow">
+          <span class="balpill">Personal <em>XX.XX</em> ${svg('eye',13,1.8)}</span>
+        </div>
+        <button class="btn pri" style="width:100%;margin-top:8px">Request Time Off</button>
+      </div>`;
+  }
+},
+
+dashboard:{ title:'Dashboard', span:3, h:296, period:1,
+  body:()=>`<div class="tiles">${TILES.map(([t,i])=>
+    `<button class="tile">${svg(i,18)}<span>${t}</span></button>`).join('')}</div>`
+},
+
+news:{ title:'Dawson News', span:3, h:296, cls:'newscard', flush:1, bare:1,
+  body:()=>{
+    const dots=[{t:'Current Time'},...NEWS].map((p,i)=>
+      `<i class="${i?'':'on'}" data-dot="${i}" data-t="${esc(p.t||p.tag||'Current Time')}"></i>`).join('');
+    const ticker=NEWS.map((n,i)=>
+      `<button data-story="${i}"><span class="sep">&#9656;</span>${esc(n.t)}</button>`).join('');
+    const stories=NEWS.map((n,i)=>`
+      <div class="nw-page" data-page="${i+1}">
+        <svg class="nw-sky" viewBox="0 0 320 190" preserveAspectRatio="none" aria-hidden="true"></svg>
+        <div class="nw-in">
+          <span class="nw-tag">${esc(n.tag)}</span>
+          <button class="nw-story" data-story="${i}">
+            <h4>${esc(n.t)}</h4><span class="when">${n.d} &middot; ${esc(n.who)}</span>
+          </button>
+        </div>
+      </div>`).join('');
+    return `<div class="nw" style="container-type:inline-size">
+      <div class="nw-stage">
+        <div class="nw-page on" data-page="0">
+          <svg class="nw-sky" viewBox="0 0 320 190" preserveAspectRatio="none" aria-hidden="true"></svg>
+          <div class="nw-in">
+            <p class="nw-date"><span class="d">&nbsp;</span><span class="sp"></span>
+              <button class="nw-tz" title="Change time zone and 12/24 hour">
+                <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>
+                <span class="z">ET</span></button></p>
+            <div class="nw-tiles"><div class="nw-tile"><b class="hh">--</b></div>
+                                  <div class="nw-tile"><b class="mm">--</b></div></div>
+            <p class="nw-ap"></p>
+          </div>
+        </div>
+        ${stories}
+        <button class="narw l" data-news="-1" aria-label="Previous">${svg('back',12,2.4)}</button>
+        <button class="narw r" data-news="1" aria-label="Next">${svg('chev',12,2.4)}</button>
+      </div>
+      <div class="nw-dots">${dots}<span class="nw-bub"></span></div>
+      <div class="nw-ticker">
+        <span class="lbl">DAWSON NEWS</span>
+        <span class="nw-win"><span class="nw-track">${ticker}${ticker}</span></span>
+      </div>
+    </div>`;
+  }
+},
+
+analytics:{ title:'Analytics', span:3, h:296, period:1,
+  body:()=>`<div class="mlist">${ANALYTICS.map(a=>`
+    <div class="r" data-row><span class="k">${a.k}</span>
+      <span class="v"><button class="drill roll" data-ds="${a.ds}">${a.v}</button></span></div>`).join('')}</div>`
+},
+
+status:{ title:'Status', span:3, h:296, period:'Today',
+  body:()=>`<div class="mlist">${STATUS.map(s=>`
+    <div class="r ${s.warn?'warn':''}" data-row><span class="k">${s.k}</span>
+      <span class="v"><button class="drill roll" data-ds="${s.ds}">${s.v}</button></span></div>`).join('')}</div>`
+},
+
+cpmEquip:{ title:'CPM By Equipment Type', span:3, h:296, period:1,
+  body:()=>{ const max=Math.max(...EQUIP.map(x=>x[1]));
+    return EQUIP.map(([k,v],i)=>`
+      <div class="hb" data-row><span class="k">${k}</span>
+        <span class="rail-bar"><i style="--w:${(v/max*100).toFixed(1)}%;animation-delay:${i*60}ms"></i></span>
+        <span class="v roll">${usd0(v)}</span></div>`).join('');
+  }
+},
+
+fleetPerf:{ title:'Fleet Performance', span:3, h:296,
+  tabs:['Revenue','Occupancy','Both'],
+  body:()=>{ const max=Math.max(...FLEET.map(f=>f[2]));
+    return FLEET.map(([id,who,v],i)=>`
+      <div class="fp" data-row><span class="who"><b>${id}</b><span>${esc(who)}</span></span>
+        <span class="rail-bar"><i style="--w:${(v/max*100).toFixed(1)}%;animation-delay:${i*60}ms"></i></span>
+        <span class="v roll">${money(v)}</span></div>`).join('');
+  }
+},
+
+grossEquip:{ title:'Gross By Equipment Type', span:3, h:296, period:1, kind:'chart', kpi:{v:'$ 31,725',d:'12.4%',dir:'up'},
+  spec:()=>({slabel:'Gross',type:'bar',data:EQUIP.map(x=>x[1]),names:EQUIP.map(x=>x[0]),
+    ticks:[0,1000,2000,3000,4000,5000,6000,7000],
+    fmt:t=>t?'$ '+(t/1000)+'k':'$ 0',lab:usd0,alt:'Gross by equipment type'})
+},
+
+/* ---- graphs from the Graphs panel -------------------------------------- */
+revenue:{ title:'Revenue', span:4, h:296, period:1, kind:'chart', kpi:{v:'$ 2.89M',d:'8.6%',dir:'up'},
+  spec:()=>({slabel:'Revenue',type:'bar',data:[412000,438000,501000,470000,523000,545000],names:MONTHS,
+    fmt:K$,lab:K$,alt:'Revenue by month'})
+},
+revCustomer:{ title:'Revenue by Customer', span:4, h:296, period:1, kind:'chart', kpi:{v:'$ 501,400',d:'5.2%',dir:'up'},
+  spec:()=>({slabel:'Revenue',type:'bar',L:52,data:[128400,96200,88100,74500,61300,52900],
+    names:['Yoke','GRANITE','BEEMAC','SUNTECK','TRANSLOOP','M.D.S.'],
+    fmt:K$,lab:K$,alt:'Revenue by customer'})
+},
+revCompanyDrivers:{ title:'Revenue by Company Drivers', span:4, h:296, period:1, kind:'chart', kpi:{v:'$ 1.80M',d:'9.1%',dir:'up'},
+  spec:()=>({slabel:'Revenue',type:'bar',data:[268000,281000,302000,295000,318000,331000],names:MONTHS,
+    fmt:K$,lab:K$,color:C_TEAL,alt:'Revenue from company drivers'})
+},
+revOwnerOps:{ title:'Revenue by Owner Operators', span:4, h:296, period:1, kind:'chart', kpi:{v:'$ 1.09M',d:'14.7%',dir:'up'},
+  spec:()=>({slabel:'Revenue',type:'bar',data:[144000,157000,199000,175000,205000,214000],names:MONTHS,
+    fmt:K$,lab:K$,color:C_ORANGE,alt:'Revenue from owner operators'})
+},
+revTruck:{ title:'Revenue by Truck', span:4, h:296, period:1, kind:'chart', kpi:{v:'$ 25,320',d:'3.8%',dir:'up'},
+  spec:()=>({slabel:'Revenue',type:'bar',data:FLEET.map(f=>f[2]),names:FLEET.map(f=>f[0]),
+    fmt:usd0,lab:usd0,alt:'Revenue by truck'})
+},
+occupancy:{ title:'Occupancy', span:4, h:296, period:1, kind:'chart', kpi:{v:'83.8%',d:'6.2%',dir:'up'},
+  legend:[['Occupancy',C_BLUE]],
+  spec:()=>({agg:'avg',type:'multiline',series:[{v:[71,78,84,81,88,92,86,90],c:C_BLUE,label:'Occupancy'}],
+    names:['W1','W2','W3','W4','W5','W6','W7','W8'],ticks:[60,70,80,90,100],
+    fmt:PCT,lab:PCT,alt:'Occupancy by week'})
+},
+cpm:{ title:'CPM (Open Deck vs Box)', span:6, h:320, period:1, kind:'chart', kpi:{v:'$ 1.69',d:'4.1%',dir:'dn'},
+  legend:[['Open deck',C_BLUE],['Box',C_ORANGE]],
+  spec:()=>({agg:'avg',type:'multiline',series:[{v:CPM_OPEN,c:C_BLUE,label:'Open deck'},{v:CPM_BOX,c:C_ORANGE,label:'Box'}],
+    names:CPMX,ticks:[0,0.5,1,1.5,2,2.5,3,3.5,4],fmt:usd2,lab:usd2,alt:'Cost per mile'})
+},
+trailerType:{ title:'Trailer Type', span:4, h:296, period:1, kind:'chart', kpi:{v:'61',d:'3.4%',dir:'up'},
+  spec:()=>({slabel:'Units',type:'bar',L:34,data:[12,6,9,11,14,5,4],names:TRAILERTYPES,
+    fmt:String,lab:String,alt:'Units by trailer type'})
+},
+driverPerTeam:{ title:'Driver Per Team', span:4, h:296, period:1, kind:'chart', kpi:{v:'68',d:'5.9%',dir:'up'},
+  legend:[['Company',C_BLUE],['Owner operator',C_ORANGE]],
+  spec:()=>({type:'grouped',L:32,a:[18,17,12],b:[7,9,5],aLabel:'Company',bLabel:'Owner operator',
+    names:['Team East','Team Central','Team South'],fmt:String,lab:String,alt:'Drivers per team'})
+},
+revenueByTeam:{ title:'Revenue By Team', span:4, h:296, period:1, kind:'chart', kpi:{v:'$ 711,700',d:'7.3%',dir:'up'},
+  spec:()=>({slabel:'Revenue',type:'bar',data:[186400,214100,168900,142300],names:['East','Central','South','West'],
+    fmt:K$,lab:K$,alt:'Revenue by team'})
+},
+revenueByTrailerType:{ title:'Revenue By Trailer Type', span:4, h:296, period:1, kind:'chart', kpi:{v:'$ 31,725',d:'12.4%',dir:'up'},
+  spec:()=>({slabel:'Revenue',type:'bar',data:EQUIP.map(x=>x[1]),names:EQUIP.map(x=>x[0]),
+    fmt:t=>t?'$ '+(t/1000)+'k':'$ 0',lab:usd0,alt:'Revenue by trailer type'})
+},
+revenueOccupancy:{ title:'Revenue & Occupancy', span:4, h:296, period:1, kind:'chart', kpi:{v:'$ 425.00',d:'9.8%',dir:'up'},
+  legend:[['Revenue',C_BLUE],['Occupancy',C_ORANGE]],
+  spec:()=>({type:'combo',barLabel:'Revenue',lineLabel:'Occupancy',bars:[71,90,159,105],line:[117,129,110,148],names:WEEKS,
+    ticks:[0,30,60,90,120,150,180],fmt:t=>'$ '+t.toFixed(2),lab:t=>'$ '+t.toFixed(2),
+    alt:'Revenue and occupancy'})
+},
+revenueActualGoal:{ title:'Revenue Actual Vs Goal', span:4, h:296, period:1, kind:'chart', kpi:{v:'$ 2.89M',d:'2.4%',dir:'dn'},
+  legend:[['Actual',C_BLUE],['Goal',C_ORANGE]],
+  spec:()=>({type:'combo',barLabel:'Actual',lineLabel:'Goal',bars:[412,438,501,470,523,545],line:[450,450,480,500,520,560],
+    names:MONTHS,fmt:t=>'$ '+t+'k',lab:t=>'$ '+t+'k',alt:'Revenue actual versus goal'})
+},
+revenueOccupancyGoal:{ title:'Revenue Occupancy Vs Goal', span:4, h:296, period:1, kind:'chart', kpi:{v:'82.3%',d:'3.1%',dir:'dn'},
+  legend:[['Actual',C_BLUE],['Goal',C_ORANGE]],
+  spec:()=>({agg:'avg',type:'combo',barLabel:'Actual',lineLabel:'Goal',bars:[71,78,84,81,88,92],line:[80,80,85,85,90,90],names:MONTHS,
+    ticks:[0,25,50,75,100],fmt:PCT,lab:PCT,alt:'Occupancy actual versus goal'})
+},
+loadsInTransit:{ title:'Loads In Transit', span:4, h:296, period:1, kind:'chart', kpi:{v:'443',d:'6.7%',dir:'up'},
+  legend:[['Loads in transit',C_BLUE]],
+  spec:()=>({type:'multiline',L:32,series:[{v:[58,61,64,60,67,64,69],c:C_BLUE,label:'Loads'}],
+    names:['Mon','Tue','Wed','Thu','Fri','Sat','Sun'],fmt:String,lab:String,
+    alt:'Loads in transit by day'})
+},
+goals:{ title:'Goals', span:3, h:296,
+  body:()=>`<div class="goals">${GOALS.map((g,i)=>`
+    <div class="goalrow" data-row>
+      <span class="k">${g.k}</span>
+      <span class="rail-bar"><i style="--w:${Math.min(100,g.pct)}%;animation-delay:${i*60}ms"></i></span>
+      <span class="v roll">${g.pct}%</span>
+      <span class="gsub">Actual ${esc(g.actual)} &middot; Goal ${esc(g.goal)}</span>
+    </div>`).join('')}</div>`
+},
+
+companyStats:{ title:'Company Stats', span:4, h:296, period:1,
+  body:()=>`<div class="statgrid">
+    <div class="stat"><b class="roll">1,284</b><span>Loads delivered</span></div>
+    <div class="stat up"><b class="roll">96.2%</b><span>On-time service</span></div>
+    <div class="stat"><b class="roll">$2.64</b><span>Average revenue per mile</span></div>
+    <div class="stat dn"><b class="roll">8.4%</b><span>Deadhead</span></div>
+    <div class="stat"><b class="roll">47</b><span>Active trucks</span></div>
+    <div class="stat"><b class="roll">795</b><span>Average length of haul</span></div>
+  </div>`
+}
+};
+
+/* drawer tree — the Graphs panel, in screen order */
+const REV_SUBS=[
+  {id:'revCustomer',label:'Customer',icon:'people'},
+  {id:'revCompanyDrivers',label:'Company Drivers',icon:'user'},
+  {id:'revOwnerOps',label:'Owner Operators',icon:'user'},
+  {id:'revTruck',label:'Truck',icon:'truck'}
+];
+const GRAPH_TREE=[
+  {id:'revenue',label:'Revenue',icon:'chart',sub:REV_SUBS,note:'Period totals'},
+  {id:'occupancy',label:'Occupancy',icon:'bag'},
+  {id:'cpm',label:'CPM',icon:'pct'},
+  {id:'trailerType',label:'Trailer Type',icon:'trailer'},
+  {id:'driverPerTeam',label:'Driver Per Team',icon:'user'},
+  {id:'revenueByTeam',label:'Revenue By Team',icon:'people'},
+  {id:'revenueByTrailerType',label:'Revenue By Trailer Type',icon:'trailer'},
+  {id:'revCustomer',label:'Revenue',icon:'usercash',sub:REV_SUBS,note:'By customer, driver, owner operator or truck'},
+  {id:'revenueOccupancy',label:'Revenue & Occupancy',icon:'chart'},
+  {id:'revenueActualGoal',label:'Revenue Actual Vs Goal',icon:'target'},
+  {id:'revenueOccupancyGoal',label:'Revenue Occupancy Vs Goal',icon:'goal'},
+  {id:'loadsInTransit',label:'Loads In Transit',icon:'transit'},
+  {id:'companyStats',label:'Company Stats',icon:'pie'}
+];
+
+/* ===========================================================================
+   6. PROFILES (landing pages)
+   ======================================================================== */
+const c=(id,span,h)=>({id,span,h});
+const TEMPLATES={
+  /* Row one is the daily-driver set: messages, shortcuts, time off, the clock. */
+  'General View':[c('comm',3,336),c('dashboard',3,336),c('timeoff',3,336),c('news',3,336),
+    c('goals',3,296),c('analytics',3,296),c('status',3,296),c('cpmEquip',3,296),
+    c('fleetPerf',6,296),c('grossEquip',6,296)],
+  'Customer Info':[c('comm',3,252),c('analytics',3,296),c('fleetPerf',3,296),
+    c('grossEquip',3,296),c('revCustomer',6,296),c('revenueByTeam',6,296),c('revenueOccupancy',12,300)],
+  'Dispatcher View':[c('comm',3,252),c('status',3,296),c('dashboard',3,296),
+    c('cpmEquip',3,296),c('loadsInTransit',6,296),c('news',6,296),
+    c('analytics',6,260),c('fleetPerf',6,260)],
+  'Driver Data':[c('driverPerTeam',6,300),c('analytics',3,300),c('timeoff',3,336),
+    c('fleetPerf',6,296),c('companyStats',6,296)],
+  'Sales Data':[c('revenue',6,300),c('revenueActualGoal',6,300),c('revCustomer',4,296),
+    c('revenueByTeam',4,296),c('revenueByTrailerType',4,296),c('revenueOccupancy',12,300)],
+  'Manager Data':[c('goals',3,296),c('companyStats',3,300),c('status',3,300),c('analytics',3,300),
+    c('revenueOccupancyGoal',6,300),c('grossEquip',6,300),c('cpm',12,320)]
+};
+const PROFILE_TYPES=Object.keys(TEMPLATES);
+
+let STATE={ profiles:[], activeId:null, defaultId:null, range:'today' };
+const SCHEMA=8;          // bump when TEMPLATES or card defaults change
+const uid=()=>'p'+Math.random().toString(36).slice(2,8);
+const active=()=>STATE.profiles.find(p=>p.id===STATE.activeId);
+
+function seedState(){
+  STATE.profiles=PROFILE_TYPES.map(t=>({id:uid(),name:t,type:t,cards:TEMPLATES[t].map(x=>({...x}))}));
+  STATE.activeId=STATE.profiles[0].id;
+  STATE.defaultId=STATE.profiles[0].id;
+  STATE.v=SCHEMA;
+}
+async function saveState(){ await Store.set('dpt.state',STATE); }
+async function loadState(){
+  const s=await Store.get('dpt.state');
+  if(s&&s.profiles&&s.profiles.length&&s.v===SCHEMA){
+    STATE=s; if(!active()) STATE.activeId=STATE.profiles[0].id;
+  } else seedState();          // no saved layout, or one from an older design
+}
+
+/* ===========================================================================
+   7. BOARD
+   ======================================================================== */
+const board=$('#board');
+const RANGE_LABEL={today:'today',yest:'yesterday',wtd:'week to date',mtd:'month to date',
+  qtd:'quarter to date',ytd:'year to date',custom:'a custom range'};
+
+function paint(wrap,anim){
+  const m=METRICS[wrap.dataset.metric]; if(!m||!m.spec) return;
+  const r=wrap.getBoundingClientRect();
+  if(r.width<8||r.height<8) return;
+  const o=effOpt(wrap.closest('.card'));
+  let sp=applyRange(m.spec(),o.range);
+  sp=applyPeriod(sp,o.period);
+  sp=morphSpec(sp,o.type);
+  sp.labels = o.labels!=='none';
+  sp.labelPos = o.labels==='none'?'out':o.labels;
+  drawChart(wrap,sp,r.width,r.height);
+  if(!wrap._wired){ wireHover(wrap); wrap._wired=1; }
+  if(!anim) $$('[class*="anim-"]',wrap).forEach(n=>{
+    n.setAttribute('class',n.getAttribute('class').replace(/anim-[a-z]+/g,'').trim());
+    n.removeAttribute('style');
+  });
+}
+const chartRO=new ResizeObserver(ents=>ents.forEach(en=>{
+  const w=en.target;
+  if(w.dataset.drawn){ paint(w,false); } else { w.dataset.drawn='1'; paint(w,true); }
+}));
+
+
+function buildCard(cd){
+  const m=METRICS[cd.id]; if(!m) return null;
+  const el=document.createElement('section');
+  el.className='card fresh'+(m.cls?' '+m.cls:'')+(m.bare?' bare':'');
+  el.dataset.id=cd.id;
+  el.style.gridColumn='span '+cd.span;
+  el.style.height=cd.h+'px';
+  el.dataset.opt=JSON.stringify(cd.opt||{});
+  if(cd.uh) el.dataset.uh='1';
+
+  const per = `<button class="copt" aria-haspopup="true" aria-label="Card options" title="Options">${svg('dots',16,2)}</button>`;
+  const tabs = m.tabs ? `<div class="tabs">${m.tabs.map((t,i)=>
+    `<button class="${i?'':'on'}">${t}</button>`).join('')}</div>` : '';
+
+  let inner, bodyCls='';
+  if(m.kind==='chart'){
+    const leg = m.legend ? `<div class="legend">${m.legend.map(([l,cc])=>
+      `<span><i style="background:${cc}"></i>${l}</span>`).join('')}</div>` : '';
+    const kp = m.kpi ? `<div class="kpi"><span class="v roll">${m.kpi.v}</span>
+      <span class="pill ${m.kpi.dir==='dn'?'dn':''}">${svg(m.kpi.dir,13,2.1)}${m.kpi.d}</span></div>` : '';
+    inner = `${kp}${leg}<div class="chart-wrap" data-metric="${cd.id}"></div>`;
+    bodyCls=' chartbody';
+  } else {
+    inner = m.body();
+  }
+
+  el.innerHTML=`
+    <header class="chead">
+      <h3>${esc(m.title)}</h3>
+      ${per}
+      <span class="grip" title="Drag to move this card">${svg('grip',14,1.6)}</span>
+    </header>
+    ${tabs}
+    <div class="cbody${m.flush?' flush':''}${bodyCls}">${inner}</div>
+    <span class="rsz" title="Drag to resize"></span>`;
+  return el;
+}
+
+function renderBoard(){
+  const p=active();
+  board.innerHTML='';
+  if(!p.cards.length){
+    board.innerHTML=`<div class="emptyboard">
+      <b>This landing page is empty</b>
+      Use <strong>Add Metric</strong> to pick graphs and cards from the system.
+    </div>`;
+    return;
+  }
+  p.cards.forEach(cd=>{ const el=buildCard(cd); if(el) board.appendChild(el); });
+  requestAnimationFrame(()=>{
+    $$('.card',board).forEach(el=>{
+      el.classList.add('in');
+      const w=$('.chart-wrap',el);
+      if(w){ delete w.dataset.drawn; chartRO.observe(w); }
+    });
+    equalizeRows();
+    rollNumbers($$('.roll',board),1500);
+    tickClock();
+    setTimeout(()=>$$('.card.fresh',board).forEach(el=>el.classList.remove('fresh')),600);
+  });
+  $('#phSub').textContent=`${p.name} · showing ${RANGE_LABEL[STATE.range]} · ${p.cards.length} card${p.cards.length===1?'':'s'}`;
+  setGraphTip(p.cards.length);
+}
+
+function syncCards(){
+  const p=active();
+  p.cards=$$('.card',board).map(el=>({
+    id:el.dataset.id,
+    span:parseInt((el.style.gridColumn.match(/\d+/)||[3])[0],10),
+    h:Math.round(el.getBoundingClientRect().height),
+    uh:el.dataset.uh==='1',
+    opt:(()=>{ try{ return JSON.parse(el.dataset.opt||'{}'); }catch(err){ return {}; } })()
+  }));
+  saveState();
+}
+
+/* ===========================================================================
+   7b. DAWSON NEWS  —  clock face, bulletin rotation, ticker
+   The sky is drawn locally rather than fetched, so the card has no network
+   dependency, no API key and no photo-licence obligation. Swap paintSky() for
+   an image URL if you'd rather pull from a stock photo API.
+   ======================================================================== */
+const SKIES={
+  night:['#0B1026','#17224A','#2B3A6B','#3C4E82','#7C8CB8'],
+  dawn :['#2B1B45','#6B3A6E','#B5638C','#E08C7A','#F3C29A'],
+  day  :['#1B4C86','#2E7FC4','#6FB0E4','#A8CDEE','#DCEBF8'],
+  dusk :['#1A1230','#402257','#7A3C74','#B2567E','#E08A84']
+};
+function skyFor(hour){
+  if(hour<5||hour>=21) return SKIES.night;
+  if(hour<8)  return SKIES.dawn;
+  if(hour<17) return SKIES.day;
+  return SKIES.dusk;
+}
+/* Layered ridges — far peaks pale, near ridge almost black. */
+function paintSky(svgEl,hour){
+  const c=skyFor(hour), gid='sky'+Math.random().toString(36).slice(2,7);
+  svgEl.innerHTML='';
+  svgEl.appendChild(e('defs',{},[e('linearGradient',{id:gid,x1:0,y1:0,x2:0,y2:1},[
+    e('stop',{offset:0,'stop-color':c[0]}),
+    e('stop',{offset:.55,'stop-color':c[1]}),
+    e('stop',{offset:1,'stop-color':c[2]})])]));
+  svgEl.appendChild(e('rect',{width:320,height:190,fill:`url(#${gid})`}));
+  if(hour<6||hour>=20)
+    [[38,26],[104,16],[168,32],[232,20],[286,40],[70,52],[200,58]].forEach(([x,y],i)=>
+      svgEl.appendChild(e('circle',{cx:x,cy:y,r:i%3?.9:1.4,fill:'#fff','fill-opacity':.75})));
+  else
+    svgEl.appendChild(e('circle',{cx:252,cy:44,r:16,fill:'#fff','fill-opacity':.22}));
+  svgEl.appendChild(e('path',{d:'M0 132 L44 96 L78 118 L118 84 L160 122 L196 100 L238 128 L276 104 L320 134 L320 190 L0 190 Z',
+    fill:c[4],'fill-opacity':.34}));
+  svgEl.appendChild(e('path',{d:'M0 152 L38 122 L74 146 L116 112 L152 144 L190 122 L226 150 L268 126 L320 156 L320 190 L0 190 Z',
+    fill:c[3],'fill-opacity':.55}));
+  svgEl.appendChild(e('path',{d:'M0 172 L46 148 L92 170 L134 142 L178 168 L222 146 L268 172 L320 150 L320 190 L0 190 Z',
+    fill:c[0],'fill-opacity':.82}));
+  svgEl.appendChild(e('rect',{y:120,width:320,height:70,fill:c[2],'fill-opacity':.14}));
+}
+const ord=d=>d+(d%10===1&&d!==11?'st':d%10===2&&d!==12?'nd':d%10===3&&d!==13?'rd':'th');
+function tzAbbr(d){
+  try{ return new Intl.DateTimeFormat('en-US',{timeZone:CLOCK.tz,timeZoneName:'short'})
+        .formatToParts(d).find(x=>x.type==='timeZoneName').value; }
+  catch(err){ return 'UTC'; }
+}
+function tickClock(){
+  const cards=$$('.newscard'); if(!cards.length) return;
+  const now=new Date();
+  const part=t=>{ try{ return new Intl.DateTimeFormat('en-US',{timeZone:CLOCK.tz,
+      hour:'2-digit',minute:'2-digit',hour12:!CLOCK.h24}).formatToParts(now)
+      .find(x=>x.type===t); }catch(err){ return null; } };
+  const hh=(part('hour')||{}).value||'--', mm=(part('minute')||{}).value||'--';
+  const ap=(part('dayPeriod')||{}).value||'';
+  let dstr='', hour24=now.getHours();
+  try{
+    const f=new Intl.DateTimeFormat('en-US',{timeZone:CLOCK.tz,weekday:'long',
+      month:'long',day:'numeric',year:'numeric'}).formatToParts(now);
+    const g=t=>(f.find(x=>x.type===t)||{}).value||'';
+    dstr=`${g('weekday')}, ${g('month')} ${ord(+g('day'))}, ${g('year')}`;
+    hour24=+new Intl.DateTimeFormat('en-US',{timeZone:CLOCK.tz,hour:'2-digit',hour12:false})
+             .formatToParts(now).find(x=>x.type==='hour').value;
+  }catch(err){}
+  cards.forEach(card=>{
+    const d=$('.nw-date .d',card); if(d) d.textContent=dstr;
+    const z=$('.nw-tz .z',card); if(z) z.textContent=tzAbbr(now);
+    const H=$('.nw-tile .hh',card), M=$('.nw-tile .mm',card);
+    if(H&&H.textContent!==hh) H.textContent=hh;
+    if(M&&M.textContent!==mm) M.textContent=mm;
+    const a=$('.nw-ap',card); if(a) a.textContent=CLOCK.h24?'24-hour':ap;
+    if(card.dataset.sky!==String(hour24)){
+      card.dataset.sky=String(hour24);
+      $$('.nw-sky',card).forEach(sv=>paintSky(sv,hour24));
+    }
+  });
+}
+setInterval(tickClock,1000);
+
+/* rotation: advance on a timer, pause while the pointer is on the card */
+const NW_MS=7000;
+let nwTimer=null;
+function nwGo(card,i){
+  const pages=$$('.nw-page',card); if(!pages.length) return;
+  const n=((i%pages.length)+pages.length)%pages.length;
+  pages.forEach((p,k)=>p.classList.toggle('on',k===n));
+  $$('.nw-dots i',card).forEach((d,k)=>d.classList.toggle('on',k===n));
+  card.dataset.nwAt=n;
+}
+function nwTick(){
+  $$('.newscard').forEach(card=>{
+    if(card.matches(':hover')||card.classList.contains('menuopen')) return;
+    if(REDUCED()) return;
+    nwGo(card,(+card.dataset.nwAt||0)+1);
+  });
+}
+function nwStart(){ clearInterval(nwTimer); nwTimer=setInterval(nwTick,NW_MS); }
+nwStart();
+
+/* ---- message row tooltip -----------------------------------------------
+   Lives on <body> so it is never clipped by the card's own scroll box. */
+const mtip=document.createElement('div');
+mtip.className='mtip';
+document.body.appendChild(mtip);
+function moveTip(ev){
+  const w=mtip.offsetWidth, h=mtip.offsetHeight;
+  let x=ev.clientX+14, y=ev.clientY-h-12;
+  if(x+w>innerWidth-8)  x=Math.max(8,innerWidth-w-8);
+  if(y<8)               y=ev.clientY+18;
+  mtip.style.left=x+'px'; mtip.style.top=y+'px';
+}
+function hideTip(){ mtip.classList.remove('on'); }
+board.addEventListener('pointerover',ev=>{
+  const row=ev.target.closest('[data-tip]');
+  if(!row||!row.dataset.tip||drag||rsz){ hideTip(); return; }
+  mtip.textContent=row.dataset.tip;
+  mtip.classList.add('on');
+  moveTip(ev);
+});
+board.addEventListener('pointermove',ev=>{
+  if(!mtip.classList.contains('on')) return;
+  if(drag||rsz||!ev.target.closest('[data-tip]')){ hideTip(); return; }
+  moveTip(ev);
+});
+board.addEventListener('pointerout',ev=>{
+  const row=ev.target.closest('[data-tip]');
+  if(row && ev.relatedTarget && row.contains(ev.relatedTarget)) return;
+  hideTip();
+});
+$('#main').addEventListener('scroll',hideTip,{passive:true});
+
+/* ---- rows share one height ---------------------------------------------
+   Cards land on a grid row together, so a row reads as a band rather than a
+   ragged edge. Auto cards are reset to their natural height first, then every
+   auto card in the row takes the row's tallest — so removing a tall card lets
+   the row come back down instead of ratcheting upwards. A card the user has
+   resized keeps its own height and is exempt. */
+function naturalH(el){ return ((METRICS[el.dataset.id]||{}).h)||296; }
+function equalizeRows(){
+  const cards=$$('.card',board); if(!cards.length) return;
+  cards.forEach(el=>{ if(el.dataset.uh!=='1') el.style.height=naturalH(el)+'px'; });
+  const rows=new Map();                       // grid rows all share an offsetTop
+  cards.forEach(el=>{
+    const t=Math.round(el.offsetTop);
+    if(!rows.has(t)) rows.set(t,[]);
+    rows.get(t).push(el);
+  });
+  rows.forEach(r=>{
+    const h=Math.max(...r.map(el=>Math.round(el.getBoundingClientRect().height)));
+    r.forEach(el=>{ if(el.dataset.uh!=='1') el.style.height=h+'px'; });
+  });
+}
+let eqT;
+function equalizeSoon(){ clearTimeout(eqT); eqT=setTimeout(equalizeRows,90); }
+window.addEventListener('resize',equalizeSoon);
+
+/* ---- drag to reorder ----------------------------------------------------
+   The card detaches, follows the pointer, and a placeholder tracks where it
+   will land. Siblings are animated with a FLIP pass so the board rearranges
+   smoothly rather than jumping. Nothing is committed until the pointer is
+   released. */
+let drag=null;
+
+function flip(measure){
+  if(REDUCED()){ measure(); return; }
+  const cards=$$('.card',board).filter(c=>c!==(drag&&drag.card));
+  const before=new Map(cards.map(c=>[c,c.getBoundingClientRect()]));
+  measure();
+  cards.forEach(c=>{
+    const a=before.get(c), b=c.getBoundingClientRect();
+    const dx=a.left-b.left, dy=a.top-b.top;
+    if(!dx&&!dy) return;
+    c.classList.remove('shifting');
+    c.style.transform=`translate(${dx}px,${dy}px)`;
+    void c.offsetWidth;                       // flush, so the next change animates
+    c.classList.add('shifting');
+    c.style.transform='';
+    clearTimeout(c._flip);
+    c._flip=setTimeout(()=>{ c.classList.remove('shifting'); c.style.transform=''; },240);
+  });
+}
+
+function startDrag(){
+  const card=drag.card, r=card.getBoundingClientRect();
+  drag.r=r; drag.gc=card.style.gridColumn; drag.h=card.style.height;
+  const ph=document.createElement('div');
+  ph.className='card-ph';
+  ph.style.gridColumn=drag.gc;
+  ph.style.height=r.height+'px';
+  card.after(ph);
+  drag.ph=ph;
+  card.style.width=r.width+'px';
+  card.style.height=r.height+'px';
+  card.style.left=r.left+'px';
+  card.style.top=r.top+'px';
+  card.classList.add('dragging');
+  document.body.classList.add('dragging');
+  drag.live=true;
+}
+
+board.addEventListener('pointerdown',ev=>{
+  const head=ev.target.closest('.chead'); if(!head) return;
+  if(ev.target.closest('select,button,input,a')) return;
+  const card=head.closest('.card'); if(!card) return;
+  ev.preventDefault();                        // stops the native text selection
+  drag={card,x0:ev.clientX,y0:ev.clientY,live:false};
+  head.setPointerCapture(ev.pointerId);
+});
+
+board.addEventListener('pointermove',ev=>{
+  if(!drag) return;
+  if(!drag.live){
+    if(Math.hypot(ev.clientX-drag.x0,ev.clientY-drag.y0)<5) return;
+    startDrag();
+  }
+  drag.card.style.transform=
+    `translate(${ev.clientX-drag.x0}px,${ev.clientY-drag.y0}px) scale(1.02)`;
+
+  const under=document.elementFromPoint(ev.clientX,ev.clientY);
+  const tgt=under&&under.closest?under.closest('.card'):null;
+  if(!tgt||tgt===drag.card||tgt.parentElement!==board) return;
+  const tr=tgt.getBoundingClientRect();
+  const after=(ev.clientX-tr.left)/tr.width>.5;
+  const ref=after?tgt.nextSibling:tgt;
+  if(ref===drag.ph) return;                   // placeholder already sits there
+  if(!after && drag.ph.nextSibling===tgt) return;
+  flip(()=>board.insertBefore(drag.ph,ref));
+});
+
+function endDrag(){
+  if(!drag) return;
+  if(!drag.live){ drag=null; return; }
+  const card=drag.card, ph=drag.ph, r=drag.r, gc=drag.gc, h=drag.h;
+  drag=null;
+  document.body.classList.remove('dragging');
+
+  const to=ph.getBoundingClientRect();        // glide into the slot, then commit
+  card.classList.add('landing');
+  card.style.transform=`translate(${to.left-r.left}px,${to.top-r.top}px)`;
+
+  let done=false;
+  const settle=()=>{
+    if(done) return; done=true;
+    card.removeEventListener('transitionend',settle);
+    ph.replaceWith(card);
+    card.classList.remove('dragging','landing');
+    card.style.position=card.style.left=card.style.top=
+      card.style.width=card.style.transform=card.style.zIndex='';
+    card.style.gridColumn=gc; card.style.height=h;
+    equalizeRows(); syncCards();
+    toast('Layout updated. <b>Order saved</b>');
+  };
+  /* transitions are off under reduced motion, so transitionend never fires —
+     drop straight into place rather than waiting out the fallback timer. */
+  if(REDUCED()){ settle(); return; }
+  card.addEventListener('transitionend',settle);
+  setTimeout(settle,280);                     // fallback if the transition is skipped
+}
+board.addEventListener('pointerup',endDrag);
+board.addEventListener('pointercancel',endDrag);
+
+/* ---- resize ------------------------------------------------------------- */
+let rsz=null;
+board.addEventListener('pointerdown',ev=>{
+  const h=ev.target.closest('.rsz'); if(!h) return;
+  ev.preventDefault(); ev.stopPropagation();
+  const card=h.closest('.card'), r=card.getBoundingClientRect();
+  const gap=parseFloat(getComputedStyle(board).columnGap)||14;
+  const inner=board.clientWidth-36;
+  rsz={card,x0:ev.clientX,y0:ev.clientY,w0:r.width,h0:r.height,colW:(inner-gap*11)/12,gap};
+  card.classList.add('resizing');
+  h.setPointerCapture(ev.pointerId);
+  hint(ev,'');
+});
+window.addEventListener('pointermove',ev=>{
+  if(!rsz) return;
+  const span=clamp(Math.round((rsz.w0+ev.clientX-rsz.x0+rsz.gap)/(rsz.colW+rsz.gap)),2,12);
+  const hgt=clamp(Math.round(rsz.h0+ev.clientY-rsz.y0),84,1600);
+  rsz.card.style.gridColumn='span '+span;
+  rsz.card.style.height=hgt+'px';
+  hintMove(ev);
+  setHint(`${span} / 12 columns · ${Math.round(rsz.card.getBoundingClientRect().height)} px`);
+});
+window.addEventListener('pointerup',()=>{
+  if(!rsz) return;
+  rsz.card.classList.remove('resizing');
+  if(Math.abs(rsz.card.getBoundingClientRect().height-rsz.h0)>1) rsz.card.dataset.uh='1';
+  const w=$('.chart-wrap',rsz.card); if(w) paint(w,false);
+  const card=rsz.card; rsz=null; hideHint();
+  equalizeRows(); syncCards();
+  const w2=$('.chart-wrap',card); if(w2) paint(w2,false);
+});
+
+/* drag hint chip */
+const hintEl=$('#hint');
+function hint(ev,txt){ hintEl.textContent=txt; hintEl.classList.add('show'); hintMove(ev); }
+function setHint(t){ hintEl.textContent=t; }
+function hintMove(ev){ hintEl.style.left=(ev.clientX+14)+'px'; hintEl.style.top=(ev.clientY+16)+'px'; }
+function hideHint(){ hintEl.classList.remove('show'); }
+
+/* ---- card interactions -------------------------------------------------- */
+board.addEventListener('click',ev=>{
+  const card=ev.target.closest('.card');
+
+  /* Options flyout — chart settings and card layout in one menu */
+  const co=ev.target.closest('.copt');
+  if(co){ ev.stopPropagation(); openOpt(card,co); return; }
+
+  /* drill-down from a linked figure */
+  const d=ev.target.closest('.drill');
+  if(d){ openDetail(d.dataset.ds); return; }
+  const mrow=ev.target.closest('.msg');
+  if(mrow && !ev.target.closest('button')){ hideTip(); openDetail('loads'); return; }
+
+  /* card tabs */
+  const tb=ev.target.closest('.tabs button');
+  if(tb){ $$('button',tb.parentElement).forEach(b=>b.classList.remove('on')); tb.classList.add('on'); return; }
+
+  /* Dawson News: rotation, bulletins, ticker, clock settings */
+  const st=ev.target.closest('[data-story]');
+  if(st){ openDetail('bulletins'); return; }
+  const tz=ev.target.closest('.nw-tz');
+  if(tz){
+    const k=TZONES.findIndex(z=>z[0]===CLOCK.tz);
+    if(k===TZONES.length-1 && !CLOCK.h24){ CLOCK.h24=true; }
+    else if(k===TZONES.length-1){ CLOCK.h24=false; CLOCK.tz=TZONES[0][0]; }
+    else CLOCK.tz=TZONES[k+1][0];
+    Store.set('dpt.clock',CLOCK); tickClock();
+    const zn=(TZONES.find(z=>z[0]===CLOCK.tz)||[])[1];
+    toast(`Clock set to <b>${esc(zn)}</b>, ${CLOCK.h24?'24-hour':'12-hour'}`);
+    return;
+  }
+  const na=ev.target.closest('[data-news]'), nd=ev.target.closest('[data-dot]');
+  if(na||nd){
+    nwGo(card, nd ? +nd.dataset.dot : (+card.dataset.nwAt||0) + (+na.dataset.news));
+    nwStart();
+  }
+});
+
+/* the dot bubble names each page as you sweep across them */
+board.addEventListener('mouseover',ev=>{
+  const d=ev.target.closest('.nw-dots i'); if(!d) return;
+  const bub=$('.nw-bub',d.parentElement); if(!bub) return;
+  bub.textContent=d.dataset.t;
+  bub.style.left=(d.offsetLeft+d.offsetWidth/2)+'px';
+  bub.classList.add('on');
+});
+board.addEventListener('mouseout',ev=>{
+  const d=ev.target.closest('.nw-dots i'); if(!d) return;
+  const bub=$('.nw-bub',d.parentElement); if(bub) bub.classList.remove('on');
+});
+
+/* ===========================================================================
+   8. PROFILE CONTROLS
+   ======================================================================== */
+/* The landing-page select is gone from the header; switching now lives at the
+   top of the Create Profile menu, and the page subtitle names the active one. */
+function renderProfileSelect(){ renderCreateMenu(); }
+
+const menuCreate=$('#menuCreate'), splitCreate=$('#splitCreate');
+function renderCreateMenu(){
+  menuCreate.innerHTML=`
+    <h5>SWITCH LANDING PAGE</h5>
+    ${STATE.profiles.map(pr=>`<button data-go="${pr.id}" class="${pr.id===STATE.activeId?'on':''}">
+      ${svg('grid',15,1.8)}<span class="txt">${esc(pr.name)}${pr.id===STATE.defaultId?' &#9733;':''}</span>
+      <span class="tick">${svg('chev',13,2.6)}</span></button>`).join('')}
+    <hr>
+    <h5>START FROM A PROFILE TYPE</h5>
+    ${PROFILE_TYPES.map(t=>`<button data-new="${t}">${svg('grid',15,1.8)}<span class="txt">${t}</span></button>`).join('')}
+    <hr>
+    <h5>THIS LANDING PAGE</h5>
+    <button data-act="default" class="${STATE.activeId===STATE.defaultId?'on':''}">
+      ${svg('star',15,1.8)}<span class="txt">Save as my default<span class="sub">Opens here after sign-in</span></span>
+      <span class="tick">${svg('chev',13,2.6)}</span></button>
+    <button data-act="rename">${svg('doc',15,1.8)}<span class="txt">Rename</span></button>
+    <button data-act="dupe">${svg('book',15,1.8)}<span class="txt">Duplicate</span></button>
+    <button data-act="reset">${svg('refresh',15,1.8)}<span class="txt">Reset to its template</span></button>
+    <hr>
+    <button data-act="delete" style="color:var(--red)">${svg('dots',15,1.8)}<span class="txt">Delete this landing page</span></button>`;
+}
+function toggleCreateMenu(on){
+  const show = on ?? !menuCreate.classList.contains('show');
+  menuCreate.classList.toggle('show',show);
+  splitCreate.classList.toggle('open',show);
+  $('#btnCreateCap').setAttribute('aria-expanded',String(show));
+}
+$('#btnCreateCap').addEventListener('click',e=>{ e.stopPropagation(); renderCreateMenu(); toggleCreateMenu(); });
+document.addEventListener('click',e=>{ if(!splitCreate.contains(e.target)) toggleCreateMenu(false); });
+
+$('#btnCreate').addEventListener('click',()=>{
+  const name=prompt('Name this landing page','My landing page');
+  if(!name) return;
+  const p={id:uid(),name:name.trim(),type:'Custom',cards:[]};
+  STATE.profiles.push(p); STATE.activeId=p.id;
+  saveState(); renderProfileSelect(); renderBoard();
+  toast(`Created <b>${esc(p.name)}</b>. Add metrics to fill it.`);
+  openDrawer();
+});
+
+menuCreate.addEventListener('click',ev=>{
+  const b=ev.target.closest('button'); if(!b) return;
+  if(b.dataset.go){
+    if(b.dataset.go!==STATE.activeId){
+      STATE.activeId=b.dataset.go; saveState(); renderBoard(); renderGPanel();
+      toast(`Switched to <b>${esc(active().name)}</b>`);
+    }
+    toggleCreateMenu(false); return;
+  }
+  const t=b.dataset.new, act=b.dataset.act, p=active();
+  if(t){
+    const np={id:uid(),name:t,type:t,cards:TEMPLATES[t].map(x=>({...x}))};
+    STATE.profiles.push(np); STATE.activeId=np.id;
+    saveState(); renderProfileSelect(); renderBoard();
+    toast(`Created a new <b>${esc(t)}</b> landing page`);
+  }
+  if(act==='default'){ STATE.defaultId=p.id; saveState(); renderProfileSelect();
+    toast(`<b>${esc(p.name)}</b> is now your default landing page`); }
+  if(act==='rename'){ const n=prompt('Rename landing page',p.name);
+    if(n&&n.trim()){ p.name=n.trim(); saveState(); renderProfileSelect(); renderBoard(); } }
+  if(act==='dupe'){
+    const np={id:uid(),name:p.name+' (copy)',type:p.type,cards:p.cards.map(x=>({...x}))};
+    STATE.profiles.push(np); STATE.activeId=np.id; saveState(); renderProfileSelect(); renderBoard();
+    toast(`Duplicated as <b>${esc(np.name)}</b>`); }
+  if(act==='reset'){ if(TEMPLATES[p.type]){ p.cards=TEMPLATES[p.type].map(x=>({...x}));
+    saveState(); renderBoard(); toast(`<b>${esc(p.name)}</b> reset to its template`); }
+    else toast('This landing page has no template to reset to'); }
+  if(act==='delete'){
+    if(STATE.profiles.length<2){ toast('You need at least one landing page'); }
+    else{
+      STATE.profiles=STATE.profiles.filter(x=>x.id!==p.id);
+      if(STATE.defaultId===p.id) STATE.defaultId=STATE.profiles[0].id;
+      STATE.activeId=STATE.profiles[0].id;
+      saveState(); renderProfileSelect(); renderBoard();
+      toast(`Deleted <b>${esc(p.name)}</b>`);
+    }
+  }
+  toggleCreateMenu(false);
+});
+
+/* ===========================================================================
+   8b. CARD OPTIONS FLYOUT  (Time Period / Chart Type / Label Choices)
+   ======================================================================== */
+const OPT_PANES={
+  range:{h:'THIS PANEL ONLY',key:'range',opts:RANGE_OPTS},
+  period:{h:'TIME PERIOD',key:'period',opts:[['Days','Days'],['Weeks','Weeks'],
+          ['Months','Months'],['Quarters','Quarters']]},
+  type:{h:'CHART TYPE',key:'type',opts:[['','Chart Default'],
+        ['line','Line Graph (Simple)'],['curve','Line Graph (Curved)'],
+        ['area','Area Graph'],['hbar','Bar Graph (Horizontal)'],
+        ['bar','Bar Graph (Vertical)'],['combo','Combo (Bar + Line)'],
+        ['scatter','Scattergram']]},
+  labels:{h:'LABEL CHOICES',key:'labels',opts:[['','Master default'],['out','Outside End'],
+          ['in','Inside End'],['center','Center'],['none','No labels']]},
+  card:{h:'CARD LAYOUT',key:'_act',opts:[['wide','Make full width'],['half','Half width'],
+        ['third','Quarter width'],['tall','Reset height'],['remove','Remove from page']]}
+};
+function doCardAct(card,act){
+  if(act==='remove'){
+    const t=$('h3',card).textContent;
+    card.remove(); closeOpt(); syncCards(); renderGPanel();
+    toast(`Removed <b>${esc(t)}</b>`);
+    if(!$$('.card',board).length) renderBoard();
+    return;
+  }
+  const label={wide:'Full width',half:'Half width',third:'Quarter width',
+               tall:'Height reset — back in step with its row'}[act];
+  if(act==='wide')  card.style.gridColumn='span 12';
+  if(act==='half')  card.style.gridColumn='span 6';
+  if(act==='third') card.style.gridColumn='span 3';
+  if(act==='tall'){ delete card.dataset.uh; card.style.height=naturalH(card)+'px'; }
+  equalizeRows();
+  syncCards();
+  const w=$('.chart-wrap',card); if(w) paint(w,false);
+  renderOpt();                   // refresh the highlighted width, stay open
+  toast(`<b>${esc($('h3',card).textContent)}</b> &middot; ${label}`);
+}
+let optMenu=null, optCard=null, optAnchor=null, optPane='period';
+function closeOpt(){
+  if(!optMenu) return;
+  optMenu.classList.remove('show');
+  if(optCard) optCard.classList.remove('menuopen');
+  optCard=null; optAnchor=null;
+}
+function cardOpt(card){ try{ return JSON.parse(card.dataset.opt||'{}'); }catch(e){ return {}; } }
+function renderOpt(){
+  if(!optCard) return;
+  const isChart=!!(METRICS[optCard.dataset.id]||{}).spec;
+  const eff=effOpt(optCard), co=cardOpt(optCard), P=OPT_PANES[optPane];
+  const span = parseInt((String(optCard.style.gridColumn).match(/\d+/)||[3])[0],10);
+  const sel = optPane==='period' ? (co.period||eff.period)
+            : optPane==='card'   ? ({12:'wide',6:'half',3:'third'}[span]||'')
+            : (co[P.key]||'');
+  const now = optPane==='period' ? eff.period
+            : optPane==='card'   ? null
+            : optPane==='range'  ? (co.range ? RANGE_NAME[co.range] : 'Master Calendar')
+            : (P.opts.find(o=>o[0]===(optPane==='type'?eff.type:eff.labels))||['','Chart Default'])[1];
+  optMenu.innerHTML=`
+    <div class="opt-l">
+      <button type="button" data-pane="range" class="${optPane==='range'?'on':''}">Date Range <span class="c">&rsaquo;</span></button>
+      <button type="button" data-pane="period" class="${optPane==='period'?'on':''}" ${isChart?'':'disabled'}>Time Period <span class="c">&rsaquo;</span></button>
+      <button type="button" data-pane="type" class="${optPane==='type'?'on':''}" ${isChart?'':'disabled'}>Chart Type <span class="c">&rsaquo;</span></button>
+      <button type="button" data-pane="labels" class="${optPane==='labels'?'on':''}" ${isChart?'':'disabled'}>Label Choices <span class="c">&rsaquo;</span></button>
+      <button type="button" data-pane="card" class="${optPane==='card'?'on':''}">Card Layout <span class="c">&rsaquo;</span></button>
+    </div>
+    <div class="opt-r">
+      <div class="opt-h">${now? P.h+' &middot; NOW '+esc(String(now).toUpperCase()) : P.h}</div>
+      ${P.opts.map(([v,l])=>`<button type="button" data-set="${P.key}" data-v="${v}" class="${v===sel?'on':''}">${l}</button>`).join('')}
+    </div>`;
+  placeOpt();
+}
+
+/* The panes are different heights — Card Layout has five rows where Time
+   Period has four — so the menu has to be re-measured after every render.
+   Positioning only on open left the lower entries below the fold. */
+function placeOpt(){
+  if(!optMenu||!optAnchor) return;
+  optMenu.style.maxHeight=Math.max(180,innerHeight-16)+'px';
+  const r=optAnchor.getBoundingClientRect();
+  const w=optMenu.offsetWidth, h=optMenu.offsetHeight;
+  const below=r.bottom+6, above=r.top-h-6;
+  let top = (below+h<=innerHeight-8) ? below
+          : (above>=8 ? above : Math.max(8,innerHeight-h-8));
+  optMenu.style.left=Math.max(8,Math.min(r.left,innerWidth-w-8))+'px';
+  optMenu.style.top=top+'px';
+}
+function openOpt(card,btn){
+  if(!optMenu){
+    optMenu=document.createElement('div');
+    optMenu.className='optmenu';
+    document.body.appendChild(optMenu);
+    optMenu.addEventListener('click',ev=>{
+      /* renderOpt() replaces innerHTML, so the clicked node is detached by the
+         time this event reaches document — where the outside-click guard would
+         read it as a click outside the menu and close it. Stop it here. */
+      ev.stopPropagation();
+      const l=ev.target.closest('[data-pane]');
+      if(l){ if(!l.disabled){ optPane=l.dataset.pane; renderOpt(); } return; }
+      const r=ev.target.closest('[data-set]'); if(!r) return;
+      if(!optCard||!optCard.isConnected){ closeOpt(); return; }
+      const k=r.dataset.set, v=r.dataset.v;
+      if(k==='_act'){ doCardAct(optCard,v); return; }
+      const co=cardOpt(optCard);
+      if(v==='') delete co[k]; else co[k]=v;
+      optCard.dataset.opt=JSON.stringify(co);
+      syncCards();
+      const w=$('.chart-wrap',optCard); if(w) paint(w,true);
+      rollNumbers($$('.roll',optCard),900);
+      renderOpt();
+      toast(`<b>${esc($('h3',optCard).textContent)}</b> &middot; ${esc(r.textContent)}`);
+    });
+  }
+  $$('.card.menuopen',board).forEach(x=>x.classList.remove('menuopen'));
+  optCard=card; optAnchor=btn; optCard.classList.add('menuopen');
+  optPane='range';
+  optMenu.classList.add('show');   // must be visible before it can be measured
+  renderOpt();
+}
+document.addEventListener('click',ev=>{
+  if(optMenu&&optCard&&!optMenu.contains(ev.target)&&!ev.target.closest('.copt')) closeOpt();
+});
+/* The board scrolls under the flyout, so follow the anchor rather than
+   stranding the menu where it was first drawn. */
+window.addEventListener('resize',()=>{ if(optCard) placeOpt(); });
+$('#main').addEventListener('scroll',()=>{
+  if(!optCard) return;
+  if(!optCard.isConnected||!optAnchor.isConnected){ closeOpt(); return; }
+  placeOpt();
+},{passive:true});
+
+/* ===========================================================================
+   8c. GRAPHS PICKER  —  every card on the page, checkable
+   ======================================================================== */
+const gpanel=$('#gpanel'), btnGraphs=$('#btnGraphs');
+function setGraphTip(n){
+  btnGraphs.dataset.tip=`${n} of ${Object.keys(METRICS).length} cards`;
+}
+function allMetricIds(){ return Object.keys(METRICS); }
+function renderGPanel(){
+  const p=active(), on=new Set(p.cards.map(x=>x.id)), ids=allMetricIds();
+  setGraphTip(on.size);
+  gpanel.innerHTML=`
+    <div class="gp-top">
+      <button data-all="1">Select all</button>
+      <button data-all="0">Deselect all</button>
+    </div>
+    <div class="gp-list">${ids.map(id=>`
+      <label class="gp-row${on.has(id)?'':' off'}">
+        <input type="checkbox" data-id="${id}" ${on.has(id)?'checked':''}>
+        <span>${esc(METRICS[id].title)}</span>
+      </label>`).join('')}</div>
+    <div class="gp-foot"><button id="gpBrowse">${svg('chart',14,2)} Browse graphs by category</button></div>`;
+}
+function toggleGPanel(on){
+  const show = on ?? !gpanel.classList.contains('show');
+  if(show) renderGPanel();
+  gpanel.classList.toggle('show',show);
+  btnGraphs.setAttribute('aria-expanded',String(show));
+}
+btnGraphs.addEventListener('click',ev=>{ ev.stopPropagation(); toggleGPanel(); });
+document.addEventListener('click',ev=>{ if(!ev.target.closest('.gwrap')) toggleGPanel(false); });
+function setCard(id,on){
+  const p=active();
+  if(on){ if(!p.cards.some(x=>x.id===id)) p.cards.push({id,span:METRICS[id].span,h:METRICS[id].h}); }
+  else p.cards=p.cards.filter(x=>x.id!==id);
+}
+gpanel.addEventListener('change',ev=>{
+  const cb=ev.target.closest('input[data-id]'); if(!cb) return;
+  setCard(cb.dataset.id,cb.checked);
+  saveState(); renderBoard(); renderGPanel();
+  toast(`${cb.checked?'Added':'Removed'} <b>${esc(METRICS[cb.dataset.id].title)}</b>`);
+});
+gpanel.addEventListener('click',ev=>{
+  ev.stopPropagation();          // same rebuild-detaches-target problem
+  const all=ev.target.closest('[data-all]');
+  if(all){
+    const on=all.dataset.all==='1';
+    allMetricIds().forEach(id=>setCard(id,on));
+    saveState(); renderBoard(); renderGPanel();
+    toast(on?'Every card added to this page':'All cards removed &mdash; pick the ones you want');
+    return;
+  }
+  if(ev.target.closest('#gpBrowse')){ toggleGPanel(false); openDrawer(); }
+});
+
+/* ===========================================================================
+   8d. MASTER CONTROLS
+   ======================================================================== */
+const masterWrap=$('#masterWrap');
+function openMaster(){
+  const M=master();
+  $('#cRange').value=STATE.range||'today';
+  $('#mCustom').classList.toggle('hide',(STATE.range||'today')!=='custom');
+  $('#mType').value=M.type; $('#mPeriod').value=M.period;
+  $('#mLabOn').checked=M.labOn; $('#mLabPos').value=M.labPos;
+  $('#mLabPos').disabled=!M.labOn;
+  masterWrap.classList.add('show');
+}
+function closeMaster(){ masterWrap.classList.remove('show'); }
+$('#btnMaster').addEventListener('click',openMaster);
+$('#mCancel').addEventListener('click',closeMaster);
+masterWrap.addEventListener('click',ev=>{ if(ev.target===masterWrap) closeMaster(); });
+$('#cRange').addEventListener('change',ev=>
+  $('#mCustom').classList.toggle('hide',ev.target.value!=='custom'));
+$('#mLabOn').addEventListener('change',ev=>$('#mLabPos').disabled=!ev.target.checked);
+$('#mFilters').addEventListener('click',()=>
+  toast('Filters apply to every card at once &mdash; wire them to your report filters here'));
+
+function applyMaster(){
+  $('#phSub').textContent=
+    `${active().name} · showing ${RANGE_LABEL[STATE.range]} · ${active().cards.length} cards`;
+  $$('.chart-wrap',board).forEach(w=>paint(w,true));
+  rollNumbers($$('.roll',board),1100);
+}
+$('#mSave').addEventListener('click',()=>{
+  STATE.range=$('#cRange').value;
+  STATE.master={period:$('#mPeriod').value,type:$('#mType').value,
+                labOn:$('#mLabOn').checked,labPos:$('#mLabPos').value};
+  saveState(); closeMaster(); applyMaster();
+  toast('Master controls applied to <b>every card</b> on this page');
+});
+$('#mRestore').addEventListener('click',()=>{
+  STATE.master={...MASTER_DEF}; STATE.range='today';
+  active().cards.forEach(x=>delete x.opt);
+  saveState(); closeMaster(); renderBoard();
+  setTimeout(applyMaster,60);
+  toast('Restored master defaults and cleared per-card overrides');
+});
+
+/* ===========================================================================
+   9. GRAPHS DRAWER
+   ======================================================================== */
+const drawer=$('#drawer'), scrim=$('#scrim');
+function openDrawer(){ renderDrawer(); drawer.classList.add('show'); scrim.classList.add('show'); }
+function closeDrawer(){ drawer.classList.remove('show'); scrim.classList.remove('show'); }
+$('#drawerClose').addEventListener('click',closeDrawer);
+scrim.addEventListener('click',closeDrawer);
+document.addEventListener('keydown',e=>{ if(e.key==='Escape'){
+  closeDrawer(); toggleCreateMenu(false); closeOpt();
+  toggleGPanel(false); closeMaster(); } });
+
+function onBoard(id){ return active().cards.some(x=>x.id===id); }
+function renderDrawer(){
+  $('#dlist').innerHTML=GRAPH_TREE.map((g,i)=>{
+    const added=onBoard(g.id);
+    const row=`
+      <div class="gitem${added?' added':''}" data-add="${g.id}" data-i="${i}">
+        <span class="gi">${svg(g.icon,19,1.7)}</span>
+        <span class="gn">${esc(g.label)}${g.note?`<span style="display:block;font-weight:450;font-size:10.5px;color:var(--ink-3)">${esc(g.note)}</span>`:''}</span>
+        ${added?`<span class="gi" style="color:var(--green)" title="Already on this page">${svg('chev',15,2.4)}</span>`:
+                `<span class="add">${svg('plus',15,2.2)}</span>`}
+        ${g.sub?`<span class="chev" data-exp="${i}">${svg('chev',15,2.2)}</span>`:''}
+      </div>`;
+    const sub=g.sub?`<div class="gsub" data-sub="${i}">${g.sub.map(s=>`
+      <div class="gitem${onBoard(s.id)?' added':''}" data-add="${s.id}">
+        <span class="gi">${svg(s.icon,17,1.7)}</span>
+        <span class="gn">${esc(s.label)}</span>
+        ${onBoard(s.id)?`<span class="gi" style="color:var(--green)">${svg('chev',14,2.4)}</span>`:
+                        `<span class="add">${svg('plus',14,2.2)}</span>`}
+      </div>`).join('')}</div>`:'';
+    return row+sub;
+  }).join('');
+}
+$('#dlist').addEventListener('click',ev=>{
+  const exp=ev.target.closest('[data-exp]');
+  if(exp){
+    ev.stopPropagation();
+    const i=exp.dataset.exp, sub=$(`[data-sub="${i}"]`), row=exp.closest('.gitem');
+    sub.classList.toggle('show'); row.classList.toggle('open');
+    return;
+  }
+  const it=ev.target.closest('[data-add]'); if(!it) return;
+  addMetric(it.dataset.add);
+});
+
+function addMetric(id){
+  const m=METRICS[id]; if(!m) return;
+  const p=active();
+  if(onBoard(id)){
+    const el=$$('.card',board).find(x=>x.dataset.id===id);
+    if(el){ el.scrollIntoView({block:'center'}); el.classList.add('fresh');
+      setTimeout(()=>el.classList.remove('fresh'),600); }
+    toast(`<b>${esc(m.title)}</b> is already on this page`);
+    return;
+  }
+  p.cards.push({id,span:m.span,h:m.h});
+  saveState(); renderBoard(); renderDrawer(); renderGPanel();
+  toast(`Added <b>${esc(m.title)}</b> to ${esc(p.name)}`);
+  setTimeout(()=>{ const el=$$('.card',board).find(x=>x.dataset.id===id);
+    if(el) el.scrollIntoView({block:'center',behavior:'smooth'}); },80);
+}
+
+/* ===========================================================================
+   10. DRILL-DOWN DETAIL VIEW
+   ======================================================================== */
+const viewHome=$('#viewHome'), viewDetail=$('#viewDetail');
+let DV={key:null,rows:[],sort:null,dir:1,q:'',page:0,size:10};
+
+function numify(v){
+  const n=parseFloat(String(v).replace(/[^0-9.\-]/g,''));
+  return isNaN(n)?null:n;
+}
+function openDetail(key){
+  const ds=DATASETS[key]; if(!ds){ toast('No detail view is wired to that figure yet'); return; }
+  DV={key,rows:ds.rows(),sort:null,dir:1,q:'',page:0,size:10};
+  viewHome.classList.add('hide'); viewDetail.classList.remove('hide');
+  renderDetail(); $('#main').scrollTop=0;
+}
+function closeDetail(){
+  viewDetail.classList.add('hide'); viewHome.classList.remove('hide');
+  $$('.chart-wrap',board).forEach(w=>paint(w,false));
+}
+function dvFiltered(){
+  const ds=DATASETS[DV.key];
+  let rows=DV.rows;
+  if(DV.q){
+    const q=DV.q.toLowerCase();
+    rows=rows.filter(r=>ds.cols.some(cl=>!cl.plain&&String(r[cl.k]??'').toLowerCase().includes(q)));
+  }
+  if(DV.sort){
+    const k=DV.sort;
+    rows=[...rows].sort((a,b)=>{
+      const na=numify(a[k]), nb=numify(b[k]);
+      if(na!==null&&nb!==null) return (na-nb)*DV.dir;
+      return String(a[k]).localeCompare(String(b[k]))*DV.dir;
+    });
+  }
+  return rows;
+}
+function renderDetail(){
+  const ds=DATASETS[DV.key];
+  const all=dvFiltered();
+  const pages=Math.max(1,Math.ceil(all.length/DV.size));
+  DV.page=clamp(DV.page,0,pages-1);
+  const rows=all.slice(DV.page*DV.size,(DV.page+1)*DV.size);
+
+  const head=ds.cols.map(cl=>`<th data-k="${cl.k}" class="${DV.sort===cl.k?'sorted':''}">${esc(cl.h)}${
+    cl.plain?'':`<span class="car">${DV.sort===cl.k?(DV.dir>0?'&#9650;':'&#9662;'):'&#9662;'}</span>`}</th>`).join('');
+
+  const body=rows.length? rows.map(r=>`<tr>${ds.cols.map(cl=>{
+    if(cl.render) return `<td>${cl.render(r)}</td>`;
+    const v=r[cl.k]??'';
+    return `<td class="${cl.num?'tnum':''}">${cl.link?`<a>${esc(v)}</a>`:esc(v)}</td>`;
+  }).join('')}</tr>`).join('')
+  : `<tr><td colspan="${ds.cols.length}"><div class="norows">Nothing matches that search.</div></td></tr>`;
+
+  viewDetail.innerHTML=`
+    <div class="dtop">
+      <div>
+        <div class="crumb">
+          <button id="crumbHome">${svg('back',12,2.4)} Dispatch Pro TMS Home page</button>
+          <span>/</span><span>${esc(ds.title)}</span>
+        </div>
+        <h2>${esc(ds.title)}</h2>
+      </div>
+      <div class="dtools">
+        <button class="linky" id="dvHide">${svg('eye',15,1.8)} View/Hide Widgets</button>
+        <button class="btn pri sm" id="dvEdit">Edit Widgets</button>
+      </div>
+    </div>
+
+    <div class="dtop">
+      <div class="dsearch">
+        <input id="dvQ" type="text" placeholder="Search" value="${esc(DV.q)}" aria-label="Search ${esc(ds.title)}">
+        ${svg('search',15,2)}
+      </div>
+    </div>
+
+    <div class="subbar">
+      <span class="cnt"><span class="dot">${svg('chev',11,3)}</span>${esc(ds.showCount||ds.title)}
+        <em>${ds.count}</em></span>
+      <span class="rt">
+        <button class="linky" id="dvFilters">${svg('filter',14,1.8)} Filters</button>
+        <button class="btn pri sm" id="dvCols">Column</button>
+      </span>
+    </div>
+
+    <div class="tablewrap joined">
+      <table class="dt"><thead><tr>${head}</tr></thead><tbody>${body}</tbody></table>
+    </div>
+
+    <div class="pager">
+      <button id="dvPrev" ${DV.page===0?'disabled':''}>${svg('back',12,2.4)} Previous</button>
+      <span class="mid">
+        <select class="sel pgsel" id="dvSize">
+          ${[10,25,50].map(n=>`<option ${n===DV.size?'selected':''}>${n}</option>`).join('')}
+        </select>
+        <span style="color:var(--ink-3)">${all.length?DV.page*DV.size+1:0}&ndash;${Math.min(all.length,(DV.page+1)*DV.size)} of ${all.length}</span>
+      </span>
+      <button id="dvNext" ${DV.page>=pages-1?'disabled':''}>Next ${svg('chev',12,2.4)}</button>
+    </div>
+    <div style="height:26px"></div>`;
+
+  $('#crumbHome').onclick=closeDetail;
+  $('#dvPrev').onclick=()=>{DV.page--;renderDetail();};
+  $('#dvNext').onclick=()=>{DV.page++;renderDetail();};
+  $('#dvSize').onchange=e=>{DV.size=+e.target.value;DV.page=0;renderDetail();};
+  $('#dvHide').onclick=()=>toast('Widget visibility is managed in <b>Edit Widgets</b>');
+  $('#dvEdit').onclick=()=>toast('Column layout editor opens here');
+  $('#dvFilters').onclick=()=>toast('Column filters open here');
+  $('#dvCols').onclick=()=>toast('Choose which columns show on this table');
+  const q=$('#dvQ');
+  q.oninput=()=>{ DV.q=q.value; DV.page=0; renderDetail();
+    const n=$('#dvQ'); n.focus(); n.setSelectionRange(n.value.length,n.value.length); };
+  $$('#viewDetail th[data-k]').forEach(th=>th.onclick=()=>{
+    const k=th.dataset.k;
+    if(DV.sort===k) DV.dir=-DV.dir; else { DV.sort=k; DV.dir=1; }
+    renderDetail();
+  });
+}
+
+/* ===========================================================================
+   11. CHROME + INIT
+   ======================================================================== */
+const MODULES=['Home','Dispatch','Equipment','Customer','Personnel','Safety','Billing','Sales','Reporting','Accounting'];
+$('#modnav').innerHTML=MODULES.map((m,i)=>`<a href="#" class="${i===0?'on':''}">${m}</a>`).join('');
+$('#modnav').addEventListener('click',ev=>{
+  const a=ev.target.closest('a'); if(!a) return; ev.preventDefault();
+  $$('#modnav a').forEach(x=>x.classList.remove('on')); a.classList.add('on');
+  if(a.textContent!=='Home') toast(`<b>${a.textContent}</b> module opens here`);
+  else { closeDetail(); }
+});
+$('#rail').innerHTML=
+  [['grid','Home',1],['doc','Documents'],['truck','Equipment'],['user','Personnel'],
+   ['cal','Calendar'],['chat','ProChat'],['bag','Billing'],['pin','Tracking']]
+  .map(([ic,t,on])=>`<button class="${on?'on':''}" title="${t}" aria-label="${t}">${svg(ic,19)}</button>`).join('')
+  +`<span class="sp"></span>`
+  +[['gear','Settings'],['list','Activity']]
+  .map(([ic,t])=>`<button title="${t}" aria-label="${t}">${svg(ic,19)}</button>`).join('');
+$('#rail').addEventListener('click',ev=>{
+  const b=ev.target.closest('button'); if(!b) return;
+  $$('#rail button').forEach(x=>x.classList.remove('on')); b.classList.add('on');
+});
+
+/* ---- theme ------------------------------------------------------------- */
+const btnTheme=$('#btnTheme');
+function applyTheme(dark){
+  document.documentElement.setAttribute('data-theme',dark?'dark':'light');
+  $('#themeIcon').innerHTML=dark?I.sun:I.moon;
+  const label=dark?'Switch to light mode':'Switch to dark mode';
+  btnTheme.title=label; btnTheme.setAttribute('aria-label',label);
+  btnTheme.setAttribute('aria-pressed',String(dark));
+}
+btnTheme.addEventListener('click',async()=>{
+  const dark=document.documentElement.getAttribute('data-theme')!=='dark';
+  applyTheme(dark);
+  await Store.set('dpt.theme',dark?'dark':'light');
+  /* charts read their colours from CSS variables, so repaint after the swap */
+  $$('.chart-wrap',board).forEach(w=>paint(w,false));
+  toast(dark?'Dark mode on':'Light mode on');
+});
+
+(async function init(){
+  const saved=await Store.get('dpt.theme');
+  applyTheme(saved ? saved==='dark'
+                   : matchMedia('(prefers-color-scheme:dark)').matches);
+  await loadState();
+  if(STATE.defaultId && STATE.profiles.some(p=>p.id===STATE.defaultId)) STATE.activeId=STATE.defaultId;
+  $('#cRange').value=STATE.range||'today';
+  const ck=await Store.get('dpt.clock'); if(ck) CLOCK=ck;
+  renderProfileSelect(); renderCreateMenu(); renderBoard(); renderGPanel();
+  setTimeout(tickClock,60);
+  const today=new Date(), prior=new Date(Date.now()-6*864e5);
+  $('#cTo').value=today.toISOString().slice(0,10);
+  $('#cFrom').value=prior.toISOString().slice(0,10);
+})();
+</script>
+</body>
+</html>

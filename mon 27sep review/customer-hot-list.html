@@ -1,0 +1,2327 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Dispatch Pro — Customer Hot List</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300..800&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/lucide@0.544.0/dist/umd/lucide.min.js"></script>
+<style>
+  /* ============================================================
+     Dispatch Pro design tokens — shadcn/ui geometry at 80%.
+     Every value is round(shadcn_px x 0.8) x 1.25 so it lands on a
+     whole rendered pixel under body{zoom:0.8}. See newdpdesignsystem.
+     ============================================================ */
+  :root{
+    --blue:#0F6FFF; --blue-dark:#1667CA; --blue-bg:#EFF6FF; --blue-border:#DBEAFE;
+    --red:#E7000B;
+    --text-dark:#101828; --text-heading:#1E2939; --text-body:#364153;
+    --text-muted:#6A7282; --text-faint:#99A1AF;
+    --border:#E5E7EB; --border-soft:#F3F4F6; --page-bg:#F9FAFB; --sidebar-bg:#FFFFFF;
+    --navy-deep:#101B33; --card-navy:#16274A; --blue-pill:#2E7DF7;
+    --icon-muted-dark:#66739A; --hairline-dark:rgba(255,255,255,0.08);
+    --surface:#FFFFFF; --segmented-track:#F3F4F6; --input-border:#E4E7EC; --icon-default:#4A5468;
+    --accent:#F4F4F5; --accent-fg:#18181B; --popover:#FFFFFF; --muted-fg:#71717A;
+    --ring:rgba(15,111,255,0.50); --ring-danger:rgba(231,0,11,0.20);
+    --shadow-xs:none; --shadow-sm:none; --shadow-md:none; --shadow-lg:none;
+    --green:#047857; --green-bg:#ECFDF5; --green-border:#A7F3D0;
+    --amber:#B45309; --amber-bg:#FFFBEB; --amber-border:#FDE68A;
+    --red-bg:#FEF2F2; --red-border:#FFE2E2; --row-hover:#FAFAFA;
+    --fs-xs:12.5px;   --lh-xs:17.5px;
+    --fs-sm:13.75px;  --lh-sm:20px;
+    --fs-base:16.25px;--lh-base:25px;
+    --fs-lg:17.5px;   --lh-lg:27.5px;
+    --fs-xl:20px;     --lh-xl:27.5px;
+    --fs-2xl:23.75px; --lh-2xl:32.5px;
+    --h-8:32.5px; --h-9:37.5px; --h-10:40px;
+    --r-sm:3.75px; --r-md:6.25px; --r-lg:7.5px; --r-xl:12.5px; --ring-w:2.5px;
+  }
+  [data-theme="dark"]{
+    --page-bg:#0B1220; --surface:#121B2E; --segmented-track:#17202F;
+    --border:#263248; --border-soft:#1C2537; --input-border:#2A3346;
+    --text-dark:#F3F5F9; --text-heading:#E9EDF4; --text-body:#A6B0C3;
+    --text-muted:#8B96AC; --text-faint:#7C879B;
+    --blue-bg:#16233A; --blue-border:#2C3E60; --icon-default:#AEB6C7;
+    --accent:#27272A; --accent-fg:#FAFAFA; --popover:#121B2E; --muted-fg:#8B96AC;
+    --ring:rgba(58,140,255,0.55); --ring-danger:rgba(248,113,113,0.26);
+    --shadow-xs:none; --shadow-sm:none; --shadow-md:none; --shadow-lg:none;
+    --green:#6EE7B7; --green-bg:#0E2A22; --green-border:#1C4638;
+    --amber:#FCD34D; --amber-bg:#2A2113; --amber-border:#4A3A18;
+    --red-bg:#2C1416; --red-border:#4A1F24; --row-hover:rgba(255,255,255,0.03);
+  }
+
+  *{ box-sizing:border-box; }
+  [hidden]{ display:none !important; }
+  html,body{ margin:0; padding:0; height:100%; }
+  button,input,select,textarea,optgroup{ font-family:inherit; }
+  body{
+    font-family:'Inter',system-ui,-apple-system,'Segoe UI',sans-serif;
+    font-size:var(--fs-sm); line-height:var(--lh-sm);
+    color:var(--text-body); background:var(--page-bg);
+    zoom:0.8;
+    display:flex; flex-direction:column;
+  }
+
+  /* ---------------- TOP BAR ---------------- */
+  .topbar{
+    height:66.25px; flex:0 0 66.25px; background:var(--surface);
+    border-bottom:1.25px solid var(--border);
+    display:flex; align-items:center; justify-content:space-between;
+    padding:0 20px; gap:20px; z-index:10;
+  }
+  .topbar-left{ display:flex; align-items:center; gap:22.5px; min-width:0; flex:1 1 auto; }
+  .company-block{ flex:0 0 auto; }
+  .company-title{ font-size:15px; line-height:18.75px; font-weight:700; color:var(--text-dark); }
+  .company-sub{ font-size:11.25px; line-height:15px; font-weight:500; color:var(--text-faint); margin-top:1.25px; }
+  .search-box{
+    background:var(--surface); border:1.25px solid var(--border); border-radius:6.25px;
+    height:35px; width:280px; display:flex; align-items:center; padding:0 12.5px; gap:7.5px; flex:0 1 280px;
+  }
+  .search-box svg{ color:var(--text-faint); flex:0 0 auto; }
+  .search-box input{
+    border:none; outline:none; font-family:inherit; font-size:12.5px;
+    line-height:20px; height:20px; color:var(--text-body); flex:1; min-width:0; background:transparent;
+  }
+  .search-box input::placeholder{ color:var(--text-faint); }
+  .topbar-right{ display:flex; align-items:center; gap:16.25px; flex:0 0 auto; }
+  .surcharge-card{ background:var(--card-navy); border-radius:7.5px; padding:7.5px 12.5px; display:flex; align-items:center; gap:10px; flex:0 0 auto; }
+  .surcharge-label{ font-size:10px; line-height:12.5px; font-weight:700; letter-spacing:0.5px; color:#8FA3C7; text-transform:uppercase; }
+  .surcharge-date{ font-size:10px; line-height:12.5px; color:#5E729C; margin-top:2.5px; }
+  .surcharge-value{ font-size:16.25px; line-height:20px; font-weight:800; color:#fff; }
+  :root:not([data-theme="dark"]) .surcharge-card{ background:var(--page-bg); box-shadow:inset 0 0 0 1.25px var(--border); }
+  :root:not([data-theme="dark"]) .surcharge-label{ color:var(--muted-fg); }
+  :root:not([data-theme="dark"]) .surcharge-date{ color:var(--muted-fg); opacity:.75; }
+  :root:not([data-theme="dark"]) .surcharge-value{ color:var(--text-heading); }
+  .icon-actions{ display:flex; align-items:center; gap:6.25px; flex:0 0 auto; }
+  .icon-btn{ position:relative; width:35px; height:35px; border-radius:7.5px; display:flex; align-items:center; justify-content:center; color:var(--icon-default); background:none; border:none; cursor:pointer; }
+  .icon-btn:hover{ background:var(--border-soft); }
+  .icon-btn .dot{ position:absolute; top:6.25px; right:7.5px; width:6.25px; height:6.25px; border-radius:50%; background:var(--red); border:1.25px solid var(--surface); }
+  .user-chip{ display:flex; align-items:center; gap:7.5px; cursor:pointer; flex:0 0 auto; }
+  .user-name{ font-size:13.75px; font-weight:600; color:var(--text-heading); }
+  .user-chip .chevron{ color:var(--text-faint); }
+  .avatar{ width:32.5px; height:32.5px; border-radius:50%; background:var(--card-navy); color:#fff; font-size:12.5px; font-weight:700; display:flex; align-items:center; justify-content:center; flex:0 0 auto; }
+
+  /* ---------------- BREADCRUMB ---------------- */
+  .breadcrumb-bar{ flex:0 0 auto; background:var(--surface); border-bottom:1.25px solid var(--border); padding:11.25px 23.75px; font-size:12.5px; }
+  .breadcrumb-bar span{ color:var(--text-faint); }
+  .breadcrumb-bar span.current{ color:var(--text-dark); font-weight:600; }
+
+  /* ---------------- APP BODY ---------------- */
+  .app-body{ flex:1 1 auto; display:flex; min-height:0; }
+
+  /* ---------------- SIDEBAR ---------------- */
+  .sidebar{ width:56.25px; flex:0 0 56.25px; background:var(--navy-deep); border-right:1.25px solid var(--border); display:flex; flex-direction:column; align-items:center; padding:12.5px 0; gap:6.25px; overflow-y:auto; }
+  .sidebar::-webkit-scrollbar{ width:0; }
+  .side-logo{ width:32.5px; height:32.5px; background:var(--blue-pill); border-radius:7.5px; display:flex; align-items:center; justify-content:center; color:#fff; font-weight:800; font-size:11.25px; letter-spacing:0.2px; flex:0 0 auto; margin-bottom:6.25px; }
+  .side-icon{ position:relative; width:37.5px; height:33.75px; border-radius:7.5px; display:flex; align-items:center; justify-content:center; color:var(--icon-muted-dark); background:none; border:none; cursor:pointer; flex:0 0 auto; }
+  .side-icon svg{ stroke-width:1.8; }
+  .side-icon:hover{ color:#C4CEE4; background:rgba(255,255,255,0.06); }
+  .side-icon.active{ color:#fff; background:rgba(255,255,255,0.08); }
+  .side-icon.active::before{ content:''; position:absolute; left:1.25px; top:50%; transform:translateY(-50%); width:2.5px; height:20px; border-radius:0 2.5px 2.5px 0; background:var(--blue-pill); }
+  .sidebar-spacer{ flex:1 1 auto; }
+  .side-icon-bottom{ width:33.75px; height:33.75px; border-radius:7.5px; display:flex; align-items:center; justify-content:center; color:var(--icon-muted-dark); background:none; border:none; cursor:pointer; }
+  .side-icon-bottom:hover{ color:#C4CEE4; }
+
+  /* ---------------- CONTENT ---------------- */
+  .content{ flex:1 1 auto; display:flex; flex-direction:column; min-width:0; min-height:0; }
+  .page-header-band{ flex:0 0 auto; background:var(--surface); border-bottom:1.25px solid var(--border); }
+  .page-head{ padding:16.25px 23.75px; display:flex; align-items:flex-start; justify-content:space-between; gap:20px; }
+  .page-head-text{ min-width:0; }
+  .page-head-actions{ display:flex; align-items:center; gap:12.5px; flex:0 0 auto; }
+  .page-title-row{ display:flex; align-items:center; gap:10px; flex-wrap:wrap; margin-bottom:3.75px; }
+  .page-title{ font-size:var(--fs-2xl); line-height:var(--lh-2xl); font-weight:600; color:var(--text-dark); margin:0; letter-spacing:-0.5px; }
+  .page-subtitle{ font-size:var(--fs-sm); line-height:var(--lh-sm); font-weight:400; color:var(--muted-fg); margin:0; }
+  .content-scroll{ flex:1 1 auto; overflow-y:auto; }
+  .content-inner{ max-width:none; margin:0; padding:23.75px 23.75px 60px; }
+
+  /* ---------------- FOCUS RING ---------------- */
+  .text-input:focus-visible,.select-input:focus-visible,.dropdown-trigger:focus-visible{ border-color:var(--blue); box-shadow:0 0 0 var(--ring-w) var(--ring); }
+  .btn:focus-visible,.btn-primary:focus-visible,.btn-outline:focus-visible,
+  .icon-action-btn:focus-visible,.segmented button:focus-visible,.page-tab:focus-visible,
+  .adv-link:focus-visible,.row-checkbox:focus-visible,.th-sort:focus-visible,
+  .cell-link:focus-visible,.grid-clear:focus-visible,.dialog-close:focus-visible{ outline:none; box-shadow:0 0 0 var(--ring-w) var(--ring); }
+  .btn-danger:focus-visible{ outline:none; box-shadow:0 0 0 var(--ring-w) var(--ring-danger); }
+
+  /* ---------------- BUTTON ---------------- */
+  .btn,.btn-primary,.btn-outline{
+    display:inline-flex; align-items:center; justify-content:center; gap:7.5px;
+    height:var(--h-9); padding:0 16.25px; border-radius:var(--r-md);
+    font-family:inherit; font-size:var(--fs-sm); line-height:var(--lh-sm); font-weight:500;
+    cursor:pointer; white-space:nowrap; border:1.25px solid transparent;
+    transition:background .15s ease, border-color .15s ease, color .15s ease;
+  }
+  .btn,.btn-primary{ background:var(--blue); color:#fff; }
+  .btn:hover,.btn-primary:hover{ background:var(--blue-dark); }
+  .btn:disabled,.btn-primary:disabled,.btn-outline:disabled{ opacity:0.5; cursor:not-allowed; }
+  .btn svg,.btn-primary svg,.btn-outline svg{ width:16.25px; height:16.25px; flex:0 0 auto; pointer-events:none; }
+  .btn-outline{ background:var(--surface); color:var(--text-heading); border-color:var(--input-border); }
+  .btn-outline:hover{ border-color:var(--blue); color:var(--blue); }
+  .btn-outline:disabled:hover{ border-color:var(--input-border); color:var(--text-heading); }
+  .btn[data-size="sm"],.btn-primary[data-size="sm"],.btn-outline[data-size="sm"]{ height:var(--h-8); padding:0 12.5px; gap:6.25px; }
+  .btn-danger{ display:inline-flex; align-items:center; justify-content:center; gap:7.5px; height:var(--h-9); padding:0 16.25px; border-radius:var(--r-md); border:1.25px solid transparent; background:var(--red); color:#fff; font-family:inherit; font-size:var(--fs-sm); line-height:var(--lh-sm); font-weight:500; cursor:pointer; white-space:nowrap; transition:background .15s ease; }
+  .btn-danger:hover{ background:#C60009; }
+  .btn-danger svg{ width:16.25px; height:16.25px; flex:0 0 auto; pointer-events:none; }
+
+  /* ---------------- BADGE ---------------- */
+  .badge{
+    display:inline-flex; align-items:center; justify-content:center; gap:3.75px; width:fit-content;
+    padding:2.5px 7.5px; border-radius:var(--r-md); border:1.25px solid var(--border);
+    background:var(--accent); color:var(--muted-fg);
+    font-size:var(--fs-xs); line-height:15px; font-weight:500; white-space:nowrap; flex:0 0 auto;
+  }
+  .badge svg{ width:12.5px; height:12.5px; flex:0 0 auto; }
+  .badge[data-variant="info"]{ background:var(--blue-bg); border-color:var(--blue-border); color:var(--blue-dark); }
+  .badge[data-variant="success"]{ background:var(--green-bg); border-color:var(--green-border); color:var(--green); }
+  .badge[data-variant="warning"]{ background:var(--amber-bg); border-color:var(--amber-border); color:var(--amber); }
+  .badge[data-variant="danger"]{ background:var(--red-bg); border-color:var(--red-border); color:var(--red); }
+  [data-theme="dark"] .badge[data-variant="info"]{ color:#93C5FD; }
+  [data-theme="dark"] .badge[data-variant="danger"]{ color:#FCA5A5; }
+
+  /* ---------------- SEGMENTED ---------------- */
+  .segmented{ display:inline-flex; align-items:center; justify-content:center; width:fit-content; height:var(--h-9); background:var(--segmented-track); border:1.25px solid var(--border); border-radius:var(--r-lg); padding:2.5px; flex:0 0 auto; }
+  .segmented button{ display:inline-flex; align-items:center; justify-content:center; gap:6.25px; height:100%; font-family:inherit; font-size:var(--fs-sm); line-height:var(--lh-sm); font-weight:500; color:var(--muted-fg); background:none; border:1.25px solid transparent; padding:0 12.5px; border-radius:var(--r-md); cursor:pointer; white-space:nowrap; transition:color .15s ease, background .15s ease; }
+  .segmented button:not(.active):hover{ background:var(--blue-bg); color:var(--blue); }
+  .segmented button.active{ background:var(--blue); color:#fff; border-color:transparent; }
+
+  /* ---------------- PAGE TABS (underline) ---------------- */
+  .page-tabs{ display:flex; align-items:flex-end; gap:22.5px; border-bottom:1.25px solid var(--border); margin-bottom:20px; }
+  .page-tab{ position:relative; background:none; border:none; font-family:inherit; font-size:var(--fs-sm); line-height:var(--lh-sm); font-weight:500; color:var(--muted-fg); padding:0 1.25px 11.25px; margin-bottom:-1.25px; cursor:pointer; border-bottom:2.5px solid transparent; border-radius:var(--r-sm) var(--r-sm) 0 0; transition:color .13s ease, border-color .13s ease; }
+  .page-tab:hover{ color:var(--blue); }
+  .page-tab.active{ color:var(--blue); border-bottom-color:var(--blue); font-weight:600; }
+
+  /* ---------------- HOT LIST TOOLBAR ---------------- */
+  .hotlist-toolbar{ display:flex; align-items:center; justify-content:space-between; gap:16.25px; margin-bottom:16.25px; flex-wrap:wrap; }
+  .toolbar-left{ display:flex; align-items:center; gap:12.5px; flex-wrap:wrap; }
+  .toolbar-right{ display:flex; align-items:center; gap:12.5px; flex-wrap:wrap; }
+  .list-by-label{ font-size:var(--fs-sm); line-height:var(--lh-sm); color:var(--muted-fg); font-weight:500; }
+  .grid-search{ background:var(--surface); border:1.25px solid var(--input-border); border-radius:var(--r-md); height:var(--h-9); width:280px; display:flex; align-items:center; padding:0 12.5px; gap:7.5px; transition:border-color .15s ease; }
+  .grid-search:focus-within{ border-color:var(--blue); box-shadow:0 0 0 var(--ring-w) var(--ring); }
+  .grid-search svg{ color:var(--text-faint); flex:0 0 auto; width:15px; height:15px; }
+  .grid-search input{ border:none; outline:none; font-family:inherit; font-size:var(--fs-sm); line-height:20px; height:20px; color:var(--text-body); flex:1; min-width:0; background:transparent; }
+  .grid-search input::placeholder{ color:var(--text-faint); }
+  .adv-link{ display:inline-flex; align-items:center; gap:6.25px; background:none; border:none; padding:0 1.25px; font-family:inherit; font-size:var(--fs-sm); line-height:var(--lh-sm); font-weight:500; color:var(--blue); cursor:pointer; border-radius:var(--r-sm); }
+  .adv-link:hover{ text-decoration:underline; }
+  .adv-link svg{ width:15px; height:15px; }
+  .adv-link.on{ color:var(--blue-dark); }
+
+  /* ---------------- DATA GRID + TABLE ---------------- */
+  .data-grid{ border:1.25px solid var(--border); border-radius:var(--r-lg); overflow:hidden; background:var(--surface); }
+  .data-grid-toolbar{ display:flex; align-items:center; justify-content:space-between; gap:12.5px; padding:10px 13.75px; background:var(--page-bg); border-bottom:1.25px solid var(--border); }
+  .data-grid-toolbar-left{ display:flex; align-items:center; gap:8.75px; min-width:0; }
+  .data-grid-toolbar-right{ display:flex; align-items:center; gap:10px; }
+  .data-grid-title{ font-size:var(--fs-sm); line-height:var(--lh-sm); font-weight:500; color:var(--text-heading); }
+  .grid-clear{ background:none; border:none; font-family:inherit; font-size:var(--fs-xs); line-height:var(--lh-xs); font-weight:500; color:var(--blue); cursor:pointer; padding:0 1.25px; border-radius:var(--r-sm); }
+  .grid-clear:hover{ text-decoration:underline; }
+  .data-grid-scroll{ overflow-x:auto; }
+  .pay-table{ width:100%; border-collapse:separate; border-spacing:0; margin:0; font-size:var(--fs-sm); }
+  /* line-height fills the 40px cell so the inline header controls (sort
+     buttons, select-all checkbox) centre geometrically. At --lh-sm the
+     vertical-align:middle baseline math landed them on a half-pixel. */
+  .pay-table th{ text-align:left; height:40px; font-size:var(--fs-sm); line-height:40px; font-weight:400; color:var(--text-dark); background:var(--page-bg); padding:0 13.75px; border-bottom:1.25px solid var(--border); white-space:nowrap; vertical-align:middle; }
+  .pay-table th .th-sort, .pay-table th .row-checkbox{ vertical-align:middle; }
+  .pay-table td{ padding:11.25px 13.75px; border-bottom:1.25px solid var(--border-soft); vertical-align:middle; white-space:nowrap; font-size:var(--fs-sm); line-height:var(--lh-sm); color:var(--text-body); }
+  .pay-table tbody tr{ transition:background .12s ease; }
+  .pay-table tbody tr.data-row:hover{ background:var(--row-hover); }
+  .pay-table tbody tr:last-child td{ border-bottom:none; }
+  .pay-table th.num, .pay-table td.num{ text-align:left; font-variant-numeric:tabular-nums; }
+  .pay-table td.cell-company{ color:var(--text-heading); font-weight:500; }
+  .pay-table td.cell-ext, .pay-table td.cell-muted{ color:var(--muted-fg); }
+  .col-check{ width:38px; padding-left:15px; padding-right:0; }
+
+  /* sortable header */
+  .th-sort{ display:inline-flex; align-items:center; gap:5px; background:none; border:none; padding:0; margin:0; font-family:inherit; font-size:var(--fs-sm); line-height:var(--lh-sm); font-weight:400; color:var(--text-dark); cursor:pointer; border-radius:var(--r-sm); }
+  .th-sort:hover{ color:var(--blue); }
+  .th-sort svg{ width:13.75px; height:13.75px; opacity:.45; flex:0 0 auto; }
+  .th-sort.sorted{ color:var(--blue); font-weight:500; }
+  .th-sort.sorted svg{ opacity:1; color:var(--blue); }
+
+  /* cell links */
+  .cell-link{ background:none; border:none; padding:0; margin:0; font-family:inherit; font-size:var(--fs-sm); line-height:var(--lh-sm); color:var(--blue); cursor:pointer; text-align:left; border-radius:var(--r-sm); }
+  .cell-link:hover{ text-decoration:underline; }
+  .cell-comment{ display:inline-block; max-width:230px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; vertical-align:bottom; color:var(--muted-fg); }
+  .cell-empty{ color:var(--text-faint); }
+
+  /* inline advance-search filter row (toggles under the column headers) */
+  .adv-link.on, .adv-link.on:hover{ color:var(--red); }
+  .filter-row th{ height:auto; padding:6.25px 13.75px; background:var(--surface); border-bottom:1.25px solid var(--border); vertical-align:middle; }
+  .filter-input{ width:100%; min-width:64px; height:27.5px; border:1.25px solid var(--input-border); border-radius:var(--r-sm); padding:0 8.75px; font-family:inherit; font-size:var(--fs-xs); line-height:27.5px; color:var(--text-body); background:var(--surface); outline:none; transition:border-color .13s ease, box-shadow .13s ease; }
+  .filter-input:hover{ border-color:var(--blue); }
+  .filter-input:focus-visible{ border-color:var(--blue); box-shadow:0 0 0 var(--ring-w) var(--ring); }
+  .filter-input::placeholder{ color:var(--text-faint); }
+
+  /* header selection bar */
+  .sel-note{ display:inline-flex; align-items:center; gap:5px; font-size:var(--fs-sm); line-height:var(--lh-sm); color:var(--muted-fg); white-space:nowrap; }
+  .sel-note b{ color:var(--blue); font-weight:700; }
+
+  /* Send Truck List (header) — profile/schedule rows + trucks table + success */
+  .stl-row{ display:grid; grid-template-columns:1fr 1fr; gap:12.5px; margin-bottom:16.25px; }
+  .stl-row-4{ display:grid; grid-template-columns:1fr 1fr 1fr 1fr; gap:10px; margin-bottom:16.25px; }
+  .trucks-wrap{ border:1.25px solid var(--border); border-radius:var(--r-md); overflow:hidden; margin-top:5px; }
+  .trucks-scroll{ max-height:230px; overflow:auto; }
+  .trucks-table{ width:100%; border-collapse:separate; border-spacing:0; font-size:var(--fs-xs); }
+  .trucks-table th{ position:sticky; top:0; z-index:1; background:var(--page-bg); text-align:left; font-weight:500; color:var(--text-heading); padding:7.5px 10px; border-bottom:1.25px solid var(--border); white-space:nowrap; }
+  .trucks-table td{ padding:7.5px 10px; border-bottom:1.25px solid var(--border-soft); white-space:nowrap; color:var(--text-body); }
+  .trucks-table tbody tr:last-child td{ border-bottom:none; }
+  .trucks-table .tt-check{ width:32.5px; padding-left:11.25px; }
+  .pill{ display:inline-flex; align-items:center; padding:1.25px 6.25px; border-radius:999px; font-size:var(--fs-xs); line-height:15px; font-weight:500; }
+  .pill.avail{ background:var(--green-bg); border:1.25px solid var(--green-border); color:var(--green); }
+  .pill.transit{ background:var(--amber-bg); border:1.25px solid var(--amber-border); color:var(--amber); }
+  .success-check{ width:60px; height:60px; margin:0 auto 15px; border-radius:50%; background:var(--green-bg); border:1.25px solid var(--green-border); display:flex; align-items:center; justify-content:center; color:var(--green); }
+  .success-check svg{ width:32.5px; height:32.5px; }
+  .success-title{ margin:0 0 6.25px; font-size:var(--fs-xl); line-height:var(--lh-xl); font-weight:700; color:var(--green); text-align:center; }
+  .success-msg{ margin:0; font-size:var(--fs-sm); line-height:var(--lh-sm); color:var(--muted-fg); text-align:center; }
+
+  /* contact-icon popover (Call / Cell / Email / Text row icons) */
+  .contact-pop{ position:fixed; z-index:1000; min-width:230px; background:var(--popover); border:1.25px solid var(--border); border-radius:var(--r-md); padding:12.5px; animation:pop-in .12s ease both; }
+  .contact-pop-head{ display:flex; align-items:center; gap:6.25px; font-size:var(--fs-xs); line-height:var(--lh-xs); font-weight:600; letter-spacing:.4px; text-transform:uppercase; color:var(--muted-fg); }
+  .contact-pop-head svg{ width:13.75px; height:13.75px; color:var(--icon-default); }
+  .contact-pop-val{ margin-top:5px; font-size:var(--fs-base); line-height:var(--lh-base); font-weight:600; color:var(--text-dark); }
+  .contact-pop-sub{ margin-top:1.25px; font-size:var(--fs-xs); line-height:var(--lh-xs); color:var(--muted-fg); }
+  .contact-pop-actions{ display:flex; gap:7.5px; margin-top:12.5px; }
+
+  /* Send Tracking modal specifics */
+  .check-row{ display:flex; align-items:center; gap:8.75px; font-size:var(--fs-sm); line-height:var(--lh-sm); color:var(--text-body); cursor:pointer; margin-bottom:17.5px; }
+  .driver-chip{ display:flex; align-items:center; gap:8.75px; height:var(--h-9); padding:0 12.5px; border:1.25px solid var(--input-border); border-radius:var(--r-md); background:var(--surface); font-size:var(--fs-sm); line-height:var(--lh-sm); color:var(--text-body); overflow:hidden; }
+  .driver-chip .av{ width:22.5px; height:22.5px; flex:0 0 auto; border-radius:50%; background:var(--card-navy); color:#fff; display:flex; align-items:center; justify-content:center; font-size:10px; font-weight:700; }
+  .driver-chip span:last-child{ overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  .link-field{ position:relative; }
+  .link-field .text-input{ padding-right:40px; }
+  .link-copy{ position:absolute; right:5px; top:5px; width:27.5px; height:27.5px; display:flex; align-items:center; justify-content:center; border:none; background:none; border-radius:var(--r-sm); color:var(--icon-default); cursor:pointer; transition:background .13s ease, color .13s ease; }
+  .link-copy:hover{ background:var(--blue-bg); color:var(--blue); }
+  .link-copy svg{ width:15px; height:15px; }
+  .field-label-add{ display:flex; align-items:center; justify-content:space-between; }
+  .field-add-btn{ background:none; border:none; padding:0; font-family:inherit; font-size:var(--fs-xs); line-height:var(--lh-xs); font-weight:500; color:var(--blue); cursor:pointer; display:inline-flex; align-items:center; gap:3.75px; }
+  .field-add-btn:hover{ text-decoration:underline; }
+  .field-add-btn svg{ width:12.5px; height:12.5px; }
+  .trk-history{ display:inline-flex; align-items:center; gap:5px; background:none; border:none; padding:0; font-family:inherit; font-size:var(--fs-sm); line-height:var(--lh-sm); font-weight:500; color:var(--blue); cursor:pointer; }
+  .trk-history:hover{ text-decoration:underline; }
+  .trk-history svg{ width:13.75px; height:13.75px; }
+
+  /* ---- Right-side sheet (Match to Freight) ---- */
+  .dialog-overlay.sheet-overlay{ justify-content:flex-end; padding:0; }
+  .sheet-panel{ width:100%; max-width:812.5px; height:100%; max-height:100%; display:flex; flex-direction:column; border-radius:0; border-width:0 0 0 1.25px; padding:0; overflow:hidden; }
+  .sheet-head{ display:flex; align-items:center; justify-content:space-between; gap:12.5px; padding:15px 20px; border-bottom:1.25px solid var(--border); flex:0 0 auto; }
+  .sheet-title{ margin:0; font-size:var(--fs-base); line-height:var(--lh-base); font-weight:600; color:var(--text-dark); }
+  .sheet-sub{ display:flex; align-items:center; justify-content:space-between; gap:12.5px; padding:12.5px 20px; border-bottom:1.25px solid var(--border-soft); flex:0 0 auto; }
+  .sheet-sub-co{ font-size:var(--fs-sm); line-height:var(--lh-sm); font-weight:600; color:var(--blue-dark); }
+  .sheet-contact{ display:flex; align-items:center; gap:7.5px; font-size:var(--fs-sm); line-height:var(--lh-sm); color:var(--text-body); }
+  .sheet-contact .av{ width:22.5px; height:22.5px; border-radius:50%; background:var(--card-navy); color:#fff; display:flex; align-items:center; justify-content:center; font-size:10px; font-weight:700; flex:0 0 auto; }
+  .mf-filters{ display:flex; flex-wrap:wrap; gap:8.75px; padding:12.5px 20px; border-bottom:1.25px solid var(--border-soft); flex:0 0 auto; }
+  .mf-filters .select-input{ width:auto; min-width:130px; height:var(--h-8); flex:1 1 130px; }
+  .mf-more{ display:inline-flex; align-items:center; gap:5px; background:none; border:none; font-family:inherit; font-size:var(--fs-sm); line-height:var(--lh-sm); font-weight:500; color:var(--blue); cursor:pointer; flex:0 0 auto; }
+  .mf-more:hover{ text-decoration:underline; }
+  .mf-map{ position:relative; height:200px; flex:0 0 auto; background:var(--page-bg); border-bottom:1.25px solid var(--border); overflow:hidden; }
+  .mf-map-svg{ position:absolute; inset:0; }
+  .mf-map svg{ width:100%; height:100%; display:block; }
+  .mf-map .state{ fill:#EAEEF4; stroke:var(--surface); stroke-width:0.5; }
+  .mf-map-empty{ display:flex; align-items:center; justify-content:center; height:100%; color:var(--muted-fg); font-size:var(--fs-sm); }
+  .mf-cards{ flex:1 1 auto; overflow-y:auto; padding:15px 20px; display:flex; flex-direction:column; gap:12.5px; }
+  .load-card{ border:1.25px solid var(--border); border-radius:var(--r-lg); padding:15px; background:var(--surface); }
+  .load-card-top{ display:flex; align-items:flex-start; justify-content:space-between; gap:10px; }
+  .load-id{ font-size:var(--fs-sm); line-height:var(--lh-sm); font-weight:600; color:var(--blue); }
+  .load-rep{ display:inline-flex; align-items:center; gap:6.25px; margin-left:8.75px; font-size:var(--fs-xs); line-height:var(--lh-xs); color:var(--muted-fg); font-weight:400; }
+  .load-rep .av{ width:17.5px; height:17.5px; border-radius:50%; background:var(--card-navy); color:#fff; display:flex; align-items:center; justify-content:center; font-size:8.75px; font-weight:700; }
+  .load-price{ text-align:right; }
+  .load-price b{ font-size:var(--fs-base); line-height:var(--lh-base); font-weight:700; color:var(--text-dark); font-variant-numeric:tabular-nums; }
+  .load-price span{ display:block; font-size:var(--fs-xs); line-height:var(--lh-xs); color:var(--amber); }
+  .load-co{ margin-top:5px; font-size:var(--fs-xs); line-height:var(--lh-xs); color:var(--muted-fg); }
+  .load-lane{ display:grid; grid-template-columns:1fr auto 1fr; align-items:center; gap:12.5px; margin-top:12.5px; }
+  .load-loc b{ display:block; font-size:var(--fs-sm); line-height:var(--lh-sm); font-weight:600; color:var(--text-heading); }
+  .load-loc span{ font-size:var(--fs-xs); line-height:var(--lh-xs); color:var(--muted-fg); }
+  .load-loc.dest{ text-align:right; }
+  .load-mid{ text-align:center; font-size:var(--fs-xs); line-height:var(--lh-xs); color:var(--muted-fg); white-space:nowrap; }
+  .load-mid .dots{ display:block; color:var(--blue); letter-spacing:2px; }
+  .load-meta{ margin-top:10px; font-size:var(--fs-xs); line-height:var(--lh-xs); color:var(--muted-fg); }
+  .load-actions{ display:flex; gap:7.5px; margin-top:12.5px; justify-content:flex-end; }
+  .load-zoom{ position:absolute; left:12.5px; bottom:12.5px; display:flex; gap:6.25px; }
+  .load-zoom button{ width:27.5px; height:27.5px; border-radius:var(--r-md); border:1.25px solid var(--input-border); background:var(--surface); color:var(--icon-default); display:flex; align-items:center; justify-content:center; cursor:pointer; }
+  .load-zoom button:hover{ border-color:var(--blue); color:var(--blue); }
+  .load-zoom svg{ width:15px; height:15px; }
+
+  /* ---- Contact modals: Call / SMS / Email / ProChat ---- */
+  .contact-line{ display:flex; align-items:center; gap:8.75px; padding:8.75px 12.5px; border:1.25px solid var(--input-border); border-radius:var(--r-md); font-size:var(--fs-sm); line-height:var(--lh-sm); }
+  .contact-line .av{ width:25px; height:25px; flex:0 0 auto; border-radius:50%; background:var(--card-navy); color:#fff; display:flex; align-items:center; justify-content:center; font-size:10px; font-weight:700; }
+  .contact-line .nm{ color:var(--blue-dark); font-weight:600; }
+  .contact-line .ph{ color:var(--text-dark); font-weight:600; }
+
+  /* Call modal — square icon tiles + segmented tabs, matching the rest of the
+     button/segmented catalog instead of a bespoke ringed-circle phone widget. */
+  .call-from{ text-align:center; font-size:var(--fs-sm); line-height:var(--lh-sm); font-weight:500; color:var(--muted-fg); margin:0 0 15px; }
+  .call-tabs{ display:flex; align-items:center; height:var(--h-9); background:var(--segmented-track); border:1.25px solid var(--border); border-radius:var(--r-lg); padding:2.5px; margin-bottom:16.25px; }
+  .call-tab{ flex:1 1 0; display:inline-flex; align-items:center; justify-content:center; height:100%; background:none; border:1.25px solid transparent; padding:0 12.5px; border-radius:var(--r-md); font-family:inherit; font-size:var(--fs-sm); line-height:var(--lh-sm); font-weight:500; color:var(--muted-fg); cursor:pointer; white-space:nowrap; transition:color .15s ease, background .15s ease; }
+  .call-tab:not(.active):hover{ background:var(--blue-bg); color:var(--blue); }
+  .call-tab.active{ background:var(--blue); color:#fff; }
+  .call-grid{ display:grid; grid-template-columns:repeat(3,1fr); gap:12.5px 10px; }
+  .call-ctrl{ display:block; text-align:center; background:none; border:none; cursor:pointer; font-family:inherit; font-size:var(--fs-xs); line-height:var(--lh-xs); font-weight:500; color:var(--muted-fg); padding:0; }
+  .call-ctrl .ic{ width:40px; height:40px; margin:0 auto 6.25px; border-radius:var(--r-md); border:1.25px solid var(--input-border); background:var(--surface); color:var(--icon-default); display:flex; align-items:center; justify-content:center; transition:background .13s ease, border-color .13s ease, color .13s ease; }
+  .call-ctrl:hover .ic{ background:var(--blue-bg); border-color:var(--blue); color:var(--blue); }
+  .call-ctrl:hover{ color:var(--blue); }
+  .call-ctrl.on .ic{ background:var(--blue); border-color:var(--blue); color:#fff; }
+  .call-ctrl.on{ color:var(--text-heading); }
+  .call-ctrl .ic svg{ width:16.25px; height:16.25px; }
+
+  /* SMS + generic checkbox rows */
+  .cb-inline{ display:flex; align-items:center; gap:25px; margin-bottom:16.25px; }
+  .cb-label{ display:inline-flex; align-items:center; gap:7.5px; font-size:var(--fs-sm); line-height:var(--lh-sm); color:var(--text-body); cursor:pointer; }
+  .label-row{ display:flex; align-items:center; justify-content:space-between; }
+
+  /* Email compose — To/Subject are ordinary .field rows; the message area is
+     one bordered .email-compose box (toolbar strip + textarea) instead of a
+     borderless toolbar floating over the page background. */
+  .email-chip{ display:inline-flex; align-items:center; gap:6.25px; padding:2.5px 5px 2.5px 8.75px; background:var(--blue-bg); border:1.25px solid var(--blue-border); border-radius:999px; font-size:var(--fs-xs); line-height:15px; color:var(--blue-dark); }
+  .email-chip button{ background:none; border:none; padding:0; display:flex; color:var(--blue-dark); cursor:pointer; }
+  .email-chip button svg{ width:12.5px; height:12.5px; }
+  .email-ccbcc{ display:flex; gap:6.25px; flex:0 0 auto; }
+  .email-ccbcc button{ height:25px; padding:0 10px; border:1.25px solid var(--input-border); border-radius:var(--r-sm); background:var(--surface); font-family:inherit; font-size:var(--fs-xs); font-weight:600; color:var(--muted-fg); cursor:pointer; }
+  .email-ccbcc button:hover{ border-color:var(--blue); color:var(--blue); }
+  .email-compose{ border:1.25px solid var(--input-border); border-radius:var(--r-md); background:var(--surface); overflow:hidden; }
+  .email-toolbar{ display:flex; flex-wrap:wrap; align-items:center; gap:2.5px; padding:6.25px 8.75px; background:var(--page-bg); border-bottom:1.25px solid var(--border-soft); }
+  .email-tb-btn{ width:27.5px; height:27.5px; display:flex; align-items:center; justify-content:center; border:none; background:none; border-radius:var(--r-sm); color:var(--icon-default); cursor:pointer; font-family:inherit; font-size:var(--fs-sm); font-weight:600; }
+  .email-tb-btn:hover{ background:var(--blue-bg); color:var(--blue); }
+  .email-tb-btn svg{ width:15px; height:15px; }
+  .email-tb-sep{ width:1.25px; height:17.5px; background:var(--border); margin:0 5px; }
+  .email-tb-tpl{ display:inline-flex; align-items:center; gap:5px; height:27.5px; padding:0 8.75px; border:1.25px solid var(--input-border); border-radius:var(--r-sm); background:var(--surface); font-family:inherit; font-size:var(--fs-xs); font-weight:500; color:var(--blue); cursor:pointer; }
+  .email-body{ min-height:150px; padding:10px 12.5px; border:none; outline:none; resize:vertical; display:block; width:100%; font-family:inherit; font-size:var(--fs-sm); line-height:var(--lh-base); color:var(--text-body); background:none; }
+  .email-attach{ display:inline-flex; align-items:center; gap:7.5px; background:none; border:none; padding:0; font-family:inherit; font-size:var(--fs-sm); line-height:var(--lh-sm); font-weight:500; color:var(--blue); cursor:pointer; }
+  .email-attach:hover{ text-decoration:underline; }
+  .email-attach .ic{ width:27.5px; height:27.5px; border:1.25px solid var(--blue-border); border-radius:var(--r-md); display:flex; align-items:center; justify-content:center; }
+  .email-attach svg{ width:15px; height:15px; }
+
+  /* ProChat */
+  .chat-sub{ display:flex; align-items:center; gap:10px; padding:10px 0; border-bottom:2.5px solid var(--blue); margin-bottom:0; }
+  .chat-sub .nm{ font-size:var(--fs-sm); line-height:var(--lh-sm); font-weight:700; color:var(--text-heading); }
+  .chat-sub .meta{ margin-left:auto; display:flex; align-items:center; gap:10px; font-size:var(--fs-sm); line-height:var(--lh-sm); color:var(--muted-fg); }
+  .chat-body{ height:300px; overflow-y:auto; padding:15px; margin:0 -18.75px; background:var(--page-bg); border-top:1.25px solid var(--border-soft); display:flex; flex-direction:column; gap:12.5px; }
+  .chat-msg{ display:flex; align-items:flex-end; gap:7.5px; max-width:78%; }
+  .chat-msg.out{ align-self:flex-end; flex-direction:row; }
+  .chat-bubble{ padding:8.75px 12.5px; border-radius:var(--r-lg); font-size:var(--fs-sm); line-height:var(--lh-sm); }
+  .chat-msg.out .chat-bubble{ background:var(--blue); color:#fff; border-bottom-right-radius:2.5px; }
+  .chat-msg.in .chat-bubble{ background:var(--surface); border:1.25px solid var(--border); color:var(--text-body); border-bottom-left-radius:2.5px; }
+  .chat-meta{ display:block; margin-top:3.75px; font-size:10px; opacity:.8; }
+  .chat-msg.out .chat-meta{ color:#DCEAFE; }
+  .chat-av{ width:30px; height:30px; flex:0 0 auto; border-radius:50%; background:var(--card-navy); color:#fff; display:flex; align-items:center; justify-content:center; font-size:11px; font-weight:700; }
+  .chat-input{ display:flex; align-items:center; gap:10px; padding-top:15px; }
+  .chat-input .box{ flex:1 1 auto; display:flex; align-items:center; gap:7.5px; height:var(--h-9); padding:0 12.5px; border:1.25px solid var(--input-border); border-radius:999px; }
+  .chat-input .box input{ flex:1 1 auto; min-width:0; height:20px; line-height:20px; border:none; outline:none; background:none; font-family:inherit; font-size:var(--fs-sm); color:var(--text-body); }
+  .dialog-title svg{ width:16.25px; height:16.25px; flex:0 0 auto; }
+  .chat-input .box .ib{ background:none; border:none; padding:0; display:flex; color:var(--icon-default); cursor:pointer; }
+  .chat-input .box .ib svg{ width:16.25px; height:16.25px; }
+  .chat-send{ width:var(--h-9); height:var(--h-9); flex:0 0 auto; border-radius:50%; background:var(--blue); color:#fff; border:none; display:flex; align-items:center; justify-content:center; cursor:pointer; }
+  .chat-send:hover{ background:var(--blue-dark); }
+  .chat-send svg{ width:17.5px; height:17.5px; }
+
+  /* ---------------- CARD (shadcn) ---------------- */
+  .card{ background:var(--surface); border:1.25px solid var(--border); border-radius:var(--r-xl); box-shadow:var(--shadow-sm); }
+  .card + .card{ margin-top:17.5px; }
+  .card-head{ display:flex; align-items:flex-start; justify-content:space-between; gap:16.25px; padding:16.25px 23.75px; border-bottom:1.25px solid var(--border-soft); }
+  .card-head-text{ min-width:0; }
+  .card-title{ font-size:var(--fs-base); line-height:var(--lh-base); font-weight:600; color:var(--text-dark); margin:0; letter-spacing:-0.3px; }
+  .card-desc{ margin:3.75px 0 0; font-size:var(--fs-sm); line-height:var(--lh-sm); color:var(--muted-fg); }
+  .card-head-actions{ display:flex; align-items:center; gap:10px; flex:0 0 auto; }
+  .card-title-row{ display:flex; align-items:baseline; gap:8.75px; min-width:0; }
+  .card-body{ padding:20px 23.75px; }
+
+  /* ============ REP DETAIL (opened from a rep name) ============ */
+  .rep-back{ display:inline-flex; align-items:center; gap:6.25px; background:none; border:none; padding:0; margin-bottom:16.25px; font-family:inherit; font-size:var(--fs-sm); line-height:var(--lh-sm); font-weight:500; color:var(--text-heading); cursor:pointer; border-radius:var(--r-sm); }
+  .rep-back:hover{ color:var(--blue); }
+  .rep-back:focus-visible{ outline:none; box-shadow:0 0 0 var(--ring-w) var(--ring); }
+  .rep-back svg{ width:16.25px; height:16.25px; }
+  .rep-overview{ display:grid; grid-template-columns:210px minmax(0,1fr) minmax(0,1.05fr) minmax(0,1.15fr); background:var(--surface); border:1.25px solid var(--border); border-radius:var(--r-xl); overflow:hidden; margin-bottom:17.5px; }
+  .rep-col{ padding:20px; border-right:1.25px solid var(--border-soft); min-width:0; }
+  .rep-col:last-child{ border-right:none; }
+  .rep-col h3{ margin:0 0 15px; font-size:var(--fs-base); line-height:var(--lh-base); font-weight:600; color:var(--text-dark); }
+  .rep-profile{ display:flex; flex-direction:column; align-items:center; text-align:center; }
+  .rep-avatar{ width:110px; height:110px; border-radius:50%; object-fit:cover; background:var(--card-navy); color:#fff; display:flex; align-items:center; justify-content:center; font-size:var(--fs-2xl); font-weight:700; }
+  .rep-name{ margin:15px 0 2.5px; font-size:var(--fs-lg); line-height:var(--lh-lg); font-weight:700; color:var(--text-dark); }
+  .rep-company{ font-size:var(--fs-sm); line-height:var(--lh-sm); color:var(--muted-fg); }
+  .rep-actions{ display:flex; gap:5px; margin-top:16.25px; width:100%; }
+  /* block layout (not flex-column) so the icon tile + label land on whole
+     pixels — a nested flex column rounds its children onto half-pixels under zoom. */
+  .rep-action{ display:block; flex:1 1 0; min-width:0; text-align:center; overflow:hidden; padding:0; background:none; border:none; cursor:pointer; font-family:inherit; font-size:8.75px; line-height:12.5px; color:var(--muted-fg); border-radius:var(--r-sm); }
+  .rep-action .ic{ width:32.5px; height:32.5px; margin:0 auto 5px; border-radius:var(--r-md); border:1.25px solid var(--input-border); background:var(--surface); color:var(--icon-default); display:flex; align-items:center; justify-content:center; transition:background .13s ease, border-color .13s ease, color .13s ease; }
+  .rep-action .ic svg{ width:15px; height:15px; }
+  .rep-action:hover .ic{ background:var(--blue-bg); border-color:var(--blue); color:var(--blue); }
+  .rep-action:hover{ color:var(--blue); }
+  .contact-row{ display:flex; align-items:center; gap:10px; min-height:27.5px; margin-bottom:12.5px; font-size:var(--fs-sm); line-height:var(--lh-sm); }
+  .contact-row:last-child{ margin-bottom:0; }
+  .contact-label{ color:var(--muted-fg); flex:0 0 82.5px; }
+  .contact-val{ color:var(--text-body); flex:1 1 auto; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  .contact-ic{ width:27.5px; height:27.5px; flex:0 0 auto; border-radius:var(--r-md); border:1.25px solid var(--input-border); background:var(--surface); color:var(--icon-default); display:flex; align-items:center; justify-content:center; cursor:pointer; transition:background .13s ease, border-color .13s ease, color .13s ease; }
+  .contact-ic:hover{ background:var(--blue-bg); border-color:var(--blue); color:var(--blue); }
+  .contact-ic svg{ width:13.75px; height:13.75px; }
+  .lanes-table{ width:100%; border-collapse:separate; border-spacing:0; font-size:var(--fs-sm); }
+  .lanes-table th{ text-align:left; font-weight:500; color:var(--muted-fg); font-size:var(--fs-xs); line-height:var(--lh-xs); padding:0 0 8.75px; }
+  .lanes-table th:nth-child(2){ text-align:center; }
+  .lanes-table td{ padding:10px 0; border-top:1.25px solid var(--border-soft); color:var(--text-body); vertical-align:top; }
+  .lanes-table td:nth-child(2){ text-align:center; }
+  .lane-pt{ display:inline-flex; align-items:center; gap:6.25px; }
+  .lane-pt .circle{ width:12.5px; height:12.5px; border-radius:50%; border:1.25px solid var(--text-faint); flex:0 0 auto; }
+  .lane-pt svg{ width:15px; height:15px; color:var(--muted-fg); flex:0 0 auto; }
+  .lanes-table td.lane-qty{ font-weight:600; color:var(--text-heading); font-variant-numeric:tabular-nums; }
+  .rep-stats{ display:grid; grid-template-columns:1fr 1fr; gap:16.25px 20px; padding:20px; }
+  .stat-tile{ display:flex; align-items:flex-start; justify-content:space-between; gap:10px; }
+  .stat-val{ font-size:var(--fs-lg); line-height:var(--lh-lg); font-weight:700; color:var(--text-dark); font-variant-numeric:tabular-nums; }
+  .stat-label{ font-size:var(--fs-xs); line-height:var(--lh-xs); color:var(--muted-fg); margin-top:2.5px; }
+  .stat-ic{ width:32.5px; height:32.5px; flex:0 0 auto; border-radius:var(--r-md); border:1.25px solid var(--border); background:var(--page-bg); color:var(--muted-fg); display:flex; align-items:center; justify-content:center; }
+  .stat-ic svg{ width:16.25px; height:16.25px; }
+
+  .analytics-card{ background:var(--surface); border:1.25px solid var(--border); border-radius:var(--r-xl); }
+  .analytics-head{ display:flex; align-items:center; justify-content:space-between; gap:12.5px; padding:15px 20px; border-bottom:1.25px solid var(--border-soft); flex-wrap:wrap; }
+  .analytics-title{ font-size:var(--fs-base); line-height:var(--lh-base); font-weight:600; color:var(--text-dark); }
+  .analytics-controls{ display:flex; align-items:center; gap:10px; flex-wrap:wrap; }
+  .analytics-controls .select-input{ width:auto; min-width:150px; }
+  .analytics-body{ padding:20px; }
+  .chart-svg{ width:100%; height:auto; display:block; }
+  .chart-svg .grid-line{ stroke:var(--border-soft); stroke-width:1; }
+  .chart-svg .axis-text{ fill:var(--text-faint); font-size:13px; }
+  .chart-svg .cline{ fill:none; stroke:#F97316; stroke-width:2.5; stroke-linejoin:round; stroke-linecap:round; }
+  .chart-svg .dot{ fill:#fff; stroke:#F97316; stroke-width:2; }
+  .chart-svg .clabel-box{ fill:var(--surface); stroke:var(--border); stroke-width:1; }
+  .chart-svg .clabel{ fill:var(--text-body); font-size:14px; text-anchor:middle; font-weight:600; }
+  .usmap-layout{ display:grid; grid-template-columns:minmax(0,1fr) 300px; gap:20px; align-items:start; }
+  .usmap-wrap{ min-width:0; }
+  .usmap-wrap svg{ width:100%; height:auto; display:block; }
+  .usmap-wrap .state{ stroke:var(--surface); stroke-width:0.75; }
+  .map-lab{ text-anchor:middle; fill:#fff; font-weight:700; }
+  .map-lab.sub{ font-weight:500; }
+  .state-table{ border:1.25px solid var(--border); border-radius:var(--r-lg); overflow:hidden; }
+  .state-scroll{ max-height:465px; overflow:auto; }
+  .state-table table{ width:100%; border-collapse:separate; border-spacing:0; font-size:var(--fs-xs); }
+  .state-table th{ text-align:left; font-weight:500; color:var(--text-heading); padding:8.75px 12.5px; background:var(--page-bg); border-bottom:1.25px solid var(--border); white-space:nowrap; position:sticky; top:0; }
+  .state-table th:last-child, .state-table td:last-child{ text-align:right; }
+  .state-table td{ padding:7.5px 12.5px; border-bottom:1.25px solid var(--border-soft); color:var(--text-body); white-space:nowrap; }
+  .state-table tbody tr:last-child td{ border-bottom:none; }
+  .st-bar{ display:inline-block; vertical-align:middle; width:70px; height:7.5px; margin:0 8.75px; border-radius:999px; background:var(--border-soft); overflow:hidden; }
+  .st-bar span{ display:block; height:100%; border-radius:999px; }
+  .st-bar span.lo{ background:var(--blue); }
+  .st-bar span.li{ background:#93C5FD; }
+
+  /* row action icons */
+  .row-actions{ display:flex; align-items:center; gap:5px; }
+  .icon-action-btn{ width:30px; height:30px; flex:0 0 auto; display:flex; align-items:center; justify-content:center; border-radius:var(--r-md); border:1.25px solid transparent; background:none; color:var(--icon-default); cursor:pointer; transition:background .13s ease, border-color .13s ease, color .13s ease; }
+  .icon-action-btn:hover{ border-color:var(--blue-border); background:var(--blue-bg); color:var(--blue); }
+  .icon-action-btn svg{ width:16.25px; height:16.25px; flex:0 0 auto; display:block; pointer-events:none; }
+  .icon-action-btn.accent{ color:var(--blue); }
+
+  /* checkbox */
+  .row-checkbox{ appearance:none; -webkit-appearance:none; width:15px; height:15px; margin:0; border:1.25px solid var(--input-border); border-radius:var(--r-sm); background:var(--surface); display:flex; align-items:center; justify-content:center; flex:0 0 auto; cursor:pointer; outline:none; vertical-align:middle; transition:background .13s ease, border-color .13s ease; }
+  .row-checkbox:hover{ border-color:var(--blue); }
+  .row-checkbox:checked{ background:var(--blue); border-color:var(--blue); }
+  .row-checkbox:indeterminate{ background:var(--blue); border-color:var(--blue); }
+  .row-checkbox:checked::after{ content:''; width:10px; height:10px; background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='3.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='20 6 9 17 4 12'/%3E%3C/svg%3E"); background-size:contain; background-repeat:no-repeat; }
+  .row-checkbox:indeterminate::after{ content:''; width:9px; height:2.5px; border-radius:2px; background:#fff; }
+
+  /* group header row (List by Company) */
+  .group-row td{ background:var(--page-bg); border-bottom:1.25px solid var(--border); padding:8.75px 13.75px; }
+  .group-cell{ display:flex; align-items:center; gap:10px; }
+  .group-name{ font-size:var(--fs-sm); line-height:var(--lh-sm); font-weight:600; color:var(--text-heading); }
+  .group-meta{ font-size:var(--fs-xs); line-height:var(--lh-xs); color:var(--muted-fg); }
+
+  /* in-grid empty state */
+  .grid-empty{ display:flex; flex-direction:column; align-items:center; gap:8.75px; padding:40px 23.75px; text-align:center; }
+  .grid-empty-icon{ width:36.25px; height:36.25px; border-radius:var(--r-lg); border:1.25px solid var(--border); background:var(--page-bg); display:flex; align-items:center; justify-content:center; color:var(--muted-fg); }
+  .grid-empty-icon svg{ width:16.25px; height:16.25px; }
+  .grid-empty p{ margin:0; font-size:var(--fs-sm); line-height:var(--lh-sm); color:var(--muted-fg); max-width:340px; }
+
+  /* ---------------- LEADER BOARD ---------------- */
+  .lb-grid{ display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:16.25px; margin-bottom:20px; }
+  .lb-card{ background:var(--surface); border:1.25px solid var(--border); border-radius:var(--r-xl); padding:18.75px 20px; display:flex; align-items:center; gap:15px; }
+  .lb-rank{ width:42.5px; height:42.5px; flex:0 0 auto; border-radius:var(--r-lg); display:flex; align-items:center; justify-content:center; font-size:var(--fs-lg); font-weight:800; color:#fff; background:var(--card-navy); }
+  .lb-card.gold .lb-rank{ background:linear-gradient(135deg,#F4C24B,#D79A1E); }
+  .lb-card.silver .lb-rank{ background:linear-gradient(135deg,#C7CDD6,#9AA3B0); }
+  .lb-card.bronze .lb-rank{ background:linear-gradient(135deg,#D9A06B,#B87A3E); }
+  .lb-body{ min-width:0; }
+  .lb-name{ font-size:var(--fs-base); line-height:var(--lh-base); font-weight:600; color:var(--text-dark); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .lb-sub{ font-size:var(--fs-xs); line-height:var(--lh-xs); color:var(--muted-fg); margin-top:1.25px; }
+  .lb-loads{ margin-left:auto; text-align:right; flex:0 0 auto; }
+  .lb-loads b{ font-size:var(--fs-xl); line-height:var(--lh-xl); font-weight:800; color:var(--blue); font-variant-numeric:tabular-nums; }
+  .lb-loads span{ display:block; font-size:var(--fs-xs); line-height:var(--lh-xs); color:var(--muted-fg); }
+
+  /* ---------------- FIELD / INPUT (dialogs) ---------------- */
+  .field{ margin-bottom:16.25px; }
+  .field:last-child{ margin-bottom:0; }
+  .field-label{ display:flex; align-items:center; gap:3.75px; font-size:var(--fs-sm); line-height:1; font-weight:500; color:var(--text-heading); margin-bottom:7.5px; }
+  .field-hint{ margin:6.25px 0 0; font-size:var(--fs-xs); line-height:var(--lh-xs); color:var(--muted-fg); }
+  .text-input{ width:100%; height:var(--h-9); border:1.25px solid var(--input-border); border-radius:var(--r-md); padding:0 12.5px; font-family:inherit; font-size:var(--fs-sm); line-height:var(--lh-sm); color:var(--text-body); background:var(--surface); outline:none; transition:border-color .15s ease, box-shadow .15s ease; }
+  .text-input::placeholder{ color:var(--text-faint); }
+  .text-input:hover{ border-color:var(--blue); }
+  .select-input{ width:100%; height:var(--h-9); border:1.25px solid var(--input-border); border-radius:var(--r-md); padding:0 30px 0 12.5px; font-family:inherit; font-size:var(--fs-sm); line-height:var(--lh-sm); color:var(--text-body); background:var(--surface) url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="%2371717A"><path d="M7 10l5 5 5-5z"/></svg>') no-repeat right 12.5px center; appearance:none; -webkit-appearance:none; outline:none; transition:border-color .15s ease, box-shadow .15s ease; }
+  [data-theme="dark"] .select-input{ background-image:url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="%238B96AC"><path d="M7 10l5 5 5-5z"/></svg>'); }
+  .select-input:hover{ border-color:var(--blue); }
+  .select-input:focus-visible{ border-color:var(--blue); box-shadow:0 0 0 var(--ring-w) var(--ring); }
+  .dialog-textarea{ width:100%; min-height:60px; padding:7.5px 12.5px; border:1.25px solid var(--input-border); border-radius:var(--r-md); font-family:inherit; font-size:var(--fs-sm); line-height:var(--lh-sm); color:var(--text-body); background:var(--surface); outline:none; resize:vertical; display:block; transition:border-color .15s ease, box-shadow .15s ease; }
+  .dialog-textarea:hover{ border-color:var(--blue); }
+  .dialog-textarea:focus-visible{ border-color:var(--blue); box-shadow:0 0 0 var(--ring-w) var(--ring); }
+
+  /* ---------------- DIALOG ---------------- */
+  body.has-dialog{ overflow:hidden; }
+  .dialog-overlay{ position:fixed; inset:0; z-index:900; display:flex; align-items:center; justify-content:center; padding:20px; background:rgba(0,0,0,0.5); animation:pop-in .15s ease both; }
+  @keyframes pop-in{ from{ opacity:0; } to{ opacity:1; } }
+  .dialog-panel{ position:relative; width:100%; max-width:480px; max-height:100%; overflow:auto; background:var(--popover); border:1.25px solid var(--border); border-radius:var(--r-lg); padding:18.75px; }
+  /* One painted pixel more, toggled by snap() so the flex-centred panel's top
+     edge lands on a whole pixel when its own height is odd. */
+  .dialog-panel.snap{ padding-bottom:20px; }
+  .dialog-panel.dialog-wide{ max-width:625px; }
+  .dialog-head{ position:relative; padding-right:30px; margin-bottom:16.25px; }
+  .dialog-title{ margin:0; font-size:var(--fs-base); line-height:var(--lh-base); font-weight:600; color:var(--text-heading); }
+  .dialog-desc{ margin:3.75px 0 0; font-size:var(--fs-sm); line-height:var(--lh-sm); color:var(--muted-fg); }
+  .dialog-close{ position:absolute; top:0; right:0; width:25px; height:25px; padding:0; display:flex; align-items:center; justify-content:center; background:none; border:none; border-radius:var(--r-sm); color:var(--muted-fg); cursor:pointer; transition:color .13s ease, background .13s ease; }
+  .dialog-close:hover{ color:var(--text-heading); background:var(--accent); }
+  .dialog-close svg{ width:15px; height:15px; }
+  .dialog-body{ margin:0; }
+  .dialog-row{ display:grid; grid-template-columns:1fr 1fr; gap:16.25px; margin-bottom:16.25px; }
+  .dialog-foot{ display:flex; justify-content:flex-end; gap:7.5px; margin-top:20px; }
+  .dialog-foot.has-note{ justify-content:space-between; align-items:center; flex-wrap:wrap; }
+  .dialog-foot-note{ display:flex; align-items:center; gap:6.25px; font-size:var(--fs-xs); line-height:var(--lh-xs); color:var(--muted-fg); min-width:0; }
+  .dialog-foot-note svg{ width:12.5px; height:12.5px; flex:0 0 auto; }
+  .dialog-foot-actions{ display:flex; align-items:center; gap:7.5px; margin-left:auto; }
+
+  /* recipient / member chips inside dialogs */
+  .chip-wrap{ display:flex; flex-wrap:wrap; gap:6.25px; max-height:130px; overflow:auto; padding:10px; border:1.25px solid var(--border); border-radius:var(--r-md); background:var(--page-bg); }
+  .chip{ display:inline-flex; align-items:center; gap:6.25px; padding:3.75px 8.75px; background:var(--surface); border:1.25px solid var(--border); border-radius:999px; font-size:var(--fs-xs); line-height:var(--lh-xs); color:var(--text-body); }
+  .chip b{ color:var(--text-heading); font-weight:600; }
+  .chip .chip-sub{ color:var(--muted-fg); }
+
+  /* recipient multi-select — the Figma "Send To" control (Truck List modal) */
+  .ms-field{ position:relative; }
+  .ms-control{ min-height:var(--h-9); display:flex; flex-wrap:wrap; align-items:center; gap:6.25px; padding:5px 34px 5px 8.75px; border:1.25px solid var(--input-border); border-radius:var(--r-md); background:var(--surface); cursor:text; transition:border-color .15s ease, box-shadow .15s ease; }
+  .ms-field.open .ms-control, .ms-control:focus-within{ border-color:var(--blue); box-shadow:0 0 0 var(--ring-w) var(--ring); }
+  .ms-search-icon{ position:absolute; right:11.25px; top:calc((var(--h-9) - 16.25px)/2); width:16.25px; height:16.25px; color:var(--blue); pointer-events:none; }
+  .ms-field.open .ms-search-icon, .ms-control:focus-within + .ms-search-icon{ color:var(--blue); }
+  .ms-chip{ display:inline-flex; align-items:center; gap:6.25px; padding:2.5px 6.25px 2.5px 3.75px; background:var(--surface); border:1.25px solid var(--border); border-radius:999px; font-size:var(--fs-xs); line-height:15px; color:var(--text-heading); }
+  .ms-chip .av{ width:17.5px; height:17.5px; border-radius:50%; background:var(--card-navy); color:#fff; display:flex; align-items:center; justify-content:center; font-size:8.75px; font-weight:700; flex:0 0 auto; }
+  .ms-chip button{ background:var(--blue); border:none; padding:0; margin:0; display:flex; align-items:center; justify-content:center; width:15px; height:15px; border-radius:50%; color:#fff; cursor:pointer; flex:0 0 auto; }
+  .ms-chip button:hover{ background:var(--blue-dark); }
+  .ms-chip button svg{ width:9px; height:9px; }
+  /* Overflow toggle — a long selection (e.g. every account in the hot list)
+     collapses to a few chips + this pill instead of one chip per line. */
+  .ms-chip-more{ background:var(--page-bg); border-style:dashed; color:var(--blue); font-weight:600; cursor:pointer; padding:2.5px 8.75px; }
+  .ms-chip-more:hover{ background:var(--blue-bg); border-color:var(--blue); }
+  .ms-input{ flex:1 1 70px; min-width:70px; border:none; outline:none; background:transparent; font-family:inherit; font-size:var(--fs-sm); line-height:20px; height:20px; color:var(--text-body); }
+  .ms-input::placeholder{ color:var(--text-faint); }
+  .ms-menu{ position:absolute; left:0; right:0; top:calc(100% + 5px); z-index:20; background:var(--popover); border:1.25px solid var(--border); border-radius:var(--r-md); padding:3.75px; max-height:222px; overflow:auto; animation:pop-in .12s ease both; }
+  .ms-item{ display:flex; align-items:center; gap:8.75px; width:100%; text-align:left; background:none; border:none; padding:6.25px 7.5px; border-radius:var(--r-sm); font-family:inherit; font-size:var(--fs-sm); line-height:var(--lh-sm); color:var(--text-body); cursor:pointer; }
+  .ms-item:hover{ background:var(--blue-bg); color:var(--blue); }
+  .ms-item .ms-check{ width:15px; height:15px; border:1.25px solid var(--input-border); border-radius:var(--r-sm); flex:0 0 auto; display:flex; align-items:center; justify-content:center; background:var(--surface); }
+  .ms-item.on .ms-check{ background:var(--blue); border-color:var(--blue); }
+  .ms-item .ms-check svg{ width:10px; height:10px; color:#fff; display:none; }
+  .ms-item.on .ms-check svg{ display:block; }
+  .ms-item .ms-name{ font-weight:500; color:var(--text-heading); }
+  .ms-item:hover .ms-name{ color:var(--blue); }
+  .ms-item .ms-prov{ margin-left:auto; display:inline-flex; align-items:center; gap:5px; font-size:var(--fs-xs); line-height:var(--lh-xs); color:var(--muted-fg); }
+  .ms-item .ms-prov svg{ width:12.5px; height:12.5px; }
+  .ms-sep{ height:1.25px; margin:3.75px 1.25px; background:var(--border); }
+  .ms-empty{ padding:10px 7.5px; font-size:var(--fs-sm); line-height:var(--lh-sm); color:var(--muted-fg); }
+
+  /* ---------------- ROW MORE MENU (fixed panel) ---------------- */
+  .menu-panel{ position:fixed; z-index:1000; min-width:180px; background:var(--popover); border:1.25px solid var(--border); border-radius:var(--r-md); padding:3.75px; animation:pop-in .12s ease both; }
+  .menu-item{ display:flex; align-items:center; gap:8.75px; width:100%; min-width:100%; text-align:left; background:none; border:none; padding:7.5px 10px; border-radius:var(--r-sm); font-family:inherit; font-size:var(--fs-sm); line-height:var(--lh-sm); color:var(--text-body); cursor:pointer; }
+  .menu-item svg{ width:15px; height:15px; flex:0 0 auto; opacity:.8; }
+  .menu-item:hover{ background:var(--blue-bg); color:var(--blue); }
+  .menu-item.danger{ color:var(--red); }
+  .menu-item.danger:hover{ background:var(--red-bg); color:var(--red); }
+  .menu-sep{ height:1.25px; margin:3.75px 1.25px; background:var(--border); }
+
+  /* ---------------- TOAST ---------------- */
+  .toast-stack{ position:fixed; top:73.75px; right:20px; z-index:1200; display:flex; flex-direction:column; gap:10px; pointer-events:none; }
+  .toast{ display:flex; align-items:flex-start; gap:10px; min-width:280px; max-width:360px; padding:16.25px; border-radius:var(--r-lg); border:1.25px solid var(--border); background:var(--popover); font-size:var(--fs-sm); line-height:var(--lh-sm); color:var(--muted-fg); animation:toast-in .2s cubic-bezier(.2,.9,.3,1) both; }
+  @keyframes toast-in{ from{ opacity:0; transform:translateX(17.5px); } to{ opacity:1; transform:none; } }
+  .toast .toast-title{ font-weight:500; display:block; margin-bottom:2.5px; color:var(--text-dark); }
+  .toast.success{ border-color:var(--green-border); }
+  .toast.success svg,.toast.success .toast-title{ color:var(--green); }
+  .toast.error{ border-color:var(--red-border); }
+  .toast.error svg,.toast.error .toast-title{ color:var(--red); }
+  [data-theme="dark"] .toast.error svg,[data-theme="dark"] .toast.error .toast-title{ color:#FCA5A5; }
+  .toast svg{ flex:0 0 auto; margin-top:1.25px; width:16.25px; height:16.25px; }
+
+  @media (max-width:900px){ .lb-grid{ grid-template-columns:minmax(0,1fr); } }
+  @media (prefers-reduced-motion: reduce){ *{ animation:none !important; } }
+</style>
+<script>
+  /* Applied before paint so a saved dark preference doesn't flash. */
+  (function(){ try{ if(localStorage.getItem('dp-theme')==='dark') document.documentElement.setAttribute('data-theme','dark'); }catch(e){} })();
+</script>
+</head>
+<body>
+
+  <!-- TOP BAR -->
+  <div class="topbar">
+    <div class="topbar-left">
+      <div class="company-block">
+        <div class="company-title">Dawson Truck Lines</div>
+        <div class="company-sub">Carrier &middot; MC 884210</div>
+      </div>
+      <div class="search-box">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>
+        <input type="text" placeholder="Search loads, drivers, customers, trailers...">
+      </div>
+    </div>
+    <div class="topbar-right">
+      <div class="surcharge-card"><div><div class="surcharge-label">Diesel FSC</div><div class="surcharge-date">07/27/26</div></div><div class="surcharge-value">$0.68</div></div>
+      <div class="surcharge-card"><div><div class="surcharge-label">Gas FSC</div><div class="surcharge-date">07/27/26</div></div><div class="surcharge-value">0.30%</div></div>
+      <div class="icon-actions">
+        <button class="icon-btn" title="Quick create"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></svg></button>
+        <button class="icon-btn" title="Help"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M9.5 9.3a2.5 2.5 0 0 1 4.9.7c0 1.7-2.4 2-2.4 3.5"/><path d="M12 17.2v.1"/></svg></button>
+        <button class="icon-btn" title="Messages"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 7l9 6 9-6"/></svg><div class="dot"></div></button>
+        <button class="icon-btn" title="Notifications"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.7 21a2 2 0 0 1-3.4 0"/></svg></button>
+      </div>
+      <div class="user-chip">
+        <div class="avatar">CS</div>
+        <div class="user-name">Christian Snead</div>
+        <svg class="chevron" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg>
+      </div>
+    </div>
+  </div>
+
+  <!-- BREADCRUMB -->
+  <div class="breadcrumb-bar">
+    <span>Dispatch</span> <span>/</span> <span>Customers</span> <span>/</span> <span class="current">Hot List</span>
+  </div>
+
+  <div class="app-body">
+    <!-- SIDEBAR -->
+    <nav class="sidebar">
+      <div class="side-logo">DP</div>
+      <button class="side-icon" title="Dashboard"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg></button>
+      <button class="side-icon active" title="Dispatch"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M2 17h11V6H2v11Z"/><path d="M13 10h4l4 4v3h-8v-7Z"/><circle cx="6.5" cy="19" r="1.6"/><circle cx="17.5" cy="19" r="1.6"/></svg></button>
+      <button class="side-icon" title="Personnel"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M18 20v-1.6a4 4 0 0 0-4-4h-4a4 4 0 0 0-4 4V20"/><circle cx="12" cy="7.5" r="3.5"/></svg></button>
+      <button class="side-icon" title="Rates"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M20.6 12.3 12.7 20a2 2 0 0 1-2.8 0l-6-6a2 2 0 0 1 0-2.8L11.7 3.5 20.6 4l.6 8.9-.6-.6Z"/><circle cx="15.5" cy="8.5" r="1.4"/></svg></button>
+      <button class="side-icon" title="Accounting"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v20"/><path d="M17 6H9.5a3 3 0 0 0 0 6H14a3 3 0 0 1 0 6H6.5"/></svg></button>
+      <button class="side-icon" title="Archive"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="5" rx="1.2"/><rect x="4.5" y="9" width="15" height="11" rx="1.2"/><path d="M10 13.5h4"/></svg></button>
+      <button class="side-icon" title="Compliance"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l7 3v5c0 5-3 8-7 10-4-2-7-5-7-10V6l7-3Z"/></svg></button>
+      <button class="side-icon" title="Reports"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20V10"/><path d="M12 20V4"/><path d="M20 20v-7"/></svg></button>
+      <button class="side-icon" title="Documents"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M7 3h7l4 4v14H7Z"/><path d="M14 3v4h4"/><path d="M9.5 12.5h5M9.5 16h5"/></svg></button>
+      <div class="sidebar-spacer"></div>
+      <button class="side-icon-bottom" id="themeToggleBtn" type="button" title="Switch to dark mode" aria-label="Toggle dark mode" aria-pressed="false">
+        <svg class="theme-icon-sun" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4.2"/><path d="M12 2.5v2.2M12 19.3v2.2M4.2 4.2l1.6 1.6M18.2 18.2l1.6 1.6M2.5 12h2.2M19.3 12h2.2M4.2 19.8l1.6-1.6M18.2 5.8l1.6-1.6"/></svg>
+        <svg class="theme-icon-moon" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="display:none"><path d="M20.8 14.5A8.5 8.5 0 1 1 9.5 3.2a6.8 6.8 0 0 0 11.3 11.3Z"/></svg>
+      </button>
+    </nav>
+
+    <!-- CONTENT -->
+    <main class="content">
+      <div class="page-header-band">
+        <div class="page-head">
+          <div class="page-head-text">
+            <div class="page-title-row">
+              <h1 class="page-title">Customer Hot List</h1>
+              <span class="badge" data-variant="danger" style="gap:5px"><i data-lucide="flame"></i> Priority desk</span>
+            </div>
+            <p class="page-subtitle">High-volume broker accounts your desk is actively working — call, text, or send a truck list.</p>
+          </div>
+          <div class="page-head-actions">
+            <button class="btn-outline" id="cancelSelBtn" type="button" hidden>Cancel</button>
+            <button class="btn-outline" id="createGroupBtn" type="button"><i data-lucide="users"></i> Create Group</button>
+            <button class="btn-primary" id="sendTruckBtn" type="button"><i data-lucide="truck"></i> Send Truck List</button>
+            <span class="sel-note" id="selNote" hidden><b id="selNoteN">0</b> Selected</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="content-scroll">
+        <div class="content-inner">
+
+          <div class="page-tabs" role="tablist">
+            <button class="page-tab active" data-tab="list" role="tab" type="button">Customer List</button>
+            <button class="page-tab" data-tab="leaderboard" role="tab" type="button">Leader Board</button>
+          </div>
+
+          <!-- ============ CUSTOMER LIST VIEW ============ -->
+          <div id="view-list">
+            <div class="hotlist-toolbar">
+              <div class="toolbar-left">
+                <span class="list-by-label">List by</span>
+                <div class="segmented" id="listBy">
+                  <button type="button" class="active" data-mode="rep">Representative</button>
+                  <button type="button" data-mode="company">Company</button>
+                </div>
+              </div>
+              <div class="toolbar-right">
+                <div class="grid-search">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>
+                  <input type="text" id="searchInput" placeholder="Search company, rep, or email…">
+                </div>
+                <button class="adv-link" id="advSearchBtn" type="button"><i data-lucide="sliders-horizontal"></i> Advance Search</button>
+              </div>
+            </div>
+
+            <div class="data-grid">
+              <div class="data-grid-toolbar">
+                <div class="data-grid-toolbar-left">
+                  <span class="data-grid-title">Accounts</span>
+                  <span class="badge" id="rowCount">0</span>
+                </div>
+              </div>
+              <div class="data-grid-scroll">
+                <table class="pay-table" id="hotTable">
+                  <thead id="hotHead"></thead>
+                  <tbody id="hotBody"></tbody>
+                </table>
+              </div>
+              <div class="grid-empty" id="gridEmpty" hidden>
+                <div class="grid-empty-icon"><i data-lucide="search-x"></i></div>
+                <p>No accounts match your search or filters. Clear them to see the full hot list.</p>
+              </div>
+            </div>
+          </div>
+
+          <!-- ============ LEADER BOARD VIEW ============ -->
+          <div id="view-leaderboard" hidden>
+            <div class="lb-grid" id="lbTop"></div>
+            <div class="data-grid">
+              <div class="data-grid-toolbar">
+                <div class="data-grid-toolbar-left">
+                  <span class="data-grid-title">Full ranking</span>
+                  <span class="badge" id="lbCount">0</span>
+                </div>
+              </div>
+              <div class="data-grid-scroll">
+                <table class="pay-table">
+                  <thead>
+                    <tr>
+                      <th style="width:70px">Rank</th>
+                      <th>Representative</th>
+                      <th>Company</th>
+                      <th class="num"># Of Loads</th>
+                      <th class="num">Highest CPM</th>
+                      <th class="num">Claims</th>
+                      <th class="num">OTP %</th>
+                    </tr>
+                  </thead>
+                  <tbody id="lbBody"></tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+
+          <!-- ============ REP DETAIL VIEW ============ -->
+          <div id="view-rep" hidden>
+            <button class="rep-back" id="repBack" type="button"><i data-lucide="chevron-left"></i> Back to customer list</button>
+            <div class="rep-overview">
+              <div class="rep-col rep-profile">
+                <div class="rep-avatar" id="repAvatar">JH</div>
+                <div class="rep-name" id="repName">—</div>
+                <div class="rep-company" id="repCompany">—</div>
+                <div class="rep-actions">
+                  <button class="rep-action" type="button" data-repact="call"><span class="ic"><i data-lucide="phone"></i></span>Office</button>
+                  <button class="rep-action" type="button" data-repact="cell"><span class="ic"><i data-lucide="smartphone"></i></span>Call</button>
+                  <button class="rep-action" type="button" data-repact="email"><span class="ic"><i data-lucide="mail"></i></span>Email</button>
+                  <button class="rep-action" type="button" data-repact="chat"><span class="ic"><i data-lucide="message-square"></i></span>ProChat</button>
+                  <button class="rep-action" type="button" data-repact="more"><span class="ic"><i data-lucide="ellipsis"></i></span>More</button>
+                </div>
+              </div>
+              <div class="rep-col">
+                <h3>Contact Info</h3>
+                <div id="repContact"></div>
+              </div>
+              <div class="rep-col">
+                <h3>Top Lanes</h3>
+                <table class="lanes-table">
+                  <thead><tr><th>Pickup</th><th>Qty</th><th>Delivery</th></tr></thead>
+                  <tbody id="repLanes"></tbody>
+                </table>
+              </div>
+              <div class="rep-col" style="padding:0">
+                <div class="rep-stats" id="repStats"></div>
+              </div>
+            </div>
+            <div class="card">
+              <div class="card-head">
+                <div class="card-head-text"><h2 class="card-title">No. of Loads</h2></div>
+                <div class="card-head-actions analytics-controls">
+                  <select class="select-input" id="repView">
+                    <option value="line">Load Count</option>
+                    <option value="map">No. of Loads Per State</option>
+                  </select>
+                  <select class="select-input" id="repEquip">
+                    <option>All equipment</option>
+                    <option>Box Truck | 48'</option>
+                    <option>Conestoga | 44'</option>
+                    <option>Reefer | 53'</option>
+                  </select>
+                  <select class="select-input" id="repPeriod">
+                    <option>Today</option>
+                    <option>This week</option>
+                    <option>This month</option>
+                    <option>This year</option>
+                  </select>
+                </div>
+              </div>
+              <div class="card-body" id="repAnalytics"></div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <!-- ============ DIALOGS ============ -->
+  <!-- Create Group (wide, traced from Figma) -->
+  <div class="dialog-overlay" id="dlgGroup" hidden>
+    <div class="dialog-panel dialog-wide" role="dialog" aria-modal="true" aria-labelledby="dlgGroupTitle">
+      <div class="dialog-head">
+        <h2 class="dialog-title" id="dlgGroupTitle">Create Group</h2>
+        <p class="dialog-desc">Save these accounts as a named group you can filter and message together.</p>
+        <button type="button" class="dialog-close" data-close aria-label="Close"><i data-lucide="x"></i></button>
+      </div>
+      <div class="dialog-body">
+        <div class="field">
+          <label class="field-label" for="groupName">Group Name</label>
+          <input type="text" class="text-input" id="groupName" placeholder="Enter Group Name">
+        </div>
+        <div class="field">
+          <label class="field-label">Customer</label>
+          <div class="ms-field" id="cgField">
+            <div class="ms-control" id="cgControl">
+              <input class="ms-input" id="cgInput" placeholder="Search customers…" autocomplete="off" aria-label="Search customers">
+            </div>
+            <i data-lucide="chevron-down" class="ms-search-icon"></i>
+            <div class="ms-menu" id="cgMenu" hidden></div>
+          </div>
+        </div>
+      </div>
+      <div class="dialog-foot">
+        <button class="btn-outline" data-close type="button">Cancel</button>
+        <button class="btn-primary" id="groupSave" type="button">Create Group</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Send Truck List → "Truck List" modal (traced from Figma) -->
+  <div class="dialog-overlay" id="dlgTruck" hidden>
+    <div class="dialog-panel" role="dialog" aria-modal="true" aria-labelledby="dlgTruckTitle">
+      <div class="dialog-head">
+        <h2 class="dialog-title" id="dlgTruckTitle">Truck List</h2>
+        <p class="dialog-desc">Choose a customer and the contacts to send your available capacity to.</p>
+        <button type="button" class="dialog-close" data-close aria-label="Close"><i data-lucide="x"></i></button>
+      </div>
+      <div class="dialog-body">
+        <div class="field">
+          <label class="field-label" for="tlCustomer">Customer</label>
+          <select class="select-input" id="tlCustomer"></select>
+        </div>
+        <div class="field">
+          <label class="field-label">Send To</label>
+          <div class="ms-field" id="tlSendTo">
+            <div class="ms-control" id="tlControl">
+              <input class="ms-input" id="tlInput" placeholder="Search contacts…" autocomplete="off" aria-label="Search contacts to send to">
+            </div>
+            <i data-lucide="search" class="ms-search-icon"></i>
+            <div class="ms-menu" id="tlMenu" hidden></div>
+          </div>
+        </div>
+      </div>
+      <div class="dialog-foot">
+        <button class="btn-outline" data-close type="button">Cancel</button>
+        <button class="btn-primary" id="tlContinue" type="button">Continue</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Send Truck List (header button) — full modal, traced from Figma -->
+  <div class="dialog-overlay" id="dlgSTL" hidden>
+    <div class="dialog-panel dialog-wide" role="dialog" aria-modal="true" aria-labelledby="dlgSTLTitle">
+      <div class="dialog-head">
+        <h2 class="dialog-title" id="dlgSTLTitle">Send Truck List</h2>
+        <p class="dialog-desc">Post your available capacity to the selected broker contacts, now or on a schedule.</p>
+        <button type="button" class="dialog-close" data-close aria-label="Close"><i data-lucide="x"></i></button>
+      </div>
+      <div class="dialog-body">
+        <div class="stl-row">
+          <div class="field" style="margin-bottom:0">
+            <label class="field-label" for="stlType">Type</label>
+            <select class="select-input" id="stlType"><option>Existing Profile</option><option>Custom</option></select>
+          </div>
+          <div class="field" style="margin-bottom:0">
+            <label class="field-label" for="stlProfile">Profile</label>
+            <select class="select-input" id="stlProfile"><option>Flatbed Northeast</option><option>Reefer Southeast</option><option>Dry Van Midwest</option><option>Power Only West</option></select>
+          </div>
+        </div>
+        <div class="stl-row">
+          <div class="field" style="margin-bottom:0">
+            <label class="field-label" for="stlFreq">Schedule frequency</label>
+            <select class="select-input" id="stlFreq"><option>Send now</option><option>Daily (At)</option><option>Daily (Every)</option><option>Weekly</option></select>
+          </div>
+          <div class="field" style="margin-bottom:0">
+            <label class="field-label" for="stlTime">Time</label>
+            <select class="select-input" id="stlTime"><option>Now</option><option>01:00 AM</option><option>02:00 AM</option><option>06:00 AM</option><option>08:00 AM</option><option>12:00 PM</option></select>
+          </div>
+        </div>
+        <div class="field">
+          <label class="field-label">Send To</label>
+          <div class="ms-field" id="stlToField">
+            <div class="ms-control" id="stlToControl">
+              <input class="ms-input" id="stlToInput" placeholder="Search contacts…" autocomplete="off" aria-label="Search contacts to send to">
+            </div>
+            <i data-lucide="search" class="ms-search-icon"></i>
+            <div class="ms-menu" id="stlToMenu" hidden></div>
+          </div>
+        </div>
+        <div class="field" style="margin-bottom:0">
+          <label class="field-label">Available trucks <span id="truckCount" style="color:var(--muted-fg);font-weight:400">(0)</span></label>
+          <div class="trucks-wrap">
+            <div class="trucks-scroll">
+              <table class="trucks-table" id="trucksTable">
+                <thead>
+                  <tr>
+                    <th class="tt-check"><input type="checkbox" class="row-checkbox" id="truckAll" checked aria-label="Select all trucks"></th>
+                    <th>Post ID</th><th>Status</th><th>Driver</th><th>Driver name</th><th>Trailer</th><th>Location</th><th>Date available</th><th>Max weight</th><th>Cargo</th>
+                  </tr>
+                </thead>
+                <tbody id="trucksBody"></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="dialog-foot has-note">
+        <span class="dialog-foot-note"><i data-lucide="info"></i> <span>Prototype — no message is actually sent.</span></span>
+        <div class="dialog-foot-actions">
+          <button class="btn-outline" data-close type="button">Cancel</button>
+          <button class="btn-primary" id="stlSend" type="button"><i data-lucide="send"></i> Send</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Success -->
+  <div class="dialog-overlay" id="dlgSuccess" hidden>
+    <div class="dialog-panel" role="dialog" aria-modal="true" aria-labelledby="dlgSuccessTitle">
+      <button type="button" class="dialog-close" data-close aria-label="Close"><i data-lucide="x"></i></button>
+      <div class="dialog-body" style="padding-top:10px">
+        <div class="success-check"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg></div>
+        <h2 class="success-title" id="dlgSuccessTitle">Success!</h2>
+        <p class="success-msg" id="dlgSuccessMsg">Truck List Successfully Sent</p>
+      </div>
+      <div class="dialog-foot" style="justify-content:center">
+        <button class="btn-primary" data-close type="button">Done</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Send Tracking (row Action ▾) — traced from Figma -->
+  <div class="dialog-overlay" id="dlgTracking" hidden>
+    <div class="dialog-panel dialog-wide" role="dialog" aria-modal="true" aria-labelledby="dlgTrkTitle">
+      <div class="dialog-head">
+        <h2 class="dialog-title" id="dlgTrkTitle">Send Tracking</h2>
+        <p class="dialog-desc">Share a load's live location with the broker.</p>
+        <button type="button" class="dialog-close" data-close aria-label="Close"><i data-lucide="x"></i></button>
+      </div>
+      <div class="dialog-body">
+        <label class="check-row"><input type="checkbox" class="row-checkbox" id="trkShare"> Share Location Based On Load Times</label>
+        <div class="dialog-row">
+          <div class="field" style="margin-bottom:0"><label class="field-label" for="trkStart">Start Date/Time</label><input type="text" class="text-input" id="trkStart" value="06/08/2024 1:30 PM"></div>
+          <div class="field" style="margin-bottom:0"><label class="field-label" for="trkEnd">End Date/Time</label><input type="text" class="text-input" id="trkEnd" value="06/08/2024 1:30 PM"></div>
+        </div>
+        <div class="dialog-row" style="margin-top:16.25px">
+          <div class="field" style="margin-bottom:0"><label class="field-label" for="trkLoad">Load No</label>
+            <select class="select-input" id="trkLoad"><option>DATR-9768 | Megacorp (MGNC12) | Mike Morris</option><option>DATR-8823 | Arrive (ARVE19) | Jackson Howard</option><option>DATR-7741 | XPO (XPOL02) | Sam Cole</option></select>
+          </div>
+          <div class="field" style="margin-bottom:0"><label class="field-label">Driver</label>
+            <div class="driver-chip"><span class="av">MJ</span><span>Michael Jordan — Roanoke, VA</span></div>
+          </div>
+        </div>
+        <div class="dialog-row" style="margin-top:16.25px">
+          <div class="field" style="margin-bottom:0"><label class="field-label" for="trkProvider">Provider Type</label>
+            <select class="select-input" id="trkProvider"><option>ProChat - Active</option><option>Fourkites - Inactive</option><option>Macropoint - Inactive</option><option>Trucker Tools - Inactive</option></select>
+          </div>
+          <div class="field" style="margin-bottom:0">
+            <label class="field-label field-label-add">Send To <button type="button" class="field-add-btn" id="trkAdd"><i data-lucide="plus"></i> Add</button></label>
+            <input type="text" class="text-input" id="trkSendTo" placeholder="Search…">
+          </div>
+        </div>
+        <div class="dialog-row" style="margin-top:16.25px">
+          <div class="field" style="margin-bottom:0"><label class="field-label" for="trkNotes">Notes</label><input type="text" class="text-input" id="trkNotes" placeholder="Enter"></div>
+          <div class="field" style="margin-bottom:0"><label class="field-label" for="trkLink">Link</label>
+            <div class="link-field"><input type="text" class="text-input" id="trkLink" value="https://dispatchpro.io/t/D59c0tpa9" readonly><button type="button" class="link-copy" data-copy-link aria-label="Copy link"><i data-lucide="link"></i></button></div>
+          </div>
+        </div>
+      </div>
+      <div class="dialog-foot has-note">
+        <button type="button" class="trk-history" id="trkHistory">Tracking History <i data-lucide="chevron-down"></i></button>
+        <div class="dialog-foot-actions">
+          <button class="btn-outline" data-close type="button">Cancel</button>
+          <button class="btn-primary" id="trkSend" type="button"><i data-lucide="send"></i> Send</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Request Documentation (row Action ▾ → Request Documentation) -->
+  <div class="dialog-overlay" id="dlgReqDoc" hidden>
+    <div class="dialog-panel" role="dialog" aria-modal="true" aria-labelledby="dlgReqTitle">
+      <div class="dialog-head">
+        <h2 class="dialog-title" id="dlgReqTitle">Request Documentation</h2>
+        <p class="dialog-desc">Ask the broker for paperwork on a load.</p>
+        <button type="button" class="dialog-close" data-close aria-label="Close"><i data-lucide="x"></i></button>
+      </div>
+      <div class="dialog-body">
+        <div class="field"><label class="field-label" for="reqLoad">Load#</label><select class="select-input" id="reqLoad"><option>DATR-189282</option><option>DATR-567882</option><option>DATR-137773</option></select></div>
+        <div class="field"><label class="field-label" for="reqCustomer">Customer Name</label><select class="select-input" id="reqCustomer"></select></div>
+        <div class="field"><label class="field-label" for="reqVia">Request Via</label><select class="select-input" id="reqVia"><option value="">Select Request Via</option><option>Email</option><option>ProChat</option><option>Fax</option></select></div>
+        <div class="field" style="margin-bottom:0"><label class="field-label" for="reqDetails">Request Details</label><textarea class="dialog-textarea" id="reqDetails" placeholder="Enter Details"></textarea></div>
+      </div>
+      <div class="dialog-foot">
+        <button class="btn-outline" data-close type="button">Cancel</button>
+        <button class="btn-primary" id="reqSend" type="button">Request</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Send Documentation (row Action ▾ → Send Documentation) -->
+  <div class="dialog-overlay" id="dlgSendDoc" hidden>
+    <div class="dialog-panel" role="dialog" aria-modal="true" aria-labelledby="dlgSdTitle">
+      <div class="dialog-head">
+        <h2 class="dialog-title" id="dlgSdTitle">Send Documentation</h2>
+        <p class="dialog-desc">Send paperwork to the broker for a load.</p>
+        <button type="button" class="dialog-close" data-close aria-label="Close"><i data-lucide="x"></i></button>
+      </div>
+      <div class="dialog-body">
+        <div class="dialog-row">
+          <div class="field" style="margin-bottom:0"><label class="field-label" for="sdLoad">Load#</label><select class="select-input" id="sdLoad"><option>DATR-189282</option><option>DATR-567882</option><option>DATR-137773</option></select></div>
+          <div class="field" style="margin-bottom:0"><label class="field-label" for="sdType">Document Type</label><select class="select-input" id="sdType"><option>Bill of Lading (BOL)</option><option>Proof of Delivery (POD)</option><option>Rate Confirmation</option><option>Invoice</option></select></div>
+        </div>
+        <div class="dialog-row" style="margin-top:16.25px">
+          <div class="field" style="margin-bottom:0"><label class="field-label" for="sdCustomer">Customer Name</label><select class="select-input" id="sdCustomer"></select></div>
+          <div class="field" style="margin-bottom:0"><label class="field-label" for="sdVia">Send Via</label><select class="select-input" id="sdVia"><option>Email</option><option>ProChat</option><option>Fax</option></select></div>
+        </div>
+        <div class="field" style="margin-top:16.25px; margin-bottom:0"><label class="field-label" for="sdNote">Note</label><textarea class="dialog-textarea" id="sdNote" placeholder="Add a note (optional)"></textarea></div>
+      </div>
+      <div class="dialog-foot has-note">
+        <span class="dialog-foot-note"><i data-lucide="paperclip"></i> <span id="sdAttach">1 document attached</span></span>
+        <div class="dialog-foot-actions">
+          <button class="btn-outline" data-close type="button">Cancel</button>
+          <button class="btn-primary" id="sdSend" type="button"><i data-lucide="send"></i> Send</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Make Offer (Match to Freight load card) -->
+  <div class="dialog-overlay" id="dlgOffer" hidden>
+    <div class="dialog-panel" role="dialog" aria-modal="true" aria-labelledby="dlgOfferTitle">
+      <div class="dialog-head">
+        <h2 class="dialog-title" id="dlgOfferTitle">Make Offer</h2>
+        <p class="dialog-desc" id="dlgOfferDesc">Submit a counter rate for this load.</p>
+        <button type="button" class="dialog-close" data-close aria-label="Close"><i data-lucide="x"></i></button>
+      </div>
+      <div class="dialog-body">
+        <div class="dialog-row">
+          <div class="field" style="margin-bottom:0"><label class="field-label" for="offerAmt">Offer amount</label><input type="text" class="text-input" id="offerAmt" value="$2,600.00"></div>
+          <div class="field" style="margin-bottom:0"><label class="field-label" for="offerCpm">Rate / mile</label><input type="text" class="text-input" id="offerCpm" value="$2.38" readonly></div>
+        </div>
+        <div class="field" style="margin-top:16.25px; margin-bottom:0"><label class="field-label" for="offerNote">Note to broker</label><textarea class="dialog-textarea" id="offerNote" placeholder="Enter a note (optional)"></textarea></div>
+      </div>
+      <div class="dialog-foot">
+        <button class="btn-outline" data-close type="button">Cancel</button>
+        <button class="btn-primary" id="offerSubmit" type="button">Submit offer</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Match to Freight (right-side board) -->
+  <div class="dialog-overlay sheet-overlay" id="dlgMatch" hidden>
+    <div class="dialog-panel sheet-panel" role="dialog" aria-modal="true" aria-labelledby="dlgMatchTitle">
+      <div class="sheet-head">
+        <h2 class="sheet-title" id="dlgMatchTitle">Match to Freight</h2>
+        <button type="button" class="dialog-close" data-close aria-label="Close" style="position:static"><i data-lucide="x"></i></button>
+      </div>
+      <div class="sheet-sub">
+        <span class="sheet-sub-co" id="mfCompany">Arrive</span>
+        <span class="sheet-contact"><span class="av" id="mfAv">JH</span><span id="mfContact">Jackson Howard — (512) 567-4522</span></span>
+      </div>
+      <div class="mf-filters">
+        <select class="select-input"><option>Select Driver</option><option>Michael Jordan</option><option>Scotty Pippen</option></select>
+        <select class="select-input"><option>Any date</option><option>Today</option><option>This week</option></select>
+        <select class="select-input"><option>Deadhead Radius</option><option>50 mi</option><option>100 mi</option><option>150 mi</option></select>
+        <select class="select-input"><option>Equipment Type</option><option>Box Truck | 48'</option><option>Conestoga | 44'</option><option>Reefer | 53'</option></select>
+        <select class="select-input"><option>Load Type</option><option>Full Truck Load</option><option>LTL</option></select>
+        <button type="button" class="mf-more"><i data-lucide="sliders-horizontal"></i> More Filter</button>
+      </div>
+      <div class="mf-map" id="mfMap">
+        <div class="mf-map-svg" id="mfMapSvg"><div class="mf-map-empty">Loading map…</div></div>
+        <div class="load-zoom"><button type="button" aria-label="Zoom in"><i data-lucide="plus"></i></button><button type="button" aria-label="Zoom out"><i data-lucide="minus"></i></button></div>
+      </div>
+      <div class="mf-cards" id="mfCards"></div>
+    </div>
+  </div>
+
+  <!-- Call modal -->
+  <div class="dialog-overlay" id="dlgCall" hidden>
+    <div class="dialog-panel" role="dialog" aria-modal="true" aria-labelledby="dlgCallTitle" style="max-width:375px">
+      <div class="dialog-head">
+        <h2 class="dialog-title" id="dlgCallTitle">Call</h2>
+        <p class="dialog-desc">Live controls for this call.</p>
+        <button type="button" class="dialog-close" data-close aria-label="Close"><i data-lucide="x"></i></button>
+      </div>
+      <div class="dialog-body">
+        <div class="contact-line" style="margin-bottom:12.5px"><span class="av" id="callAv">JH</span><span><span class="nm" id="callName">Jackson Howard</span> - <span class="ph" id="callNum">(512) 426-7843</span></span></div>
+        <div class="call-from">From: (555) 174-8731</div>
+        <div class="call-tabs">
+          <button type="button" class="call-tab active" data-callview="options">Call Options</button>
+          <button type="button" class="call-tab" data-callview="notes">Call Notes</button>
+        </div>
+        <div data-callpane="options">
+          <div class="call-grid">
+            <button type="button" class="call-ctrl" data-toggle><span class="ic"><i data-lucide="mic-off"></i></span>Mute</button>
+            <button type="button" class="call-ctrl"><span class="ic"><i data-lucide="grid-3x3"></i></span>Keypad</button>
+            <button type="button" class="call-ctrl" data-toggle><span class="ic"><i data-lucide="pause"></i></span>Hold</button>
+            <button type="button" class="call-ctrl"><span class="ic"><i data-lucide="plus"></i></span>Add</button>
+            <button type="button" class="call-ctrl" data-toggle><span class="ic"><i data-lucide="circle-dot"></i></span>Record</button>
+            <button type="button" class="call-ctrl"><span class="ic"><i data-lucide="ellipsis"></i></span>Call Actions</button>
+          </div>
+        </div>
+        <div data-callpane="notes" hidden>
+          <div class="field" style="margin:0"><label class="field-label" for="callNotes">Notes</label><textarea class="dialog-textarea" id="callNotes" placeholder="Add call notes…" style="min-height:150px"></textarea></div>
+        </div>
+      </div>
+      <div class="dialog-foot" style="justify-content:center">
+        <button type="button" class="btn-danger" id="callGo" data-close><i data-lucide="phone-off"></i> End Call</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- SMS modal -->
+  <div class="dialog-overlay" id="dlgSms" hidden>
+    <div class="dialog-panel" role="dialog" aria-modal="true" aria-labelledby="dlgSmsTitle">
+      <div class="dialog-head">
+        <h2 class="dialog-title" id="dlgSmsTitle" style="color:var(--blue-dark)">Send as SMS</h2>
+        <button type="button" class="dialog-close" data-close aria-label="Close"><i data-lucide="x"></i></button>
+      </div>
+      <div class="dialog-body">
+        <div class="contact-line" style="margin-bottom:16.25px"><span class="av" id="smsAv">JH</span><span><span class="nm" id="smsName">Jackson Howard</span> - <span class="ph" id="smsContactNum">(512) 567-4522</span></span></div>
+        <div class="field">
+          <label class="field-label label-row" for="smsPhone">Phone Number <span class="cb-label"><input type="checkbox" class="row-checkbox" id="smsCustom"> Custom</span></label>
+          <input type="text" class="text-input" id="smsPhone" value="(615) 339-8509" readonly>
+        </div>
+        <div class="cb-inline">
+          <label class="cb-label"><input type="checkbox" class="row-checkbox" id="smsCell" checked> Cell</label>
+          <label class="cb-label"><input type="checkbox" class="row-checkbox" id="smsOffice"> SMS Office</label>
+        </div>
+        <div class="field" style="margin-bottom:0"><label class="field-label" for="smsMsg">Message</label><textarea class="dialog-textarea" id="smsMsg" placeholder="Enter" style="min-height:90px"></textarea></div>
+      </div>
+      <div class="dialog-foot">
+        <button class="btn-outline" data-close type="button">Cancel</button>
+        <button class="btn-primary" id="smsSend" type="button">Send</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Email compose modal -->
+  <div class="dialog-overlay" id="dlgEmail" hidden>
+    <div class="dialog-panel dialog-wide" role="dialog" aria-modal="true" aria-labelledby="dlgEmailTitle">
+      <div class="dialog-head">
+        <h2 class="dialog-title" id="dlgEmailTitle">New Email</h2>
+        <p class="dialog-desc">Compose a message to the broker.</p>
+        <button type="button" class="dialog-close" data-close aria-label="Close"><i data-lucide="x"></i></button>
+      </div>
+      <div class="dialog-body">
+        <div class="field">
+          <label class="field-label label-row">To <span class="email-ccbcc"><button type="button">CC</button><button type="button">BCC</button></span></label>
+          <div class="chip-wrap" style="max-height:none">
+            <span class="email-chip"><span id="emailTo">jhoward@arrivelogistics.com</span><button type="button" aria-label="Remove"><i data-lucide="x"></i></button></span>
+          </div>
+        </div>
+        <div class="field">
+          <label class="field-label" for="emailSubject">Subject</label>
+          <input type="text" class="text-input" id="emailSubject" value="New Lead Deal">
+        </div>
+        <div class="field" style="margin-bottom:0">
+          <label class="field-label">Message</label>
+          <div class="email-compose">
+            <div class="email-toolbar">
+              <button type="button" class="email-tb-tpl"><i data-lucide="layout-template"></i> Templates <i data-lucide="chevron-down"></i></button>
+              <span class="email-tb-sep"></span>
+              <button type="button" class="email-tb-btn" style="font-weight:700">B</button>
+              <button type="button" class="email-tb-btn" style="font-style:italic">I</button>
+              <button type="button" class="email-tb-btn" style="text-decoration:underline">U</button>
+              <span class="email-tb-sep"></span>
+              <button type="button" class="email-tb-btn"><i data-lucide="align-left"></i></button>
+              <button type="button" class="email-tb-btn"><i data-lucide="list"></i></button>
+            </div>
+            <textarea class="email-body" id="emailBody" placeholder="Message"></textarea>
+          </div>
+        </div>
+      </div>
+      <div class="dialog-foot has-note">
+        <button type="button" class="email-attach"><span class="ic"><i data-lucide="paperclip"></i></span> Add Attachment</button>
+        <div class="dialog-foot-actions">
+          <button class="btn-primary" id="emailSend" type="button">Send <i data-lucide="send"></i></button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ProChat modal -->
+  <div class="dialog-overlay" id="dlgProchat" hidden>
+    <div class="dialog-panel" role="dialog" aria-modal="true" aria-labelledby="dlgChatTitle">
+      <div class="dialog-head" style="margin-bottom:0">
+        <h2 class="dialog-title" id="dlgChatTitle" style="color:var(--blue-dark);display:flex;align-items:center;gap:6.25px"><i data-lucide="message-square"></i> ProChat</h2>
+        <button type="button" class="dialog-close" data-close aria-label="Close"><i data-lucide="x"></i></button>
+      </div>
+      <div class="dialog-body">
+        <div class="chat-sub"><span class="nm" id="chatName">Jackson Howard</span><span class="meta"><span id="chatCo">Arrive Logistics</span> <span style="color:var(--border)">|</span> West Monroe, LA</span></div>
+        <div class="chat-body" id="chatBody">
+          <div class="chat-msg out"><div><div class="chat-bubble">Hey, How are you<span class="chat-meta">Christian Snead · 02:45 PM</span></div></div><span class="chat-av">CS</span></div>
+        </div>
+        <div class="chat-input">
+          <div class="box"><input type="text" id="chatInput" placeholder="Type Your Message…"><button type="button" class="ib" aria-label="Attach"><i data-lucide="paperclip"></i></button><button type="button" class="ib" aria-label="Emoji"><i data-lucide="smile"></i></button></div>
+          <button type="button" class="chat-send" id="chatSend" aria-label="Send"><i data-lucide="send"></i></button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="toast-stack" id="toastStack"></div>
+
+<script>
+/* =========================================================================
+   Customer Hot List — behaviour
+   ========================================================================= */
+(function(){
+  'use strict';
+
+  /* ---- Toast ---- */
+  var toastStack = document.getElementById('toastStack');
+  var TICONS = {
+    success:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>',
+    error:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7.5v5M12 16.2v.1"/></svg>'
+  };
+  function toast(kind, title, msg){
+    var el = document.createElement('div');
+    el.className = 'toast ' + kind;
+    el.innerHTML = TICONS[kind] + '<div><span class="toast-title">' + title + '</span>' + (msg||'') + '</div>';
+    toastStack.appendChild(el);
+    setTimeout(function(){ el.remove(); }, 3200);
+  }
+
+  function esc(s){ return String(s==null?'':s).replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];}); }
+
+  /* ---- Data (from Figma; emails regenerated to match each rep cleanly) ---- */
+  var DATA = [
+    ['Arrive','Jackson Howard','(512) 426-7843','x3453',800,3.07,45,80,80,'(615) 339-8509','jhoward@arrivelogistics.com',true,'Text cell or email to call back asap'],
+    ['Avenue','Kris Pierce','(630) 270-8262','x3453',788,3.07,40,80,80,'(678) 672-1050','kpierce@avenuelogistics.com',false,'Text cell or email to call back asap'],
+    ['C.H Robinson','Anslee Webb','(866) 281-6676','x3453',767,3.07,33,80,80,'(920) 357-2004','ansleewebb@chrobinson.com',true,'Text cell or email to call back asap'],
+    ['C.H Robinson','Steve Rueben','(866) 281-6676','x1573',678,3.07,30,80,80,'(920) 357-2697','steverueben@chrobinson.com',false,''],
+    ['C.H Robinson','Hunter Austin','(866) 281-6676','x4940',623,3.07,30,80,80,'(920) 357-7900','hunteraustin@chrobinson.com',false,''],
+    ['Coyote','Christopher Stevens','(773) 799-2235','x6638',610,3.07,30,80,80,'(847) 804-5654','chrisstevens@coyote.com',false,''],
+    ['Despir','Evan Berna','(630) 541-4789','x6638',600,2.56,30,75,75,'(847) 584-3289','evanberna@despir.com',false,''],
+    ['Dovtail','Lori Hahn','(615) 339-8509','x6638',588,2.56,30,75,75,'(479) 434-9230','lori@dovtail.com',false,''],
+    ['Echo','Jeffery Eisenstein','(847) 213-2573','x6638',588,2.56,30,75,75,'(479) 494-8265','jefferyeisenstein@echo.com',false,''],
+    ['Edge','Dani Kornfeld','(312) 584-1169','x6638',577,2.56,30,75,75,'(854) 952-2189','danikornfeld@edge.com',false,'Ian @ Deaton terminal referral'],
+    ['Megacorp','Amy Waugh','(859) 538-1660','x6638',577,2.56,30,75,75,'(704) 594-3457','amywaugh@megacorp.com',false,''],
+    ['Nolan Transportation Group','Josh Vieira','(678) 672-1050','x6638',571,2.56,30,75,75,'(828) 448-5022','joshvieira@nolantransportation.com',false,'Shows how much money and works with Ian at Meadowlark'],
+    ['Nolan Transportation Group','Brian Syphoe','(678) 672-1194','x1313',545,2.56,16,75,75,'(678) 672-1194','briansyphoe@nolantransportation.com',false,'Text cell or email to call back asap'],
+    ['Redwood','Sam Dolan','(678) 672-1194','x1313',542,1.90,15,75,75,'(678) 672-1194','sdolan@redwood.com',false,'Referred by Ian at Deaton'],
+    ['Uber Freight','Sam Reyes','(828) 448-5022','x1313',523,1.90,15,75,75,'(678) 672-1050','sreyes@uber.com',true,''],
+    ['XPO','Sam Cole','(704) 594-3457','x1313',515,1.90,15,75,75,'(859) 538-1660','scole@xpo.com',false,'Referred by Ian at Deaton'],
+    ['XPO','Sam Trent','(854) 952-2189','x1313',513,1.90,15,75,75,'(312) 584-1169','strent@xpo.com',false,'Referred by Ian at Deaton'],
+    ['Nolan Transportation Group','Richard Leach','(479) 494-8265','x1313',420,1.90,15,75,75,'(847) 213-2573','richardleach@nolantransportation.com',false,'Referred by Ian at Deaton'],
+    ['Molo','Bubba Hines','(479) 434-9230','x1313',410,1.90,15,75,75,'(615) 339-8509','bubba@molo.com',false,'Referred by Ian at Deaton'],
+    ['Molo','Beau Carter','(847) 584-3289','x1313',409,0.50,15,75,75,'(630) 541-4789','beau@molo.com',false,'Referred by Ian at Deaton'],
+    ['Molo','Chandler Fox','(847) 804-5654','x1313',408,0.50,15,75,75,'(773) 799-2235','chandler@molo.com',true,'Referred by Ian at Deaton'],
+    ['JB Hunt','Jason Blair','(920) 357-7900','x1313',400,0.50,10,75,75,'(866) 281-6676','jasonblair@jbhunt.com',false,'Referred by Ian at Deaton'],
+    ['Trafix','Rick Mora','(920) 357-2697','x1313',350,0.50,15,75,75,'(866) 281-6676','rick@trafix.com',false,'Referred by Ian at Deaton'],
+    ['Schneider','Mikael Bishop','(920) 357-2697','x1313',300,0.50,5,75,75,'(866) 281-6676','mikaelbishop@schneider.com',false,'Ian @ Deaton terminal referral'],
+    ['Schneider','Austin Berkovitz','(920) 357-2004','x1313',100,0.50,2,75,75,'(866) 281-6676','austinberkovitz@schneider.com',false,'Ian @ Deaton terminal referral']
+  ].map(function(r,i){
+    return { id:i+1, company:r[0], rep:r[1], phone:r[2], ext:r[3], loads:r[4], cpm:r[5],
+             claims:r[6], otp:r[7], otd:r[8], cell:r[9], email:r[10], assigned:r[11], comment:r[12] };
+  });
+
+  var selected = {};                    // id -> true
+  var sortKey = 'loads', sortDir = -1;  // default: loads desc
+  var listMode = 'rep';                 // 'rep' | 'company'
+  var advOpen = false;                  // inline advance-search filter row shown?
+  var advFilters = {};                  // column key -> filter text
+  var searchTerm = '';
+
+  /* ---- Company-aggregated rows (the "List by: Company" view) ---- */
+  var COMPANY = (function(){
+    var map = {}, order = [];
+    DATA.forEach(function(r){ if(!map[r.company]){ map[r.company] = []; order.push(r.company); } map[r.company].push(r); });
+    var prefixes = ['billing','sales','customercare','dispatch','hr'];
+    return order.map(function(c, i){
+      var g = map[c], domain = (g[0].email.split('@')[1]) || 'example.com';
+      return {
+        id:'c'+i, company:c,
+        phone:'(800) 500-'+(5551 + i),
+        ext:g[0].ext,
+        loads:g.reduce(function(s,x){ return s + x.loads; }, 0),
+        cpm:Math.max.apply(null, g.map(function(x){ return x.cpm; })),
+        claims:g.reduce(function(s,x){ return s + x.claims; }, 0),
+        otp:Math.max.apply(null, g.map(function(x){ return x.otp; })),
+        otd:Math.max.apply(null, g.map(function(x){ return x.otd; })),
+        email:prefixes[i % prefixes.length] + '@' + domain,
+        reps:g, isCompany:true
+      };
+    });
+  })();
+
+  /* ---- Cell renderers + column config per mode ---- */
+  var body = document.getElementById('hotBody');
+  var head = document.getElementById('hotHead');
+  var table = document.getElementById('hotTable');
+  var currentById = {};
+
+  function link(act, id, txt){ return '<button class="cell-link" data-act="'+act+'" data-id="'+id+'">'+txt+'</button>'; }
+  function badgeYesNo(v){ return v ? '<span class="badge" data-variant="success">Yes</span>' : '<span class="badge">No</span>'; }
+  function commentCell(c){ return c ? '<span class="cell-comment" title="'+esc(c)+'">'+esc(c)+'</span>' : '<span class="cell-empty">—</span>'; }
+  function actionCell(row){
+    return '<div class="row-actions">' +
+      '<button class="icon-action-btn" data-act="call" data-id="'+row.id+'" title="Call office"><i data-lucide="phone"></i></button>' +
+      '<button class="icon-action-btn" data-act="cell" data-id="'+row.id+'" title="Call cell"><i data-lucide="smartphone"></i></button>' +
+      '<button class="icon-action-btn accent" data-act="email" data-id="'+row.id+'" title="Email"><i data-lucide="mail"></i></button>' +
+      '<button class="icon-action-btn accent" data-act="text" data-id="'+row.id+'" title="Text"><i data-lucide="message-square"></i></button>' +
+      '<button class="icon-action-btn" data-act="more" data-id="'+row.id+'" title="More"><i data-lucide="chevron-down"></i></button>' +
+    '</div>';
+  }
+  var COLS = {
+    rep: [
+      {k:'company', label:'Company', sort:true, filter:true, cls:'cell-company', get:function(r){ return esc(r.company); }},
+      {k:'rep', label:'Representative', sort:true, filter:true, get:function(r){ return link('view', r.id, esc(r.rep)); }},
+      {k:'phone', label:'Phone', filter:true, get:function(r){ return link('call', r.id, esc(r.phone)); }},
+      {k:'ext', label:'Extension', filter:true, cls:'cell-ext', get:function(r){ return esc(r.ext); }},
+      {k:'loads', label:'# Of Loads', sort:true, filter:true, num:true, get:function(r){ return link('loads', r.id, r.loads); }},
+      {k:'cpm', label:'Highest CPM', sort:true, filter:true, num:true, get:function(r){ return '$ '+r.cpm.toFixed(2); }},
+      {k:'claims', label:'Claims', sort:true, filter:true, num:true, get:function(r){ return ''+r.claims; }},
+      {k:'otp', label:'OTP %', sort:true, filter:true, num:true, get:function(r){ return r.otp+'%'; }},
+      {k:'otd', label:'OTD %', sort:true, filter:true, num:true, get:function(r){ return r.otd+'%'; }},
+      {k:'cell', label:'Cell', filter:true, get:function(r){ return link('cell', r.id, esc(r.cell)); }},
+      {k:'email', label:'Email', filter:true, get:function(r){ return link('email', r.id, esc(r.email)); }},
+      {k:'assigned', label:'Assigned', filter:true, get:function(r){ return badgeYesNo(r.assigned); }},
+      {k:'comment', label:'Comments', filter:true, get:function(r){ return commentCell(r.comment); }},
+      {k:'action', label:'Action', get:function(r){ return actionCell(r); }}
+    ],
+    company: [
+      {k:'company', label:'Company', sort:true, filter:true, cls:'cell-company', get:function(r){ return esc(r.company); }},
+      {k:'phone', label:'Phone', filter:true, get:function(r){ return link('call', r.id, esc(r.phone)); }},
+      {k:'ext', label:'Extension', filter:true, cls:'cell-ext', get:function(r){ return esc(r.ext); }},
+      {k:'loads', label:'# Of Loads', sort:true, filter:true, num:true, get:function(r){ return link('loads', r.id, r.loads); }},
+      {k:'cpm', label:'Highest CPM', sort:true, filter:true, num:true, get:function(r){ return '$ '+r.cpm.toFixed(2); }},
+      {k:'claims', label:'Claims', sort:true, filter:true, num:true, get:function(r){ return ''+r.claims; }},
+      {k:'otp', label:'OTP %', sort:true, filter:true, num:true, get:function(r){ return r.otp+'%'; }},
+      {k:'otd', label:'OTD %', sort:true, filter:true, num:true, get:function(r){ return r.otd+'%'; }},
+      {k:'email', label:'Email', filter:true, get:function(r){ return link('email', r.id, esc(r.email)); }},
+      {k:'action', label:'Action', get:function(r){ return actionCell(r); }}
+    ]
+  };
+  function cols(){ return COLS[listMode]; }
+  function baseRows(){ return listMode === 'company' ? COMPANY : DATA; }
+
+  /* ---- Filtering + sorting ---- */
+  function matchesSearch(row){
+    if(!searchTerm) return true;
+    var t = searchTerm.toLowerCase();
+    return (row.company + ' ' + (row.rep||'') + ' ' + row.email + ' ' + (row.comment||'')).toLowerCase().indexOf(t) !== -1;
+  }
+  function plainCell(col, row){ return col.get(row).replace(/<[^>]*>/g, '').replace(/&amp;/g,'&').trim(); }
+  function matchesFilters(row){
+    for(var k in advFilters){
+      var v = advFilters[k]; if(!v) continue;
+      var col; cols().forEach(function(c){ if(c.k === k) col = c; }); if(!col) continue;
+      if(plainCell(col, row).toLowerCase().indexOf(v.toLowerCase()) === -1) return false;
+    }
+    return true;
+  }
+  function visibleRows(){ return baseRows().filter(function(r){ return matchesSearch(r) && matchesFilters(r); }); }
+  function sortRows(rows){
+    if(!sortKey) return rows.slice();
+    var out = rows.slice();
+    out.sort(function(a, b){
+      var va = a[sortKey], vb = b[sortKey];
+      if(typeof va === 'string'){ va = va.toLowerCase(); vb = (''+vb).toLowerCase(); return va<vb?-1*sortDir:va>vb?1*sortDir:0; }
+      return (va - vb) * sortDir;
+    });
+    return out;
+  }
+
+  /* ---- Render (config-driven head + body) ---- */
+  function sortIcon(active){ return '<i data-lucide="'+(active ? (sortDir === 1 ? 'chevron-up' : 'chevron-down') : 'chevrons-up-down')+'"></i>'; }
+  function renderHead(){
+    var vis = visibleRows();
+    var visSel = vis.filter(function(r){ return selected[r.id]; }).length;
+    var allChecked = vis.length > 0 && visSel === vis.length;
+    var h = '<tr><th class="col-check"><input type="checkbox" class="row-checkbox" id="selectAll" aria-label="Select all"'+(allChecked?' checked':'')+'></th>';
+    cols().forEach(function(c){
+      var cls = c.num ? ' class="num"' : '';
+      if(c.sort){
+        var active = (sortKey === c.k);
+        h += '<th'+cls+'><button class="th-sort'+(active?' sorted':'')+'" data-sort="'+c.k+'" type="button">'+esc(c.label)+' '+sortIcon(active)+'</button></th>';
+      } else {
+        h += '<th'+cls+'>'+esc(c.label)+'</th>';
+      }
+    });
+    h += '</tr>';
+    if(advOpen){
+      h += '<tr class="filter-row"><th class="col-check"></th>';
+      cols().forEach(function(c){
+        h += c.filter
+          ? '<th><input class="filter-input" data-filter="'+c.k+'" value="'+esc(advFilters[c.k]||'')+'" placeholder="Filter" aria-label="Filter '+esc(c.label)+'"></th>'
+          : '<th></th>';
+      });
+      h += '</tr>';
+    }
+    head.innerHTML = h;
+    var sa = document.getElementById('selectAll'); if(sa) sa.indeterminate = visSel > 0 && !allChecked;
+  }
+  function rowHTML(row){
+    var h = '<tr class="data-row" data-id="'+row.id+'"><td class="col-check"><input type="checkbox" class="row-checkbox row-select" data-id="'+row.id+'"'+(selected[row.id]?' checked':'')+' aria-label="Select '+esc(row.company)+'"></td>';
+    cols().forEach(function(c){
+      var cls = ((c.num?'num ':'') + (c.cls||'')).trim();
+      h += '<td'+(cls?' class="'+cls+'"':'')+'>'+c.get(row)+'</td>';
+    });
+    return h + '</tr>';
+  }
+  function renderBody(){
+    var rows = sortRows(visibleRows());
+    document.getElementById('rowCount').textContent = rows.length;
+    currentById = {};
+    if(!rows.length){ body.innerHTML = ''; document.getElementById('gridEmpty').hidden = false; }
+    else {
+      document.getElementById('gridEmpty').hidden = true;
+      var html = '';
+      rows.forEach(function(r){ currentById[r.id] = r; html += rowHTML(r); });
+      body.innerHTML = html;
+    }
+    var vis = visibleRows(), visSel = vis.filter(function(r){ return selected[r.id]; }).length;
+    var sa = document.getElementById('selectAll');
+    if(sa){ sa.checked = vis.length > 0 && visSel === vis.length; sa.indeterminate = visSel > 0 && visSel < vis.length; }
+    updateSelInfo();
+    if(window.lucide) try{ lucide.createIcons(); }catch(e){}
+  }
+  function render(){ renderHead(); renderBody(); }
+
+  /* ---- Delegated table events (head + body persist; contents re-rendered) ---- */
+  table.addEventListener('click', function(e){
+    var st = e.target.closest('.th-sort');
+    if(st){ var k = st.getAttribute('data-sort'); if(sortKey === k){ sortDir = -sortDir; } else { sortKey = k; sortDir = (k === 'company' || k === 'rep') ? 1 : -1; } render(); return; }
+    var act = e.target.closest('[data-act]');
+    if(act){ handleAct(act.getAttribute('data-act'), act.getAttribute('data-id'), act); }
+  });
+  table.addEventListener('change', function(e){
+    if(e.target.id === 'selectAll'){
+      var checked = e.target.checked, vis = visibleRows();
+      vis.forEach(function(r){ if(checked) selected[r.id] = true; else delete selected[r.id]; });
+      render(); return;
+    }
+    var cb = e.target.closest('.row-select');
+    if(cb){ var id = cb.getAttribute('data-id'); if(cb.checked) selected[id] = true; else delete selected[id]; renderBody(); }
+  });
+  table.addEventListener('input', function(e){
+    var fi = e.target.closest('.filter-input');
+    if(!fi) return;
+    advFilters[fi.getAttribute('data-filter')] = fi.value;
+    renderBody();   // head (and the focused input) stays put; only rows re-render
+  });
+
+  /* ---- Selection (header action bar: "N Selected" + Cancel) ---- */
+  function selectedRows(){ return baseRows().filter(function(r){ return selected[r.id]; }); }
+  function updateSelInfo(){
+    var n = Object.keys(selected).length;
+    document.getElementById('selNote').hidden = n === 0;
+    document.getElementById('selNoteN').textContent = n;
+    document.getElementById('cancelSelBtn').hidden = n === 0;
+  }
+  document.getElementById('cancelSelBtn').addEventListener('click', function(){ selected = {}; render(); });
+
+  /* ---- Row cell + action clicks (delegated on the table; works both modes) ---- */
+  function handleAct(act, id, anchor){
+    var row = currentById[id]; if(!row) return;
+    switch(act){
+      case 'call': case 'cell': case 'email': case 'text': openContactPop(anchor, act, row); break;
+      case 'view': if(row.rep) openRep(row); else toast('success','Opening customer', esc(row.company)); break;
+      case 'loads': toast('success','Loads', esc(row.company)+' has '+row.loads+' loads on record'); break;
+      case 'more': openRowMenu(anchor, row); break;
+    }
+  }
+
+  /* ---- Row "More" menu ---- */
+  var openMenu = null;
+  function closeRowMenu(){ if(openMenu){ openMenu.remove(); openMenu = null; document.removeEventListener('click', onDocClickMenu, true); document.removeEventListener('scroll', closeRowMenu, true); window.removeEventListener('resize', closeRowMenu); } }
+  function onDocClickMenu(e){ if(openMenu && !openMenu.contains(e.target)) closeRowMenu(); }
+  function openRowMenu(anchor, row){
+    closeRowMenu();
+    var m = document.createElement('div');
+    m.className = 'menu-panel';
+    // The real Figma row Action ▾ menu.
+    m.innerHTML =
+      '<button class="menu-item" data-mi="stl"><i data-lucide="truck"></i> Send Truck List</button>' +
+      '<button class="menu-item" data-mi="loads"><i data-lucide="package"></i> View Loads</button>' +
+      '<button class="menu-item" data-mi="tracking"><i data-lucide="route"></i> Send Tracking</button>' +
+      '<button class="menu-item" data-mi="reqdoc"><i data-lucide="file-input"></i> Request Documentation</button>' +
+      '<button class="menu-item" data-mi="senddoc"><i data-lucide="file-output"></i> Send Documentation</button>' +
+      '<button class="menu-item" data-mi="match"><i data-lucide="git-compare-arrows"></i> Match to Freight</button>';
+    document.body.appendChild(m);
+    openMenu = m;
+    // position (getBoundingClientRect is painted px; divide by zoom to viewport units)
+    var z = 0.8;
+    var r = anchor.getBoundingClientRect();
+    var mw = m.offsetWidth, mh = m.offsetHeight;
+    var left = r.right/z - mw; if(left < 8) left = 8;
+    var top = r.bottom/z + 5;
+    if(top + mh > window.innerHeight - 8) top = r.top/z - mh - 5;
+    var grid = function(v){ return Math.round(v/1.25)*1.25; };   // land on a whole painted pixel
+    m.style.left = grid(left) + 'px';
+    m.style.top = grid(top) + 'px';
+    if(window.lucide) try{ lucide.createIcons(); }catch(e){}
+    m.addEventListener('click', function(e){
+      var mi = e.target.closest('.menu-item'); if(!mi) return;
+      var act = mi.getAttribute('data-mi');
+      closeRowMenu();
+      if(act === 'stl') window.openTruckList(row.company, row.reps ? row.reps.map(function(x){ return x.rep; }) : [row.rep]);
+      else if(act === 'loads') toast('success','Opening loads', esc(row.company)+' — '+row.loads+' loads');
+      else if(act === 'tracking') openTracking(row);
+      else if(act === 'reqdoc') openReqDoc(row);
+      else if(act === 'senddoc') openSendDoc(row);
+      else if(act === 'match') openMatch(row);
+    });
+    setTimeout(function(){ document.addEventListener('click', onDocClickMenu, true); document.addEventListener('scroll', closeRowMenu, true); window.addEventListener('resize', closeRowMenu); }, 0);
+  }
+
+  /* ---- Contact modals: Call / SMS / Email / ProChat (traced from Figma) ---- */
+  function copyText(t){ try{ if(navigator.clipboard) navigator.clipboard.writeText(t); }catch(e){} }
+  function cInits(n){ var p=(n||'').trim().split(/\s+/); return (((p[0]||'')[0]||'')+((p[p.length-1]||'')[0]||'')).toUpperCase(); }
+  // Router kept for the existing call sites (row icons + rep-detail actions)
+  function openContactPop(anchor, kind, row){
+    if(kind === 'call') openCall(row, 'office');
+    else if(kind === 'cell') openCall(row, 'cell');
+    else if(kind === 'email') openEmail(row);
+    else if(kind === 'text') openSms(row);
+    else if(kind === 'chat') openProchat(row);
+  }
+
+  /* Call */
+  function openCall(row, which){
+    document.getElementById('callAv').textContent = cInits(row.rep || row.company);
+    document.getElementById('callName').textContent = row.rep || row.company;
+    document.getElementById('callNum').textContent = (which === 'cell' ? (row.cell || row.phone) : row.phone);
+    document.querySelectorAll('#dlgCall .call-tab').forEach(function(t,i){ t.classList.toggle('active', i===0); });
+    document.querySelector('#dlgCall [data-callpane="options"]').hidden = false;
+    document.querySelector('#dlgCall [data-callpane="notes"]').hidden = true;
+    document.querySelectorAll('#dlgCall .call-ctrl.on').forEach(function(c){ c.classList.remove('on'); });
+    showDialog('dlgCall');
+  }
+  document.querySelectorAll('#dlgCall .call-tab').forEach(function(tab){
+    tab.addEventListener('click', function(){
+      document.querySelectorAll('#dlgCall .call-tab').forEach(function(t){ t.classList.remove('active'); });
+      tab.classList.add('active');
+      var v = tab.getAttribute('data-callview');
+      document.querySelector('#dlgCall [data-callpane="options"]').hidden = (v !== 'options');
+      document.querySelector('#dlgCall [data-callpane="notes"]').hidden = (v !== 'notes');
+      resnapOpen();
+    });
+  });
+  document.querySelectorAll('#dlgCall .call-ctrl[data-toggle]').forEach(function(c){ c.addEventListener('click', function(){ c.classList.toggle('on'); }); });
+  document.getElementById('callGo').addEventListener('click', function(){ toast('success','Call ended', document.getElementById('callName').textContent); });
+
+  /* SMS */
+  function openSms(row){
+    document.getElementById('smsAv').textContent = cInits(row.rep || row.company);
+    document.getElementById('smsName').textContent = row.rep || row.company;
+    document.getElementById('smsContactNum').textContent = row.phone;
+    document.getElementById('smsPhone').value = row.cell || row.phone;
+    document.getElementById('smsCustom').checked = false; document.getElementById('smsPhone').readOnly = true;
+    document.getElementById('smsMsg').value = '';
+    showDialog('dlgSms');
+  }
+  document.getElementById('smsCustom').addEventListener('change', function(){ var p = document.getElementById('smsPhone'); p.readOnly = !this.checked; if(this.checked) p.focus(); });
+  document.getElementById('smsSend').addEventListener('click', function(){ hideDialog(); toast('success','SMS sent', document.getElementById('smsPhone').value); });
+
+  /* Email */
+  function openEmail(row){
+    document.getElementById('emailTo').textContent = row.email;
+    document.getElementById('emailSubject').value = 'New Lead Deal';
+    document.getElementById('emailBody').value = '';
+    showDialog('dlgEmail');
+  }
+  document.getElementById('emailSend').addEventListener('click', function(){ hideDialog(); toast('success','Email sent', 'To ' + document.getElementById('emailTo').textContent); });
+
+  /* ProChat */
+  var CHAT_SEED = '<div class="chat-msg out"><div><div class="chat-bubble">Hey, How are you<span class="chat-meta">Christian Snead · 02:45 PM</span></div></div><span class="chat-av">CS</span></div>';
+  function openProchat(row){
+    document.getElementById('chatName').textContent = row.rep || row.company;
+    document.getElementById('chatCo').textContent = (row.company || '') + ' Logistics';
+    document.getElementById('chatBody').innerHTML = CHAT_SEED;
+    document.getElementById('chatInput').value = '';
+    showDialog('dlgProchat');
+  }
+  function sendChat(){
+    var inp = document.getElementById('chatInput'), v = inp.value.trim(); if(!v) return;
+    var now = new Date(), hh = now.getHours(), mm = ('0'+now.getMinutes()).slice(-2), ap = hh>=12?'PM':'AM'; hh = hh%12 || 12;
+    var body = document.getElementById('chatBody');
+    var el = document.createElement('div'); el.className = 'chat-msg out';
+    el.innerHTML = '<div><div class="chat-bubble">'+esc(v)+'<span class="chat-meta">Christian Snead · '+hh+':'+mm+' '+ap+'</span></div></div><span class="chat-av">CS</span>';
+    body.appendChild(el); body.scrollTop = body.scrollHeight; inp.value = '';
+  }
+  document.getElementById('chatSend').addEventListener('click', sendChat);
+  document.getElementById('chatInput').addEventListener('keydown', function(e){ if(e.key === 'Enter'){ e.preventDefault(); sendChat(); } });
+
+  /* ---- Send Tracking modal (row Action ▾ → Send Tracking) ---- */
+  function openTracking(row){
+    document.getElementById('trkLink').value = 'https://dispatchpro.io/t/' + (row.rep||row.company).toLowerCase().replace(/[^a-z]/g,'').slice(0,6) + Math.floor(1000+Math.random()*9000);
+    showDialog('dlgTracking');
+  }
+  document.getElementById('trkSend').addEventListener('click', function(){ hideDialog(); toast('success','Tracking sent','Live location shared with the broker'); });
+  document.getElementById('trkHistory').addEventListener('click', function(){ toast('success','Tracking history','No prior tracking on this load'); });
+  document.getElementById('trkAdd').addEventListener('click', function(){ document.getElementById('trkSendTo').focus(); });
+  document.querySelector('[data-copy-link]').addEventListener('click', function(){ var v = document.getElementById('trkLink').value; copyText(v); toast('success','Link copied', v); });
+
+  /* ---- Request / Send Documentation + Match to Freight (row Action ▾) ---- */
+  (function(){
+    var companies = []; DATA.forEach(function(r){ if(companies.indexOf(r.company) === -1) companies.push(r.company); }); companies.sort();
+    function fillCustomers(sel, company){ sel.innerHTML = companies.map(function(c){ return '<option'+(c===company?' selected':'')+'>'+esc(c)+'</option>'; }).join(''); }
+    function inits(n){ var p=(n||'').trim().split(/\s+/); return (((p[0]||'')[0]||'')+((p[p.length-1]||'')[0]||'')).toUpperCase(); }
+
+    window.openReqDoc = function(row){ fillCustomers(document.getElementById('reqCustomer'), row.company); document.getElementById('reqVia').value=''; document.getElementById('reqDetails').value=''; showDialog('dlgReqDoc'); };
+    window.openSendDoc = function(row){ fillCustomers(document.getElementById('sdCustomer'), row.company); document.getElementById('sdNote').value=''; showDialog('dlgSendDoc'); };
+    document.getElementById('reqSend').addEventListener('click', function(){ var via = document.getElementById('reqVia').value; if(!via){ toast('error','Select a channel','Choose how to request the documentation.'); return; } hideDialog(); toast('success','Request sent','Documentation requested via '+esc(via)); });
+    document.getElementById('sdSend').addEventListener('click', function(){ hideDialog(); toast('success','Documentation sent','Sent via '+esc(document.getElementById('sdVia').value)); });
+
+    /* Match to Freight board */
+    var LOADS = [
+      {id:'DATR-189282', rep:'Jackson Howard', price:'$2,674.00', ago:'16 hrs ago', from:'Roanoke, VA', fromT:'Mar 15 08:00 AM', to:'Frametown, VA', toT:'Mar 16 10:00 AM', mi:'315 mi', rate:'$2.45', eq:"Box Truck | 48', Conestoga | 44'", type:'Full Truck Load', stops:2},
+      {id:'DATR-567882', rep:'Jackson Howard', price:'$2,455.00', ago:'16 hrs ago', from:'Roanoke, VA', fromT:'Mar 17 08:00 AM', to:'Frametown, VA', toT:'Mar 17 11:00 AM', mi:'315 mi', rate:'$2.45', eq:"Box Truck | 48', Conestoga | 44'", type:'Full Truck Load', stops:0},
+      {id:'DATR-137773', rep:'Jackson Howard', price:'$1,300.00', ago:'16 hrs ago', from:'Salem, VA', fromT:'Mar 18 09:00 AM', to:'Morristown, NJ', toT:'Mar 19 12:00 PM', mi:'410 mi', rate:'$3.17', eq:"Reefer | 53'", type:'Full Truck Load', stops:1}
+    ];
+    function cardHTML(l){
+      return '<div class="load-card" data-load="'+esc(l.id)+'">' +
+        '<div class="load-card-top"><div><span class="load-id">'+esc(l.id)+'</span><span class="load-rep"><span class="av">'+inits(l.rep)+'</span>'+esc(l.rep)+' - Rep</span><div class="load-co">'+esc(document.getElementById('mfCompany').textContent)+'</div></div>' +
+          '<div class="load-price"><b>'+esc(l.price)+'</b><span>'+esc(l.ago)+'</span></div></div>' +
+        '<div class="load-lane"><div class="load-loc"><b>'+esc(l.from)+'</b><span>'+esc(l.fromT)+'</span></div>' +
+          '<div class="load-mid">'+esc(l.mi)+' &middot; '+esc(l.rate)+'<span class="dots">&#9679;&#9472;&#9472;&#9472;&#9679;</span>'+(l.stops?'Extra Stops: '+l.stops:'&nbsp;')+'</div>' +
+          '<div class="load-loc dest"><b>'+esc(l.to)+'</b><span>'+esc(l.toT)+'</span></div></div>' +
+        '<div class="load-meta">Equipment: '+esc(l.eq)+' &middot; Load Type: '+esc(l.type)+'</div>' +
+        '<div class="load-actions"><button class="btn-outline" data-size="sm" data-lc="req" type="button">Request Info</button><button class="btn-outline" data-size="sm" data-lc="offer" type="button">Make Offer</button><button class="btn-primary" data-size="sm" data-lc="book" type="button">Book Now</button></div>' +
+      '</div>';
+    }
+    var mfCards = document.getElementById('mfCards'), curLoad = null;
+    window.openMatch = function(row){
+      document.getElementById('mfCompany').textContent = row.company;
+      document.getElementById('mfAv').textContent = inits(row.rep);
+      document.getElementById('mfContact').textContent = row.rep + ' — ' + row.phone;
+      mfCards.innerHTML = LOADS.map(cardHTML).join('');
+      renderMfMap();
+      showDialog('dlgMatch');
+      if(window.lucide) try{ lucide.createIcons(); }catch(e){}
+    };
+    mfCards.addEventListener('click', function(e){
+      var b = e.target.closest('[data-lc]'); if(!b) return;
+      curLoad = b.closest('.load-card').getAttribute('data-load');
+      var act = b.getAttribute('data-lc');
+      if(act === 'req'){ document.getElementById('reqLoad').value = curLoad; window.openReqDoc({ company:document.getElementById('mfCompany').textContent }); }
+      else if(act === 'offer'){ document.getElementById('dlgOfferDesc').textContent = 'Submit a counter rate for '+curLoad+'.'; showDialog('dlgOffer'); }
+      else { toast('success','Load booked', curLoad + ' is booked'); }
+    });
+    document.getElementById('offerSubmit').addEventListener('click', function(){ hideDialog(); toast('success','Offer submitted', (curLoad||'') + ' · ' + document.getElementById('offerAmt').value); });
+
+    function renderMfMap(){
+      var host = document.getElementById('mfMapSvg'); if(!host) return;
+      host.innerHTML = '<div class="mf-map-empty">Loading map…</div>';
+      ensureMapLibs().then(function(){
+        var W = Math.max(360, Math.round(host.clientWidth || 760)), H = 200;
+        var fc = topojson.feature(US, US.objects.states);
+        var proj = d3.geoAlbersUsa().fitSize([W, H], fc), path = d3.geoPath(proj);
+        var s = '<svg viewBox="0 0 '+W+' '+H+'" preserveAspectRatio="none">';
+        fc.features.forEach(function(f){ s += '<path class="state" d="'+path(f)+'"/>'; });
+        host.innerHTML = s + '</svg>';
+      }).catch(function(){ host.innerHTML = '<div class="mf-map-empty">Map needs an internet connection.</div>'; });
+    }
+  })();
+
+  /* ---- Tabs ---- */
+  document.querySelectorAll('.page-tab').forEach(function(tab){
+    tab.addEventListener('click', function(){
+      document.querySelectorAll('.page-tab').forEach(function(t){ t.classList.remove('active'); });
+      tab.classList.add('active');
+      var t = tab.getAttribute('data-tab');
+      document.getElementById('view-list').hidden = (t !== 'list');
+      document.getElementById('view-leaderboard').hidden = (t !== 'leaderboard');
+      if(t === 'leaderboard') renderLeaderboard();
+    });
+  });
+
+  /* ---- List by (segmented) ---- */
+  var listByEl = document.getElementById('listBy');
+  listByEl.querySelectorAll('button').forEach(function(b){
+    b.addEventListener('click', function(){
+      listByEl.querySelectorAll('button').forEach(function(x){ x.classList.remove('active'); });
+      b.classList.add('active');
+      listMode = b.getAttribute('data-mode');
+      selected = {};          // ids differ between modes; start clean
+      advFilters = {};        // filter row belongs to the previous column set
+      render();
+    });
+  });
+
+  /* ---- Search ---- */
+  var searchInput = document.getElementById('searchInput');
+  searchInput.addEventListener('input', function(){ searchTerm = searchInput.value.trim(); render(); });
+
+  /* ---- Dialog plumbing (agent pay profile design system) ----
+     Flex-centred overlay, snap() half-pixel correction, Tab focus-trap,
+     Escape (skipped while an in-dialog dropdown is open), body scroll lock,
+     and focus restored to the opener on close. */
+  var openDlg = null, lastFocus = null;
+  function dlgFocusables(panel){
+    return Array.prototype.slice.call(panel.querySelectorAll(
+      'a[href],button:not([disabled]),input:not([disabled]),select:not([disabled]),textarea:not([disabled]),[tabindex]:not([tabindex="-1"])'
+    )).filter(function(el){ return el.offsetParent !== null; });
+  }
+  // A flex-centred panel of odd height lands on a half-pixel; one extra painted
+  // pixel of bottom padding pushes its top edge back onto a whole pixel.
+  function snap(panel){
+    if(!panel) return;
+    panel.classList.remove('snap');
+    var t = panel.getBoundingClientRect().top;
+    if(Math.abs(t - Math.round(t)) > 0.01) panel.classList.add('snap');
+  }
+  function resnapOpen(){ if(openDlg) snap(openDlg.querySelector('.dialog-panel')); }
+  function showDialog(id, onOpen){
+    var d = document.getElementById(id);
+    lastFocus = document.activeElement;
+    d.hidden = false;
+    document.body.classList.add('has-dialog');
+    openDlg = d;
+    if(onOpen) onOpen(d);
+    var panel = d.querySelector('.dialog-panel');
+    var f = panel.querySelector('input:not([disabled]),textarea,select,button:not([data-close])');
+    if(f) try{ f.focus(); }catch(e){}
+    requestAnimationFrame(function(){ snap(panel); });
+  }
+  function hideDialog(){
+    if(!openDlg) return;
+    var panel = openDlg.querySelector('.dialog-panel');
+    if(panel) panel.classList.remove('snap');
+    openDlg.hidden = true;
+    openDlg = null;
+    document.body.classList.remove('has-dialog');
+    if(lastFocus) try{ lastFocus.focus(); }catch(e){}
+  }
+  document.querySelectorAll('.dialog-overlay').forEach(function(ov){
+    ov.addEventListener('mousedown', function(e){ if(e.target === ov) hideDialog(); });
+    ov.querySelectorAll('[data-close]').forEach(function(b){ b.addEventListener('click', hideDialog); });
+  });
+  document.addEventListener('keydown', function(e){
+    if(e.key === 'Escape'){
+      var msOpen = document.querySelector('.ms-field.open');
+      if(openMenu){ closeRowMenu(); }
+      else if(msOpen){ msOpen.classList.remove('open'); var mm = msOpen.querySelector('.ms-menu'); if(mm) mm.hidden = true; }
+      else if(openDlg){ hideDialog(); }
+      return;
+    }
+    if(e.key === 'Tab' && openDlg){
+      var panel = openDlg.querySelector('.dialog-panel');
+      var f = dlgFocusables(panel);
+      if(!f.length) return;
+      var first = f[0], last = f[f.length-1];
+      if(!panel.contains(document.activeElement)){ e.preventDefault(); first.focus(); }
+      else if(e.shiftKey && document.activeElement === first){ e.preventDefault(); last.focus(); }
+      else if(!e.shiftKey && document.activeElement === last){ e.preventDefault(); first.focus(); }
+    }
+  });
+  window.addEventListener('resize', resnapOpen);
+
+  function requireSelection(){
+    var rows = selectedRows();
+    if(!rows.length){ toast('error','No accounts selected','Tick one or more rows first.'); return null; }
+    return rows;
+  }
+
+  /* ---- Reusable account multi-select (the "Company | Rep | Location" picker) ---- */
+  function selectedAccounts(){
+    var out = [];
+    selectedRows().forEach(function(r){ if(r.reps) out = out.concat(r.reps); else out.push(r); });
+    return out;
+  }
+  var MS_CHIP_LIMIT = 4; // collapse a large selection to N chips + "+N others"
+  function makeAcctSelect(ids){
+    var field = document.getElementById(ids.field), control = document.getElementById(ids.control),
+        input = document.getElementById(ids.input), menu = document.getElementById(ids.menu);
+    var chosen = {}, expanded = false;
+    function inits(name){ var p=(name||'').trim().split(/\s+/); return (((p[0]||'')[0]||'')+((p[p.length-1]||'')[0]||'')).toUpperCase(); }
+    function label(a){ return a.company+' | '+a.rep+' | Roanoke, VA'; }
+    function renderChips(){
+      control.querySelectorAll('.ms-chip').forEach(function(c){ c.remove(); });
+      var ids2 = Object.keys(chosen);
+      var shown = (!expanded && ids2.length > MS_CHIP_LIMIT) ? ids2.slice(0, MS_CHIP_LIMIT) : ids2;
+      shown.forEach(function(id){
+        var a = chosen[id], chip = document.createElement('span'); chip.className = 'ms-chip';
+        chip.innerHTML = '<span class="av">'+esc(inits(a.rep))+'</span>'+esc(label(a))+
+          '<button type="button" data-id="'+esc(id)+'" aria-label="Remove"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg></button>';
+        control.insertBefore(chip, input);
+      });
+      if(ids2.length > MS_CHIP_LIMIT){
+        var more = document.createElement('button');
+        more.type = 'button'; more.className = 'ms-chip ms-chip-more'; more.setAttribute('data-more','1');
+        more.textContent = expanded ? 'Show less' : ('+' + (ids2.length - shown.length) + ' others');
+        control.insertBefore(more, input);
+      }
+      resnapOpen();
+    }
+    function renderMenu(){
+      var f = input.value.trim().toLowerCase();
+      var list = DATA.filter(function(a){ return !f || (a.company+' '+a.rep).toLowerCase().indexOf(f) !== -1; });
+      if(!list.length){ menu.innerHTML = '<p class="ms-empty">No customers match.</p>'; return; }
+      menu.innerHTML = list.map(function(a){
+        return '<button class="ms-item'+(chosen[a.id]?' on':'')+'" data-id="'+a.id+'">'+
+          '<span class="ms-check"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></span>'+
+          '<span class="ms-name">'+esc(a.company)+'</span><span class="ms-prov">'+esc(a.rep)+'</span></button>';
+      }).join('');
+    }
+    function openMenu(){ field.classList.add('open'); menu.hidden=false; renderMenu(); }
+    function closeMenu(){ field.classList.remove('open'); menu.hidden=true; }
+    input.addEventListener('focus', openMenu);
+    input.addEventListener('input', function(){ if(menu.hidden) openMenu(); else renderMenu(); });
+    control.addEventListener('click', function(e){
+      var mo = e.target.closest('.ms-chip-more');
+      if(mo){ expanded = !expanded; renderChips(); return; }
+      var rm = e.target.closest('.ms-chip button');
+      if(rm){ delete chosen[rm.getAttribute('data-id')]; renderChips(); if(!menu.hidden) renderMenu(); return; }
+      if(!e.target.closest('.ms-chip')) input.focus();
+    });
+    menu.addEventListener('click', function(e){
+      var it = e.target.closest('.ms-item'); if(!it) return;
+      var id = it.getAttribute('data-id');
+      if(chosen[id]) delete chosen[id]; else chosen[id] = DATA.filter(function(a){ return ''+a.id === id; })[0];
+      renderChips(); renderMenu(); input.focus();
+    });
+    document.addEventListener('mousedown', function(e){ if(field && !field.contains(e.target)) closeMenu(); });
+    return {
+      set:function(rows){ chosen = {}; expanded = false; (rows||[]).forEach(function(r){ chosen[r.id] = r; }); input.value=''; renderChips(); closeMenu(); },
+      count:function(){ return Object.keys(chosen).length; }
+    };
+  }
+
+  /* ---- Create Group (wide modal) ---- */
+  var cgSelect = makeAcctSelect({ field:'cgField', control:'cgControl', input:'cgInput', menu:'cgMenu' });
+  document.getElementById('createGroupBtn').addEventListener('click', function(){
+    var accts = selectedAccounts();
+    if(!accts.length){ toast('error','No accounts selected','Tick one or more rows first.'); return; }
+    cgSelect.set(accts);
+    document.getElementById('groupName').value = '';
+    showDialog('dlgGroup');
+  });
+  document.getElementById('groupSave').addEventListener('click', function(){
+    var name = document.getElementById('groupName').value.trim();
+    if(!name){ toast('error','Name required','Give the group a name.'); document.getElementById('groupName').focus(); return; }
+    var n = cgSelect.count();
+    if(!n){ toast('error','No customers','Add at least one customer to the group.'); return; }
+    hideDialog();
+    toast('success','Group created', '“'+esc(name)+'” · '+n+' account'+(n>1?'s':''));
+  });
+
+  /* ---- Send Truck List (header button) — full modal → Success ---- */
+  (function(){
+    var TRUCKS = [
+      ['178923','Available','Solo','Emry Huang','Box Truck | 48','Roanoke, VA','01/26 09:00 EST','44,000','$250k'],
+      ['178924','In Transit','Team','Micheal Scott','Container | 48','Roanoke, VA','01/26 09:00 EST','44,000','$250k'],
+      ['178925','Available','Solo','Jack Ryan','Conestoga | 44','Roanoke, VA','01/26 09:00 EST','44,000','$250k'],
+      ['178926','Available','Team','Samuel Philip','Flatbed | 48','Roanoke, VA','01/26 09:00 EST','44,000','$250k'],
+      ['178927','In Transit','Solo','Jackson Bar','Hot Shot | 53','Roanoke, VA','01/26 09:00 EST','44,000','$250k'],
+      ['178928','Available','Team','Howard Simons','Power Only | 48','Roanoke, VA','01/26 09:00 EST','44,000','$250k'],
+      ['178929','Available','Solo','Samuel Philip','Reefer | 53','Roanoke, VA','01/26 09:00 EST','44,000','$250k']
+    ].map(function(t,i){ return { id:'t'+i, post:t[0], status:t[1], driver:t[2], name:t[3], trailer:t[4], loc:t[5], date:t[6], weight:t[7], cargo:t[8] }; });
+    var tSel = {};
+    var tBody = document.getElementById('trucksBody');
+    var tAll = document.getElementById('truckAll');
+    function updateTruckCount(){
+      var n = TRUCKS.filter(function(t){ return tSel[t.id]; }).length;
+      document.getElementById('truckCount').textContent = '(' + n + ')';
+      tAll.checked = n === TRUCKS.length; tAll.indeterminate = n > 0 && n < TRUCKS.length;
+    }
+    function renderTrucks(){
+      tBody.innerHTML = TRUCKS.map(function(t){
+        var pill = t.status === 'Available' ? '<span class="pill avail">Available</span>' : '<span class="pill transit">In Transit</span>';
+        return '<tr><td class="tt-check"><input type="checkbox" class="row-checkbox truck-cb" data-id="'+t.id+'"'+(tSel[t.id]?' checked':'')+' aria-label="Include '+esc(t.post)+'"></td>'+
+          '<td>'+t.post+'</td><td>'+pill+'</td><td>'+esc(t.driver)+'</td><td>'+esc(t.name)+'</td><td>'+esc(t.trailer)+'\'</td><td>'+esc(t.loc)+'</td><td>'+esc(t.date)+'</td><td>'+t.weight+'</td><td>'+t.cargo+'</td></tr>';
+      }).join('');
+      updateTruckCount();
+    }
+    tBody.addEventListener('change', function(e){ var cb = e.target.closest('.truck-cb'); if(!cb) return; tSel[cb.getAttribute('data-id')] = cb.checked; updateTruckCount(); });
+    tAll.addEventListener('change', function(){ TRUCKS.forEach(function(t){ tSel[t.id] = tAll.checked; }); renderTrucks(); });
+
+    var stlTo = makeAcctSelect({ field:'stlToField', control:'stlToControl', input:'stlToInput', menu:'stlToMenu' });
+
+    document.getElementById('sendTruckBtn').addEventListener('click', function(){
+      stlTo.set(selectedAccounts());
+      TRUCKS.forEach(function(t){ tSel[t.id] = true; });
+      renderTrucks();
+      showDialog('dlgSTL');
+    });
+    document.getElementById('stlSend').addEventListener('click', function(){
+      var n = stlTo.count();
+      if(!n){ toast('error','No recipients','Add at least one contact to Send To.'); return; }
+      hideDialog();
+      document.getElementById('dlgSuccessMsg').textContent = 'Truck List Successfully Sent to ' + n + ' Recipient' + (n>1?'s':'');
+      showDialog('dlgSuccess');
+    });
+  })();
+
+  /* ---- Send Truck List → "Truck List" modal (traced from Figma) ----
+     Action ▾ menu item (or the header button) opens a modal that asks for a
+     Customer and a set of Send To contacts (a searchable multi-select of that
+     customer's reps, shown as removable chips), then Continue. */
+  (function(){
+    var companies = [];
+    DATA.forEach(function(r){ if(companies.indexOf(r.company) === -1) companies.push(r.company); });
+    companies.sort();
+
+    var custSel = document.getElementById('tlCustomer');
+    var control = document.getElementById('tlControl');
+    var input   = document.getElementById('tlInput');
+    var menu    = document.getElementById('tlMenu');
+    var field   = document.getElementById('tlSendTo');
+    var chosen  = {}, expanded = false;        // handle -> contact
+    var curCompany = null;
+
+    function initials(name){ var p=name.trim().split(/\s+/); return (((p[0]||'')[0]||'')+((p[p.length-1]||'')[0]||'')).toUpperCase(); }
+    function handleOf(name){ var p=name.toLowerCase().split(/\s+/); return (p[0][0]||'')+(p[p.length-1]||'')+(100+(name.length*7)%900); }
+    function contactsFor(company){
+      var seen={}, out=[];
+      DATA.filter(function(r){ return r.company===company; }).forEach(function(r){
+        if(seen[r.rep]) return; seen[r.rep]=1;
+        out.push({ name:r.rep, handle:handleOf(r.rep) });
+      });
+      return out;
+    }
+    function renderChips(){
+      control.querySelectorAll('.ms-chip').forEach(function(c){ c.remove(); });
+      var handles = Object.keys(chosen);
+      var shown = (!expanded && handles.length > MS_CHIP_LIMIT) ? handles.slice(0, MS_CHIP_LIMIT) : handles;
+      shown.forEach(function(h){
+        var c = chosen[h];
+        var chip = document.createElement('span');
+        chip.className = 'ms-chip';
+        chip.innerHTML = '<span class="av">'+esc(initials(c.name))+'</span>'+esc(c.name)+
+          '<button type="button" data-h="'+esc(h)+'" aria-label="Remove '+esc(c.name)+'"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg></button>';
+        control.insertBefore(chip, input);
+      });
+      if(handles.length > MS_CHIP_LIMIT){
+        var more = document.createElement('button');
+        more.type = 'button'; more.className = 'ms-chip ms-chip-more'; more.setAttribute('data-more','1');
+        more.textContent = expanded ? 'Show less' : ('+' + (handles.length - shown.length) + ' others');
+        control.insertBefore(more, input);
+      }
+      resnapOpen();   // chip rows can change the panel height, re-centre on grid
+    }
+    var CHK = '<span class="ms-check"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></span>';
+    var PRO = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5a8.38 8.38 0 0 1-8.5 8.5 8.5 8.5 0 0 1-3.9-.9L3 20l1.4-4.6A8.5 8.5 0 1 1 21 11.5Z"/></svg>';
+    function renderMenu(){
+      var filter = input.value.trim().toLowerCase();
+      var list = contactsFor(curCompany).filter(function(c){ return !filter || c.name.toLowerCase().indexOf(filter) !== -1; });
+      if(!list.length){ menu.innerHTML = '<p class="ms-empty">No contacts match.</p>'; return; }
+      var allOn = list.every(function(c){ return chosen[c.handle]; });
+      var html = '<button class="ms-item'+(allOn?' on':'')+'" data-all="1">'+CHK+'<span class="ms-name">Select all</span></button><div class="ms-sep"></div>';
+      list.forEach(function(c){
+        html += '<button class="ms-item'+(chosen[c.handle]?' on':'')+'" data-h="'+esc(c.handle)+'">'+CHK+
+          '<span class="ms-name">'+esc(c.name)+'</span>'+
+          '<span class="ms-prov">'+PRO+'ProChat · '+esc(c.handle)+'</span></button>';
+      });
+      menu.innerHTML = html;
+    }
+    function openMenu(){ field.classList.add('open'); menu.hidden=false; renderMenu(); }
+    function closeMenu(){ field.classList.remove('open'); menu.hidden=true; }
+
+    input.addEventListener('focus', openMenu);
+    input.addEventListener('input', function(){ if(menu.hidden) openMenu(); else renderMenu(); });
+    control.addEventListener('click', function(e){
+      var mo = e.target.closest('.ms-chip-more');
+      if(mo){ expanded = !expanded; renderChips(); return; }
+      var rm = e.target.closest('.ms-chip button');
+      if(rm){ delete chosen[rm.getAttribute('data-h')]; renderChips(); if(!menu.hidden) renderMenu(); return; }
+      if(!e.target.closest('.ms-chip')) input.focus();
+    });
+    menu.addEventListener('click', function(e){
+      var it = e.target.closest('.ms-item'); if(!it) return;
+      if(it.getAttribute('data-all')){
+        var list = contactsFor(curCompany);
+        var allOn = list.every(function(c){ return chosen[c.handle]; });
+        list.forEach(function(c){ if(allOn) delete chosen[c.handle]; else chosen[c.handle]=c; });
+      } else {
+        var h = it.getAttribute('data-h');
+        if(chosen[h]) delete chosen[h];
+        else chosen[h] = contactsFor(curCompany).find(function(x){ return x.handle===h; });
+      }
+      renderChips(); renderMenu(); input.focus();
+    });
+    document.addEventListener('mousedown', function(e){ if(field && !field.contains(e.target)) closeMenu(); });
+    custSel.addEventListener('change', function(){ curCompany = custSel.value; chosen = {}; expanded = false; renderChips(); if(!menu.hidden) renderMenu(); });
+
+    window.openTruckList = function(prefCompany, prefRepNames){
+      if(!custSel.options.length){
+        custSel.innerHTML = companies.map(function(c){ return '<option value="'+esc(c)+'">'+esc(c)+'</option>'; }).join('');
+      }
+      curCompany = (prefCompany && companies.indexOf(prefCompany) !== -1) ? prefCompany : companies[0];
+      custSel.value = curCompany;
+      chosen = {}; expanded = false;
+      if(prefRepNames && prefRepNames.length){
+        contactsFor(curCompany).forEach(function(c){ if(prefRepNames.indexOf(c.name) !== -1) chosen[c.handle] = c; });
+      }
+      input.value = '';
+      renderChips(); closeMenu();
+      showDialog('dlgTruck');
+    };
+
+    document.getElementById('tlContinue').addEventListener('click', function(){
+      var n = Object.keys(chosen).length;
+      if(!n){ toast('error','No recipients','Add at least one contact to Send To.'); input.focus(); return; }
+      hideDialog();
+      toast('success','Truck list sent', n+' contact'+(n>1?'s':'')+' at '+esc(curCompany));
+    });
+  })();
+
+  /* ---- Advance Search: an inline per-column filter row (traced from Figma) ----
+     The link toggles the filter row and flips to a red "Close Advance Search". */
+  var advBtn = document.getElementById('advSearchBtn');
+  advBtn.addEventListener('click', function(){
+    advOpen = !advOpen;
+    advBtn.classList.toggle('on', advOpen);
+    advBtn.innerHTML = advOpen
+      ? '<i data-lucide="x"></i> Close Advance Search'
+      : '<i data-lucide="sliders-horizontal"></i> Advance Search';
+    if(!advOpen) advFilters = {};
+    render();
+    if(window.lucide) try{ lucide.createIcons(); }catch(e){}
+  });
+
+  /* ---- Leaderboard ---- */
+  function renderLeaderboard(){
+    var ranked = DATA.slice().sort(function(a,b){ return b.loads - a.loads; });
+    document.getElementById('lbCount').textContent = ranked.length;
+    var medals = ['gold','silver','bronze'];
+    document.getElementById('lbTop').innerHTML = ranked.slice(0,3).map(function(r,i){
+      return '<div class="lb-card '+medals[i]+'">' +
+        '<div class="lb-rank">'+(i+1)+'</div>' +
+        '<div class="lb-body"><div class="lb-name">'+esc(r.rep)+'</div><div class="lb-sub">'+esc(r.company)+'</div></div>' +
+        '<div class="lb-loads"><b>'+r.loads+'</b><span>loads</span></div>' +
+      '</div>';
+    }).join('');
+    document.getElementById('lbBody').innerHTML = ranked.map(function(r,i){
+      return '<tr class="data-row">' +
+        '<td class="num" style="font-weight:600;color:var(--text-heading)">#'+(i+1)+'</td>' +
+        '<td class="cell-company">'+esc(r.rep)+'</td>' +
+        '<td>'+esc(r.company)+'</td>' +
+        '<td class="num">'+r.loads+'</td>' +
+        '<td class="num">$ '+r.cpm.toFixed(2)+'</td>' +
+        '<td class="num">'+r.claims+'</td>' +
+        '<td class="num">'+r.otp+'%</td>' +
+      '</tr>';
+    }).join('');
+    if(window.lucide) try{ lucide.createIcons(); }catch(e){}
+  }
+
+  /* ============ REP DETAIL (opened from a rep name) ============ */
+  var repView = document.getElementById('view-rep');
+  var repViewSel = document.getElementById('repView');
+  var curRep = null;
+
+  function repInits(name){ var p=(name||'').trim().split(/\s+/); return (((p[0]||'')[0]||'')+((p[p.length-1]||'')[0]||'')).toUpperCase(); }
+  function money(n){ return '$'+Number(n).toLocaleString('en-US',{minimumFractionDigits:2, maximumFractionDigits:2}); }
+  function prochatId(email){ return (email.split('@')[0]||'') + '819'; }
+
+  function repStats(row){
+    var loads = row.loads, cpm = row.cpm, completed = Math.round(loads*0.94), revenue = loads*243;
+    return [
+      ['No. of Loads', ''+loads, 'truck'],
+      ['Completed Loads', ''+completed, 'circle-check'],
+      ['Total Miles', (loads*120).toLocaleString(), 'gauge'],
+      ['OTP', row.otp+'%', 'map-pin'],
+      ['Total Revenue', money(revenue), 'wallet'],
+      ['OTD', row.otd+'%', 'badge-check'],
+      ['Cent Per Mile', '$'+cpm.toFixed(2), 'circle-dollar-sign'],
+      ['Average Gross Revenue', money(Math.round(revenue/loads*3.9)), 'trending-up'],
+      ['Loads In Transit', ''+Math.round(loads*0.031), 'truck'],
+      ['Service Failures', ''+Math.round(loads*0.056), 'circle-x'],
+      ['Average Mileage', ''+Math.round(loads*0.56), 'gauge'],
+      ['Claims', ''+row.claims, 'clipboard-list']
+    ];
+  }
+  var LANES = [
+    ['Randolph, NJ',184,'Rutgers, NJ'],['Salem, VA',152,'Morristown, NJ'],
+    ['Philadelphia, PA',139,'Pittsburgh, PA'],['Mason City, NE',123,'Garden City, KS'],
+    ['Denver, CO',245,'Phoenix, AZ'],['Jefferson City, KS',213,'Conyers, AL']
+  ];
+  function renderContact(row){
+    var rows = [
+      ['Office', 'Mechanicsburg, PA', null],
+      ['Phone', row.phone+'  Ext '+row.ext, 'phone'],
+      ['Cell Phone', row.cell, 'smartphone'],
+      ['Email', row.email, 'mail'],
+      ['Prochat ID', prochatId(row.email), 'message-square'],
+      ['Timezone', 'EST', null]
+    ];
+    document.getElementById('repContact').innerHTML = rows.map(function(r){
+      var icon = r[2] ? '<span class="contact-ic"><i data-lucide="'+r[2]+'"></i></span>' : '';
+      return '<div class="contact-row"><span class="contact-label">'+esc(r[0])+'</span><span class="contact-val" title="'+esc(r[1])+'">'+esc(r[1])+'</span>'+icon+'</div>';
+    }).join('');
+  }
+  function renderLanes(){
+    document.getElementById('repLanes').innerHTML = LANES.map(function(l){
+      return '<tr><td><span class="lane-pt"><span class="circle"></span>'+esc(l[0])+'</span></td>'+
+        '<td class="lane-qty">'+l[1]+'</td>'+
+        '<td><span class="lane-pt"><i data-lucide="map-pin"></i>'+esc(l[2])+'</span></td></tr>';
+    }).join('');
+  }
+  function renderStats(row){
+    document.getElementById('repStats').innerHTML = repStats(row).map(function(s){
+      return '<div class="stat-tile"><div><div class="stat-val">'+esc(s[1])+'</div><div class="stat-label">'+esc(s[0])+'</div></div><span class="stat-ic"><i data-lucide="'+s[2]+'"></i></span></div>';
+    }).join('');
+  }
+
+  /* ---- Load Count line chart (inline SVG) ---- */
+  var MONTHS = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+  function monthlySeries(row){
+    var base = [0.44,0.53,0.43,0.71,0.36,0.73,0.72,0.61,0.38,0.64,0.77,0.25], seed = row.loads;
+    return base.map(function(b,i){ return Math.max(60, Math.round(seed*b*((i%3===0)?1.02:0.98))); });
+  }
+  function renderChart(row){
+    var host = document.getElementById('repAnalytics');
+    var data = monthlySeries(row);
+    // Fixed height, width measured from the container: the viewBox matches the
+    // real pixel size (scale 1), so the chart fills the width WITHOUT growing
+    // taller on wide screens the way a fixed-aspect SVG does.
+    var W = Math.max(720, Math.round(host.clientWidth || 1000)), H = 360;
+    var padL=54, padR=26, padT=26, padB=36, maxY=900;
+    var iw=W-padL-padR, ih=H-padT-padB;
+    function x(i){ return padL + iw*(i/(data.length-1)); }
+    function y(v){ return padT + ih*(1 - v/maxY); }
+    var svg = '<svg class="chart-svg" width="'+W+'" height="'+H+'" viewBox="0 0 '+W+' '+H+'" preserveAspectRatio="none">';
+    for(var g=0; g<=900; g+=100){ var yy=y(g); svg+='<line class="grid-line" x1="'+padL+'" y1="'+yy.toFixed(1)+'" x2="'+(W-padR)+'" y2="'+yy.toFixed(1)+'"/><text class="axis-text" x="'+(padL-10)+'" y="'+(yy+5).toFixed(1)+'" text-anchor="end">'+g+'</text>'; }
+    var d = data.map(function(v,i){ return (i?'L':'M')+x(i).toFixed(1)+' '+y(v).toFixed(1); }).join(' ');
+    svg += '<path class="cline" d="'+d+'"/>';
+    data.forEach(function(v,i){
+      var px=x(i), py=y(v), below = v > 800, ly = below ? py+30 : py-18;
+      svg += '<rect class="clabel-box" x="'+(px-23)+'" y="'+(ly-16)+'" width="46" height="23" rx="5"/><text class="clabel" x="'+px.toFixed(1)+'" y="'+ly.toFixed(1)+'">'+v+'</text><circle class="dot" cx="'+px.toFixed(1)+'" cy="'+py.toFixed(1)+'" r="4.5"/>';
+    });
+    MONTHS.forEach(function(m,i){ svg+='<text class="axis-text" x="'+x(i).toFixed(1)+'" y="'+(H-10)+'" text-anchor="middle">'+m+'</text>'; });
+    return svg + '</svg>';
+  }
+
+  /* ---- No. of Loads per State: US choropleth (d3 + us-atlas, lazy) + table ---- */
+  var STATE_DATA = { AL:{lo:575,li:141}, AZ:{lo:720,li:254}, CO:{lo:700,li:142}, NE:{lo:300,li:52}, VA:{lo:400,li:66}, PA:{lo:310,li:22}, KS:{lo:580,li:119} };
+  var FIPS = {'01':'AL','02':'AK','04':'AZ','05':'AR','06':'CA','08':'CO','09':'CT','10':'DE','11':'DC','12':'FL','13':'GA','15':'HI','16':'ID','17':'IL','18':'IN','19':'IA','20':'KS','21':'KY','22':'LA','23':'ME','24':'MD','25':'MA','26':'MI','27':'MN','28':'MS','29':'MO','30':'MT','31':'NE','32':'NV','33':'NH','34':'NJ','35':'NM','36':'NY','37':'NC','38':'ND','39':'OH','40':'OK','41':'OR','42':'PA','44':'RI','45':'SC','46':'SD','47':'TN','48':'TX','49':'UT','50':'VT','51':'VA','53':'WA','54':'WV','55':'WI','56':'WY'};
+  var ALL_STATES = ['AL','AK','AZ','AR','CA','CO','CT','DE','FL','GA','HI','IA','ID','IL','IN','KS','KY','LA','MA','MD','ME','MI','MN','MO','MS','MT','NC','ND','NE','NH','NJ','NM','NV','NY','OH','OK','OR','PA','RI','SC','SD','TN','TX','UT','VA','VT','WA','WI','WV','WY'];
+  var mapReady = false, US = null, mapPending = null;
+  function loadScript(src){ return new Promise(function(res,rej){ var s=document.createElement('script'); s.src=src; s.onload=res; s.onerror=rej; document.head.appendChild(s); }); }
+  function ensureMapLibs(){
+    if(mapReady) return Promise.resolve();
+    if(mapPending) return mapPending;
+    mapPending = loadScript('https://cdn.jsdelivr.net/npm/d3@7/dist/d3.min.js')
+      .then(function(){ return loadScript('https://cdn.jsdelivr.net/npm/topojson-client@3/dist/topojson-client.min.js'); })
+      .then(function(){ return fetch('https://cdn.jsdelivr.net/npm/us-atlas@3/states-10m.json').then(function(r){ return r.json(); }); })
+      .then(function(topo){ US = topo; mapReady = true; })
+      .catch(function(err){ mapPending = null; throw err; });   // let it retry next time
+    return mapPending;
+  }
+  function mapColor(lo, max){
+    if(!lo) return '#E9EDF3';
+    var t = Math.min(1, lo/max), c1=[219,234,254], c2=[22,80,155];
+    return 'rgb('+Math.round(c1[0]+(c2[0]-c1[0])*t)+','+Math.round(c1[1]+(c2[1]-c1[1])*t)+','+Math.round(c1[2]+(c2[2]-c1[2])*t)+')';
+  }
+  function stateTableHTML(){
+    var active = Object.keys(STATE_DATA).sort(function(a,b){ return STATE_DATA[b].lo-STATE_DATA[a].lo; });
+    var rest = ALL_STATES.filter(function(a){ return !STATE_DATA[a]; }).sort();
+    var order = active.concat(rest), max = 720;
+    var rows = order.map(function(ab){
+      var d = STATE_DATA[ab] || {lo:0,li:0};
+      return '<tr><td>'+ab+'</td><td><span class="st-bar"><span class="lo" style="width:'+Math.round(70*d.lo/max)+'px"></span></span>'+d.lo+'</td><td>'+d.li+'</td></tr>';
+    }).join('');
+    return '<div class="state-table"><div class="state-scroll"><table><thead><tr><th>State</th><th>Loads Out (LO)</th><th>Loads In (LI)</th></tr></thead><tbody>'+rows+'</tbody></table></div></div>';
+  }
+  function renderMap(host){
+    host.innerHTML = '<div class="usmap-layout"><div class="usmap-wrap" id="usmapSvg"><p class="ms-empty">Loading map…</p></div>'+stateTableHTML()+'</div>';
+    ensureMapLibs().then(function(){
+      var svgHost = document.getElementById('usmapSvg'); if(!svgHost) return;
+      var W = Math.max(360, Math.round(svgHost.clientWidth || 640)), H = 430;   // fixed height, fill width
+      var fc = topojson.feature(US, US.objects.states);
+      var proj = d3.geoAlbersUsa().fitSize([W, H], fc), path = d3.geoPath(proj), max = 720;
+      var s = '<svg width="'+W+'" height="'+H+'" viewBox="0 0 '+W+' '+H+'" preserveAspectRatio="none">';
+      fc.features.forEach(function(f){ var ab = FIPS[('0'+f.id).slice(-2)], d = ab && STATE_DATA[ab]; s += '<path class="state" d="'+path(f)+'" fill="'+mapColor(d?d.lo:0, max)+'"/>'; });
+      fc.features.forEach(function(f){ var ab = FIPS[('0'+f.id).slice(-2)], d = ab && STATE_DATA[ab]; if(!d) return; var c = path.centroid(f); if(!c || isNaN(c[0])) return;
+        s += '<text class="map-lab" x="'+c[0].toFixed(1)+'" y="'+(c[1]-4).toFixed(1)+'" font-size="13">'+ab+'</text>'+
+             '<text class="map-lab sub" x="'+c[0].toFixed(1)+'" y="'+(c[1]+7).toFixed(1)+'" font-size="9">(LO '+d.lo+')</text>'+
+             '<text class="map-lab sub" x="'+c[0].toFixed(1)+'" y="'+(c[1]+17).toFixed(1)+'" font-size="9">(LI '+d.li+')</text>';
+      });
+      svgHost.innerHTML = s + '</svg>';
+    }).catch(function(){ var h = document.getElementById('usmapSvg'); if(h) h.innerHTML = '<p class="ms-empty">The map needs an internet connection to load U.S. geography.</p>'; });
+  }
+
+  function showRepAnalytics(){
+    var host = document.getElementById('repAnalytics');
+    if(repViewSel.value === 'map'){ renderMap(host); }
+    else { host.innerHTML = renderChart(curRep); }
+    if(window.lucide) try{ lucide.createIcons(); }catch(e){}
+  }
+  function openRep(row){
+    curRep = row;
+    document.getElementById('repAvatar').textContent = repInits(row.rep);
+    document.getElementById('repName').textContent = row.rep;
+    document.getElementById('repCompany').textContent = row.company;
+    renderContact(row); renderLanes(); renderStats(row);
+    repViewSel.value = 'line';
+    // reveal first so the analytics container has a measurable width
+    document.querySelector('.page-header-band').hidden = true;
+    document.querySelector('.page-tabs').hidden = true;
+    document.getElementById('view-list').hidden = true;
+    document.getElementById('view-leaderboard').hidden = true;
+    repView.hidden = false;
+    showRepAnalytics();
+    var sc = document.querySelector('.content-scroll'); if(sc) sc.scrollTop = 0;
+    if(window.lucide) try{ lucide.createIcons(); }catch(e){}
+  }
+  var repResizeTimer;
+  window.addEventListener('resize', function(){
+    if(repView.hidden) return;
+    clearTimeout(repResizeTimer);
+    repResizeTimer = setTimeout(showRepAnalytics, 160);   // re-fit chart/map to the new width
+  });
+  function closeRep(){
+    repView.hidden = true;
+    document.querySelector('.page-header-band').hidden = false;
+    document.querySelector('.page-tabs').hidden = false;
+    var activeTab = document.querySelector('.page-tab.active').getAttribute('data-tab');
+    document.getElementById('view-list').hidden = (activeTab !== 'list');
+    document.getElementById('view-leaderboard').hidden = (activeTab !== 'leaderboard');
+  }
+  document.getElementById('repBack').addEventListener('click', closeRep);
+  repViewSel.addEventListener('change', showRepAnalytics);
+  document.getElementById('repPeriod').addEventListener('change', showRepAnalytics);
+  document.getElementById('repEquip').addEventListener('change', showRepAnalytics);
+  repView.addEventListener('click', function(e){
+    var ra = e.target.closest('[data-repact]'); if(!ra || !curRep) return;
+    var a = ra.getAttribute('data-repact');
+    if(a === 'call' || a === 'cell' || a === 'email' || a === 'chat') openContactPop(ra, a, curRep);
+    else toast('success','More actions', esc(curRep.rep));
+  });
+
+  /* ---- Theme toggle ---- */
+  (function(){
+    var root = document.documentElement;
+    var btn = document.getElementById('themeToggleBtn');
+    var sun = btn.querySelector('.theme-icon-sun'), moon = btn.querySelector('.theme-icon-moon');
+    function apply(theme){
+      if(theme === 'dark') root.setAttribute('data-theme','dark'); else root.removeAttribute('data-theme');
+      sun.style.display = theme === 'dark' ? 'none' : 'block';
+      moon.style.display = theme === 'dark' ? 'block' : 'none';
+      btn.setAttribute('aria-pressed', theme === 'dark' ? 'true' : 'false');
+      btn.title = theme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode';
+    }
+    apply(root.getAttribute('data-theme') === 'dark' ? 'dark' : 'light');
+    btn.addEventListener('click', function(){
+      var next = root.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
+      apply(next);
+      try{ localStorage.setItem('dp-theme', next); }catch(e){}
+    });
+  })();
+
+  /* ---- Init ---- */
+  render();
+  if(window.lucide) try{ lucide.createIcons(); }catch(e){}
+})();
+</script>
+</body>
+</html>

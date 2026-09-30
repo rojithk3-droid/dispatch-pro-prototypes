@@ -1,0 +1,807 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Dispatch Pro — Geofence 3D</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#0b1220; --panel:rgba(11,18,32,.86); --panel-2:rgba(255,255,255,.04); --border:rgba(148,163,184,.16);
+    --text:#e5e7eb; --muted:#94a3b8; --faint:#64748b;
+    --accent:#3b82f6; --accent-2:#60a5fa; --good:#22c55e; --warn:#f59e0b; --bad:#ef4444;
+    --mono:"JetBrains Mono",ui-monospace,Menlo,monospace;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;height:100%;background:var(--bg);color:var(--text);font:14px/1.45 Inter,system-ui,-apple-system,Segoe UI,sans-serif;overflow:hidden}
+  #scene{position:fixed;inset:0;width:100%;height:100%;display:block;outline:none}
+
+  /* ---------- left control panel ---------- */
+  #panel{position:fixed;top:16px;left:16px;width:372px;max-height:calc(100vh - 32px);overflow:auto;
+    background:var(--panel);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);
+    border:1px solid var(--border);border-radius:14px;padding:16px 16px 14px;box-shadow:0 24px 60px rgba(0,0,0,.5)}
+  #panel::-webkit-scrollbar{width:8px}#panel::-webkit-scrollbar-thumb{background:rgba(148,163,184,.25);border-radius:8px}
+  .brand{display:flex;align-items:center;gap:10px;margin-bottom:12px}
+  .brand .logo{width:34px;height:34px;border-radius:9px;background:linear-gradient(135deg,#2563eb,#60a5fa);display:grid;place-items:center;box-shadow:0 6px 16px rgba(37,99,235,.35)}
+  .brand h1{font-size:15px;font-weight:700;margin:0;letter-spacing:.01em}
+  .brand p{margin:0;font-size:12px;color:var(--muted)}
+  label.field{display:block;font-size:11.5px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin:12px 0 6px}
+  textarea,input[type=text]{width:100%;background:rgba(2,6,23,.6);border:1px solid var(--border);color:var(--text);border-radius:9px;padding:9px 10px;font:12.5px/1.4 var(--mono);resize:vertical;outline:none;transition:border-color .15s,box-shadow .15s}
+  textarea:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(59,130,246,.2)}
+  .hint{font-size:11.5px;color:var(--faint);margin-top:6px}
+  .hint code{font-family:var(--mono);font-size:11px;color:var(--muted)}
+  .row{display:flex;align-items:center;gap:10px}
+  input[type=range]{flex:1;accent-color:var(--accent)}
+  .val{font-family:var(--mono);font-size:12px;color:var(--accent-2);min-width:58px;text-align:right}
+  .btn{appearance:none;border:1px solid var(--border);background:var(--panel-2);color:var(--text);border-radius:9px;padding:8px 12px;font:600 12.5px Inter,sans-serif;cursor:pointer;transition:background .15s,border-color .15s,transform .05s;white-space:nowrap}
+  .btn:hover{background:rgba(255,255,255,.08);border-color:rgba(148,163,184,.3)}
+  .btn:active{transform:translateY(1px)}
+  .btn:disabled{opacity:.5;cursor:not-allowed}
+  .btn.primary{background:var(--accent);border-color:transparent;color:#fff;box-shadow:0 6px 16px rgba(59,130,246,.3)}
+  .btn.primary:hover{background:#2f74e6}
+  .btn.block{width:100%;margin-top:12px;padding:10px}
+  .btns{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px}
+  .section{margin-top:14px;padding-top:12px;border-top:1px solid var(--border)}
+  .section h2{margin:0 0 8px;font-size:11.5px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.06em}
+  .stats{display:grid;grid-template-columns:1fr 1fr;gap:6px}
+  .stat{background:var(--panel-2);border:1px solid var(--border);border-radius:9px;padding:7px 9px}
+  .stat .k{font-size:10.5px;color:var(--faint);text-transform:uppercase;letter-spacing:.05em}
+  .stat .v{font-family:var(--mono);font-size:12.5px;color:var(--text);margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .stat.wide{grid-column:1/-1}
+  .toggles{display:flex;flex-direction:column;gap:6px}
+  .toggle{display:flex;align-items:center;justify-content:space-between;font-size:12.5px;color:var(--text)}
+  .toggle input{accent-color:var(--accent);width:16px;height:16px}
+  #log{font:11px/1.55 var(--mono);color:var(--muted);background:rgba(2,6,23,.55);border:1px solid var(--border);border-radius:9px;padding:8px 10px;max-height:150px;overflow:auto;white-space:pre-wrap;word-break:break-word}
+  #log .ok{color:var(--good)}#log .warn{color:var(--warn)}#log .err{color:var(--bad)}#log .dim{color:var(--faint)}
+
+  /* ---------- HUD ---------- */
+  #hud{position:fixed;right:16px;bottom:16px;display:flex;flex-direction:column;align-items:flex-end;gap:8px;pointer-events:none}
+  .chip{background:var(--panel);backdrop-filter:blur(12px);border:1px solid var(--border);border-radius:999px;padding:6px 12px;font-size:12px;color:var(--muted);box-shadow:0 8px 24px rgba(0,0,0,.35)}
+  .chip b{color:var(--text);font-weight:600}
+  .chip .dot{display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--good);margin-right:6px;vertical-align:middle;box-shadow:0 0 8px var(--good)}
+  .chip .dot.bad{background:var(--bad);box-shadow:0 0 8px var(--bad)}
+  #compass{position:fixed;right:16px;top:16px;width:52px;height:52px;border-radius:50%;background:var(--panel);border:1px solid var(--border);backdrop-filter:blur(12px);display:grid;place-items:center;pointer-events:none;box-shadow:0 8px 24px rgba(0,0,0,.35)}
+  #compass svg{width:40px;height:40px;transition:transform .08s linear}
+
+  /* ---------- loading overlay ---------- */
+  #overlay{position:fixed;inset:0;display:grid;place-items:center;background:rgba(4,9,20,.55);backdrop-filter:blur(3px);z-index:10;transition:opacity .3s}
+  #overlay.hidden{opacity:0;pointer-events:none}
+  .loader{background:var(--panel);border:1px solid var(--border);border-radius:14px;padding:20px 24px;min-width:320px;text-align:center;box-shadow:0 24px 60px rgba(0,0,0,.5)}
+  .loader .spin{width:28px;height:28px;border:3px solid rgba(96,165,250,.25);border-top-color:var(--accent-2);border-radius:50%;margin:0 auto 12px;animation:spin .8s linear infinite}
+  @keyframes spin{to{transform:rotate(360deg)}}
+  .loader .t{font-weight:600}.loader .s{font-size:12px;color:var(--muted);margin-top:4px;font-family:var(--mono)}
+  .bar{height:4px;background:rgba(148,163,184,.15);border-radius:4px;margin-top:12px;overflow:hidden}
+  .bar i{display:block;height:100%;width:0;background:linear-gradient(90deg,var(--accent),var(--accent-2));transition:width .2s}
+
+  @media (max-width:720px){#panel{width:calc(100vw - 32px)}}
+</style>
+<script type="importmap">
+{
+  "imports": {
+    "three": "https://cdn.jsdelivr.net/npm/three@0.170.0/build/three.module.js",
+    "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.170.0/examples/jsm/",
+    "@dimforge/rapier3d-compat": "https://cdn.jsdelivr.net/npm/@dimforge/rapier3d-compat@0.14.0/rapier.es.js"
+  }
+}
+</script>
+</head>
+<body>
+<canvas id="scene" tabindex="0"></canvas>
+
+<aside id="panel">
+  <div class="brand">
+    <div class="logo">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s7-6.2 7-12a7 7 0 0 0-14 0c0 5.8 7 12 7 12z"/><circle cx="12" cy="10" r="2.5"/></svg>
+    </div>
+    <div><h1>Geofence 3D</h1><p>Real-world map · rigid-body physics</p></div>
+  </div>
+
+  <label class="field" for="link">Google Maps link</label>
+  <textarea id="link" rows="3" spellcheck="false" placeholder="https://www.google.com/maps/place/...@12.9716,77.5946,17z"></textarea>
+  <div class="hint">Accepts full Google Maps URLs (place / search / directions / <code>?q=lat,lng</code>) or plain <code>lat, lng</code>. Short <code>maps.app.goo.gl</code> links must be opened first — paste the expanded address-bar URL.</div>
+
+  <label class="field" for="radius">Geofence radius</label>
+  <div class="row">
+    <input id="radius" type="range" min="100" max="1500" step="25" value="300">
+    <span class="val" id="radiusVal">300 m</span>
+  </div>
+
+  <button class="btn primary block" id="build">Build 3D map</button>
+
+  <div class="section">
+    <h2>Map</h2>
+    <div class="stats">
+      <div class="stat wide"><div class="k">Center</div><div class="v" id="sCenter">—</div></div>
+      <div class="stat"><div class="k">Buildings</div><div class="v" id="sBuildings">—</div></div>
+      <div class="stat"><div class="k">Roads</div><div class="v" id="sRoads">—</div></div>
+      <div class="stat"><div class="k">Elevation range</div><div class="v" id="sElev">—</div></div>
+      <div class="stat"><div class="k">Imagery / DEM zoom</div><div class="v" id="sZoom">—</div></div>
+    </div>
+  </div>
+
+  <div class="section">
+    <h2>Physics</h2>
+    <div class="stats">
+      <div class="stat"><div class="k">Static colliders</div><div class="v" id="sStatic">—</div></div>
+      <div class="stat"><div class="k">Collider triangles</div><div class="v" id="sTris">—</div></div>
+    </div>
+    <div class="btns">
+      <button class="btn" id="dropCrate">Drop crate</button>
+      <button class="btn" id="dropBalls">Drop 10 balls</button>
+      <button class="btn" id="clearBodies">Clear</button>
+    </div>
+    <div class="hint">Objects are spawned above the camera target. Roll one across the fence line to see the sensor fire.</div>
+  </div>
+
+  <div class="section">
+    <h2>Layers</h2>
+    <div class="toggles">
+      <label class="toggle"><span>Buildings</span><input type="checkbox" id="tBuildings" checked></label>
+      <label class="toggle"><span>Roads</span><input type="checkbox" id="tRoads" checked></label>
+      <label class="toggle"><span>Geofence wall</span><input type="checkbox" id="tFence" checked></label>
+      <label class="toggle"><span>Physics collider wireframe</span><input type="checkbox" id="tDebug"></label>
+      <label class="toggle"><span>Shadows</span><input type="checkbox" id="tShadows" checked></label>
+    </div>
+  </div>
+
+  <div class="section">
+    <h2>Log</h2>
+    <div id="log"></div>
+  </div>
+</aside>
+
+<div id="compass"><svg viewBox="0 0 40 40"><circle cx="20" cy="20" r="18" fill="none" stroke="rgba(148,163,184,.25)"/><path d="M20 5 L25 20 L20 17 L15 20 Z" fill="#ef4444"/><path d="M20 35 L25 20 L20 23 L15 20 Z" fill="#94a3b8"/><text x="20" y="4" font-size="6" fill="#e5e7eb" text-anchor="middle" font-family="Inter" font-weight="700">N</text></svg></div>
+
+<div id="hud">
+  <div class="chip" id="hudFence"><span class="dot"></span><b id="hudInside">0</b> inside · <b id="hudOutside">0</b> outside fence</div>
+  <div class="chip">Drag orbit · Scroll zoom · Right-drag pan · <b id="fps">— fps</b></div>
+</div>
+
+<div id="overlay">
+  <div class="loader">
+    <div class="spin"></div>
+    <div class="t" id="ovTitle">Starting physics engine…</div>
+    <div class="s" id="ovSub">loading Rapier WASM</div>
+    <div class="bar"><i id="ovBar"></i></div>
+  </div>
+</div>
+
+<script type="module">
+import * as THREE from 'three';
+import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+import * as BufferGeometryUtils from 'three/addons/utils/BufferGeometryUtils.js';
+import RAPIER from '@dimforge/rapier3d-compat';
+
+/* =====================================================================
+   UI helpers
+   ===================================================================== */
+const $ = (id) => document.getElementById(id);
+const ui = {
+  link: $('link'), radius: $('radius'), radiusVal: $('radiusVal'), build: $('build'), log: $('log'),
+  sCenter: $('sCenter'), sBuildings: $('sBuildings'), sRoads: $('sRoads'), sElev: $('sElev'), sZoom: $('sZoom'),
+  sStatic: $('sStatic'), sTris: $('sTris'),
+  dropCrate: $('dropCrate'), dropBalls: $('dropBalls'), clearBodies: $('clearBodies'),
+  tBuildings: $('tBuildings'), tRoads: $('tRoads'), tFence: $('tFence'), tDebug: $('tDebug'), tShadows: $('tShadows'),
+  hudInside: $('hudInside'), hudOutside: $('hudOutside'), hudFence: $('hudFence'), fps: $('fps'),
+  overlay: $('overlay'), ovTitle: $('ovTitle'), ovSub: $('ovSub'), ovBar: $('ovBar'), compass: $('compass').querySelector('svg'),
+};
+function log(msg, cls = '') {
+  const t = new Date().toTimeString().slice(0, 8);
+  const line = document.createElement('div');
+  line.innerHTML = `<span class="dim">${t}</span> ${cls ? `<span class="${cls}">${msg}</span>` : msg}`;
+  ui.log.appendChild(line);
+  ui.log.scrollTop = ui.log.scrollHeight;
+}
+function overlay(title, sub = '', pct = null) {
+  ui.overlay.classList.remove('hidden');
+  ui.ovTitle.textContent = title;
+  ui.ovSub.textContent = sub;
+  ui.ovBar.style.width = pct == null ? '0%' : `${Math.round(pct * 100)}%`;
+}
+function hideOverlay() { ui.overlay.classList.add('hidden'); }
+ui.radius.addEventListener('input', () => ui.radiusVal.textContent = `${ui.radius.value} m`);
+
+/* =====================================================================
+   Google Maps link parsing
+   ===================================================================== */
+const NUM = '(-?\\d{1,3}(?:\\.\\d+)?)';
+function parseGoogleMapsLink(raw) {
+  const s = raw.trim();
+  if (!s) throw new Error('Paste a Google Maps link first.');
+  let m = s.match(new RegExp(`^${NUM}\\s*,\\s*${NUM}$`));
+  if (m) return check(+m[1], +m[2], 'coordinates');
+  if (/maps\.app\.goo\.gl|goo\.gl\/maps|g\.co\/kgs/i.test(s))
+    throw new Error('That is a short link. Open it in a browser and paste the expanded URL from the address bar.');
+  let d = s; try { d = decodeURIComponent(s); } catch { /* keep raw */ }
+  // 1. the actual place pin in a /maps/place/ URL: ...!3d<lat>!4d<lng>
+  m = d.match(new RegExp(`!3d${NUM}!4d${NUM}`));
+  if (m) return check(+m[1], +m[2], 'place pin');
+  // 2. query-style parameters
+  m = d.match(new RegExp(`[?&](?:q|query|ll|destination|center|daddr|saddr|sll)=${NUM}\\s*,\\s*${NUM}`));
+  if (m) return check(+m[1], +m[2], 'query parameter');
+  // 3. /maps/place/<lat>,<lng>  or /maps/search/<lat>,<lng>
+  m = d.match(new RegExp(`/(?:place|search|dir)/${NUM},\\s*${NUM}`));
+  if (m) return check(+m[1], +m[2], 'path coordinates');
+  // 4. viewport center @lat,lng,zoom
+  m = d.match(new RegExp(`@${NUM},${NUM}`));
+  if (m) return check(+m[1], +m[2], 'viewport center');
+  throw new Error('No coordinates found in that link.');
+}
+function check(lat, lng, source) {
+  if (!(Math.abs(lat) <= 85 && Math.abs(lng) <= 180)) throw new Error('Coordinates out of range.');
+  return { lat, lng, source };
+}
+
+/* =====================================================================
+   Geo helpers
+   ===================================================================== */
+const EARTH = 40075016.686;
+const DEG = Math.PI / 180;
+const tileX = (lng, z) => (lng + 180) / 360 * 2 ** z;
+const tileY = (lat, z) => { const r = lat * DEG; return (1 - Math.log(Math.tan(r) + 1 / Math.cos(r)) / Math.PI) / 2 * 2 ** z; };
+const metersPerPixel = (lat, z) => EARTH * Math.cos(lat * DEG) / (256 * 2 ** z);
+
+/** Local East-North-Up frame in meters: +x east, +z south (so north is -z), +y up. */
+class LocalFrame {
+  constructor(lat0, lng0) { this.lat0 = lat0; this.lng0 = lng0; this.mLat = 111320; this.mLng = 111320 * Math.cos(lat0 * DEG); }
+  toLocal(lat, lng) { return { x: (lng - this.lng0) * this.mLng, z: -(lat - this.lat0) * this.mLat }; }
+  toGeo(x, z) { return { lat: this.lat0 - z / this.mLat, lng: this.lng0 + x / this.mLng }; }
+}
+
+function loadImage(url) {
+  return new Promise((res, rej) => {
+    const img = new Image();
+    img.crossOrigin = 'anonymous';
+    img.onload = () => res(img);
+    img.onerror = () => rej(new Error('tile failed ' + url));
+    img.src = url;
+  });
+}
+
+/** Fetch every XYZ tile covering the local square [-S,S]² and stitch into one canvas. */
+async function loadMosaic(frame, S, zoom, urlFn, onProgress) {
+  const corners = [frame.toGeo(-S, -S), frame.toGeo(S, -S), frame.toGeo(-S, S), frame.toGeo(S, S)];
+  const xs = corners.map(p => tileX(p.lng, zoom)), ys = corners.map(p => tileY(p.lat, zoom));
+  const x0 = Math.floor(Math.min(...xs)), x1 = Math.floor(Math.max(...xs));
+  const y0 = Math.floor(Math.min(...ys)), y1 = Math.floor(Math.max(...ys));
+  const cols = x1 - x0 + 1, rows = y1 - y0 + 1;
+  const canvas = document.createElement('canvas');
+  canvas.width = cols * 256; canvas.height = rows * 256;
+  const ctx = canvas.getContext('2d', { willReadFrequently: true });
+  const jobs = []; let done = 0, ok = 0;
+  for (let ty = y0; ty <= y1; ty++) for (let tx = x0; tx <= x1; tx++) {
+    jobs.push(loadImage(urlFn(zoom, tx, ty))
+      .then(img => { ctx.drawImage(img, (tx - x0) * 256, (ty - y0) * 256); ok++; })
+      .catch(() => {})
+      .finally(() => { done++; onProgress?.(done, jobs.length); }));
+  }
+  await Promise.all(jobs);
+  const px = (x, z) => { const g = frame.toGeo(x, z); return { x: (tileX(g.lng, zoom) - x0) * 256, y: (tileY(g.lat, zoom) - y0) * 256 }; };
+  return { canvas, ctx, px, tiles: jobs.length, ok, zoom };
+}
+
+function tileCountFor(frame, S, zoom) {
+  const a = frame.toGeo(-S, -S), b = frame.toGeo(S, S);
+  const cols = Math.floor(tileX(b.lng, zoom)) - Math.floor(tileX(a.lng, zoom)) + 1;
+  const rows = Math.floor(tileY(b.lat, zoom)) - Math.floor(tileY(a.lat, zoom)) + 1;
+  return cols * rows;
+}
+function pickZoom(frame, S, lat, targetMpp, minZ, maxZ, maxTiles) {
+  let z = Math.round(Math.log2(EARTH * Math.cos(lat * DEG) / (256 * targetMpp)));
+  z = Math.max(minZ, Math.min(maxZ, z));
+  while (z > minZ && tileCountFor(frame, S, z) > maxTiles) z--;
+  return z;
+}
+
+/* Terrarium RGB -> meters */
+function decodeTerrarium(mosaic) {
+  const { width: w, height: h } = mosaic.canvas;
+  const d = mosaic.ctx.getImageData(0, 0, w, h).data;
+  const out = new Float32Array(w * h);
+  for (let i = 0, j = 0; i < out.length; i++, j += 4) out[i] = d[j + 3] === 0 ? 0 : (d[j] * 256 + d[j + 1] + d[j + 2] / 256) - 32768;
+  return { data: out, w, h };
+}
+function sampleField(f, x, y) {
+  x = Math.max(0, Math.min(f.w - 1.001, x)); y = Math.max(0, Math.min(f.h - 1.001, y));
+  const x0 = x | 0, y0 = y | 0, fx = x - x0, fy = y - y0;
+  const i = y0 * f.w + x0;
+  const a = f.data[i], b = f.data[i + 1], c = f.data[i + f.w], d = f.data[i + f.w + 1];
+  return (a * (1 - fx) + b * fx) * (1 - fy) + (c * (1 - fx) + d * fx) * fy;
+}
+
+/* =====================================================================
+   Overpass (OpenStreetMap)
+   ===================================================================== */
+const OVERPASS = ['https://overpass-api.de/api/interpreter', 'https://overpass.kumi.systems/api/interpreter', 'https://overpass.private.coffee/api/interpreter'];
+async function fetchOSM(frame, S) {
+  const a = frame.toGeo(-S, S), b = frame.toGeo(S, -S); // a = south-west, b = north-east
+  const bbox = `${a.lat.toFixed(6)},${a.lng.toFixed(6)},${b.lat.toFixed(6)},${b.lng.toFixed(6)}`;
+  const q = `[out:json][timeout:60];(way["building"](${bbox});way["highway"](${bbox}););out body;>;out skel qt;`;
+  let lastErr;
+  for (const url of OVERPASS) {
+    try {
+      const ctrl = new AbortController(); const t = setTimeout(() => ctrl.abort(), 70000);
+      const r = await fetch(url, { method: 'POST', body: 'data=' + encodeURIComponent(q), headers: { 'Content-Type': 'application/x-www-form-urlencoded' }, signal: ctrl.signal });
+      clearTimeout(t);
+      if (!r.ok) throw new Error(`HTTP ${r.status}`);
+      return await r.json();
+    } catch (e) { lastErr = e; log(`Overpass ${new URL(url).host} failed: ${e.message} — trying next mirror`, 'warn'); }
+  }
+  throw lastErr;
+}
+
+/* =====================================================================
+   Geometry helpers
+   ===================================================================== */
+function clipSegment(p, q, S) { // Liang–Barsky against the square [-S,S]²
+  let t0 = 0, t1 = 1; const dx = q.x - p.x, dz = q.z - p.z;
+  const checks = [[-dx, p.x + S], [dx, S - p.x], [-dz, p.z + S], [dz, S - p.z]];
+  for (const [pk, qk] of checks) {
+    if (pk === 0) { if (qk < 0) return null; }
+    else { const r = qk / pk; if (pk < 0) { if (r > t1) return null; if (r > t0) t0 = r; } else { if (r < t0) return null; if (r < t1) t1 = r; } }
+  }
+  return [{ x: p.x + dx * t0, z: p.z + dz * t0 }, { x: p.x + dx * t1, z: p.z + dz * t1 }];
+}
+function clipPolyline(pts, S) {
+  const out = []; let cur = [];
+  for (let i = 0; i < pts.length - 1; i++) {
+    const s = clipSegment(pts[i], pts[i + 1], S);
+    if (!s) { if (cur.length > 1) out.push(cur); cur = []; continue; }
+    if (cur.length === 0) cur.push(s[0]);
+    cur.push(s[1]);
+    if (s[1].x !== pts[i + 1].x || s[1].z !== pts[i + 1].z) { out.push(cur); cur = []; }
+  }
+  if (cur.length > 1) out.push(cur);
+  return out;
+}
+function densify(pts, maxLen) {
+  const out = [pts[0]];
+  for (let i = 1; i < pts.length; i++) {
+    const a = pts[i - 1], b = pts[i]; const len = Math.hypot(b.x - a.x, b.z - a.z);
+    const n = Math.max(1, Math.ceil(len / maxLen));
+    for (let k = 1; k <= n; k++) out.push({ x: a.x + (b.x - a.x) * k / n, z: a.z + (b.z - a.z) * k / n });
+  }
+  return out;
+}
+function polygonArea(pts) { let a = 0; for (let i = 0, j = pts.length - 1; i < pts.length; j = i++) a += (pts[j].x + pts[i].x) * (pts[j].z - pts[i].z); return Math.abs(a / 2); }
+
+const ROAD = {
+  motorway: { w: 14, c: 0x2b2f38 }, trunk: { w: 12, c: 0x2b2f38 }, primary: { w: 11, c: 0x353a45 }, secondary: { w: 9, c: 0x3a4050 },
+  tertiary: { w: 8, c: 0x424859 }, residential: { w: 6.5, c: 0x4a5163 }, unclassified: { w: 6, c: 0x4a5163 }, living_street: { w: 5.5, c: 0x4a5163 },
+  service: { w: 4, c: 0x555c6e }, pedestrian: { w: 4, c: 0x8a8378 }, footway: { w: 2, c: 0x8a8378 }, path: { w: 1.6, c: 0x8a8378 },
+  cycleway: { w: 2.2, c: 0x6b5f8f }, steps: { w: 2, c: 0x8a8378 }, track: { w: 3, c: 0x7a6a4f },
+};
+function roadStyle(t) {
+  const k = (t || '').replace(/_link$/, '');
+  return ROAD[k] || { w: 5, c: 0x4a5163 };
+}
+function buildingHeight(tags, id) {
+  const h = parseFloat((tags.height || '').replace(/[^\d.]/g, ''));
+  if (h > 0) return Math.min(h, 400);
+  const lv = parseFloat(tags['building:levels']);
+  if (lv > 0) return lv * 3.2 + 1.5;
+  if (/^(house|detached|semidetached_house|bungalow|hut|shed|garage|garages)$/.test(tags.building)) return 5 + (id % 3) * 1.2;
+  return 6 + (id % 7) * 1.4; // 6–14 m when OSM has no height data
+}
+function buildingColor(tags, id) {
+  const b = tags.building || 'yes';
+  const jitter = ((id * 9301 + 49297) % 233280) / 233280 - 0.5;
+  let base;
+  if (/^(house|detached|semidetached_house|bungalow|residential|apartments|terrace)$/.test(b)) base = new THREE.Color(0xd9c8b0);
+  else if (/^(commercial|office|retail|hotel)$/.test(b)) base = new THREE.Color(0xb8c4d6);
+  else if (/^(industrial|warehouse|garage|garages|shed)$/.test(b)) base = new THREE.Color(0xa8adb5);
+  else if (/^(church|cathedral|temple|mosque|synagogue|civic|public|school|university|hospital)$/.test(b)) base = new THREE.Color(0xe3d6c6);
+  else base = new THREE.Color(0xcfd3da);
+  return base.offsetHSL(jitter * 0.03, jitter * 0.08, jitter * 0.1);
+}
+
+/* =====================================================================
+   Renderer / scene
+   ===================================================================== */
+const canvas = $('scene');
+const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, powerPreference: 'high-performance' });
+renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+renderer.setSize(innerWidth, innerHeight);
+renderer.shadowMap.enabled = true;
+renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+renderer.toneMapping = THREE.ACESFilmicToneMapping;
+renderer.toneMappingExposure = 1.05;
+renderer.outputColorSpace = THREE.SRGBColorSpace;
+
+const scene = new THREE.Scene();
+scene.background = new THREE.Color(0xbcd4ea);
+const camera = new THREE.PerspectiveCamera(55, innerWidth / innerHeight, 0.5, 30000);
+const controls = new OrbitControls(camera, canvas);
+controls.enableDamping = true; controls.dampingFactor = 0.08;
+controls.maxPolarAngle = Math.PI * 0.49;
+controls.screenSpacePanning = false;
+
+const hemi = new THREE.HemisphereLight(0xcfe3ff, 0x8a7d63, 0.85); scene.add(hemi);
+const sun = new THREE.DirectionalLight(0xfff4e0, 2.2);
+sun.castShadow = true;
+sun.shadow.mapSize.set(2048, 2048);
+sun.shadow.bias = -0.0004; sun.shadow.normalBias = 0.8;
+scene.add(sun, sun.target);
+
+const mapGroup = new THREE.Group(); scene.add(mapGroup);     // everything rebuilt per map
+const bodyGroup = new THREE.Group(); scene.add(bodyGroup);   // dynamic objects
+const debugLines = new THREE.LineSegments(new THREE.BufferGeometry(), new THREE.LineBasicMaterial({ vertexColors: true, transparent: true, opacity: 0.9 }));
+debugLines.visible = false; debugLines.frustumCulled = false; scene.add(debugLines);
+
+addEventListener('resize', () => {
+  camera.aspect = innerWidth / innerHeight; camera.updateProjectionMatrix();
+  renderer.setSize(innerWidth, innerHeight);
+});
+
+/* =====================================================================
+   Physics (Rapier)
+   ===================================================================== */
+overlay('Starting physics engine…', 'loading Rapier WASM');
+await RAPIER.init();
+log('Rapier physics ready', 'ok');
+
+let world = null, eventQueue = null, fenceHandle = null;
+const bodies = [];                 // { rb, mesh, kind, colliderHandle, inside }
+const bodyByCollider = new Map();
+let staticTriCount = 0, staticColliders = 0;
+
+function resetPhysics() {
+  if (world) world.free();
+  world = new RAPIER.World({ x: 0, y: -9.81, z: 0 });
+  world.timestep = 1 / 60;
+  eventQueue = new RAPIER.EventQueue(true);
+  bodies.length = 0; bodyByCollider.clear();
+  bodyGroup.clear();
+  staticTriCount = 0; staticColliders = 0; fenceHandle = null;
+  updateFenceHud();
+}
+function addStaticTrimesh(positions, indices) {
+  const body = world.createRigidBody(RAPIER.RigidBodyDesc.fixed());
+  world.createCollider(RAPIER.ColliderDesc.trimesh(positions, indices).setFriction(0.9), body);
+  staticTriCount += indices.length / 3; staticColliders++;
+}
+
+/* =====================================================================
+   Map state
+   ===================================================================== */
+let map = null; // { frame, S, R, N, cell, heights, terrainHeight(x,z), center, hMin, hMax }
+let fenceWall = null, roadsMesh = null, buildingsMesh = null;
+const fenceUniforms = { time: { value: 0 }, color: { value: new THREE.Color(0x3b82f6) } };
+
+function disposeMap() {
+  mapGroup.traverse(o => { if (o.geometry) o.geometry.dispose(); if (o.material) { [].concat(o.material).forEach(m => { if (m.map) m.map.dispose(); m.dispose(); }); } });
+  mapGroup.clear();
+  fenceWall = roadsMesh = buildingsMesh = null;
+}
+
+async function buildMap(linkText, radius) {
+  ui.build.disabled = true;
+  try {
+    const pin = parseGoogleMapsLink(linkText);
+    log(`Parsed ${pin.source}: ${pin.lat.toFixed(6)}, ${pin.lng.toFixed(6)}`, 'ok');
+    ui.sCenter.textContent = `${pin.lat.toFixed(5)}, ${pin.lng.toFixed(5)}`;
+
+    const frame = new LocalFrame(pin.lat, pin.lng);
+    const R = radius, S = Math.ceil(R * 1.3);            // half-size of the loaded square (context beyond the fence)
+    const N = R > 900 ? 257 : R > 450 ? 193 : 129;       // terrain grid resolution
+    const cell = 2 * S / (N - 1);
+
+    disposeMap(); resetPhysics();
+
+    /* ---------- elevation ---------- */
+    const demZ = pickZoom(frame, S, pin.lat, cell, 9, 15, 36);
+    overlay('Fetching elevation…', `terrarium tiles @ z${demZ}`, 0.05);
+    const dem = await loadMosaic(frame, S, demZ, (z, x, y) => `https://s3.amazonaws.com/elevation-tiles-prod/terrarium/${z}/${x}/${y}.png`, (d, n) => overlay('Fetching elevation…', `${d}/${n} tiles @ z${demZ}`, 0.05 + 0.15 * d / n));
+    const field = decodeTerrarium(dem);
+    log(`Elevation: ${dem.ok}/${dem.tiles} tiles @ z${demZ} (${metersPerPixel(pin.lat, demZ).toFixed(1)} m/px)`, dem.ok ? '' : 'warn');
+
+    const heights = new Float32Array(N * N);
+    const c0 = dem.px(0, 0); const hRef = sampleField(field, c0.x, c0.y);
+    let hMin = Infinity, hMax = -Infinity;
+    for (let row = 0; row < N; row++) for (let col = 0; col < N; col++) {
+      const x = -S + col * cell, z = -S + row * cell;
+      const p = dem.px(x, z);
+      const h = dem.ok ? sampleField(field, p.x, p.y) - hRef : 0;
+      heights[row * N + col] = h; if (h < hMin) hMin = h; if (h > hMax) hMax = h;
+    }
+    const terrainHeight = (x, z) => {
+      const u = Math.max(0, Math.min(N - 1.001, (x + S) / cell)), v = Math.max(0, Math.min(N - 1.001, (z + S) / cell));
+      const c = u | 0, r = v | 0, fu = u - c, fv = v - r, i = r * N + c;
+      return (heights[i] * (1 - fu) + heights[i + 1] * fu) * (1 - fv) + (heights[i + N] * (1 - fu) + heights[i + N + 1] * fu) * fv;
+    };
+    map = { frame, S, R, N, cell, heights, terrainHeight, center: pin, hMin, hMax, hRef };
+    ui.sElev.textContent = `${hMin.toFixed(0)} … +${hMax.toFixed(0)} m`;
+
+    /* ---------- satellite imagery ---------- */
+    const imgZ = pickZoom(frame, S, pin.lat, 2 * S / 2048, 12, 19, 100);
+    overlay('Fetching satellite imagery…', `Esri World Imagery @ z${imgZ}`, 0.2);
+    const sat = await loadMosaic(frame, S, imgZ, (z, x, y) => `https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/${z}/${y}/${x}`, (d, n) => overlay('Fetching satellite imagery…', `${d}/${n} tiles @ z${imgZ}`, 0.2 + 0.25 * d / n));
+    log(`Imagery: ${sat.ok}/${sat.tiles} tiles @ z${imgZ} (${metersPerPixel(pin.lat, imgZ).toFixed(2)} m/px)`, sat.ok ? '' : 'warn');
+    ui.sZoom.textContent = `z${imgZ} / z${demZ}`;
+    const texCanvas = document.createElement('canvas'); texCanvas.width = texCanvas.height = 2048;
+    { const a = sat.px(-S, -S), b = sat.px(S, S); texCanvas.getContext('2d').drawImage(sat.canvas, a.x, a.y, b.x - a.x, b.y - a.y, 0, 0, 2048, 2048); }
+    const satTex = new THREE.CanvasTexture(texCanvas);
+    satTex.colorSpace = THREE.SRGBColorSpace; satTex.anisotropy = renderer.capabilities.getMaxAnisotropy();
+
+    /* ---------- terrain mesh + collider ---------- */
+    overlay('Building terrain…', `${N}×${N} grid`, 0.47);
+    const tg = new THREE.PlaneGeometry(2 * S, 2 * S, N - 1, N - 1);
+    tg.rotateX(-Math.PI / 2);
+    const tp = tg.attributes.position;
+    for (let i = 0; i < tp.count; i++) tp.setY(i, heights[i]);
+    tp.needsUpdate = true; tg.computeVertexNormals();
+    const terrain = new THREE.Mesh(tg, new THREE.MeshStandardMaterial({ map: satTex, roughness: 1, metalness: 0 }));
+    terrain.receiveShadow = true; mapGroup.add(terrain);
+    addStaticTrimesh(new Float32Array(tp.array), new Uint32Array(tg.index.array));
+
+    // skirt so the edges don't look paper-thin from low angles
+    const skirt = new THREE.Mesh(new THREE.BoxGeometry(2 * S, 60, 2 * S), new THREE.MeshStandardMaterial({ color: 0x5b4a3a, roughness: 1 }));
+    skirt.position.y = hMin - 30.5; mapGroup.add(skirt);
+
+    /* ---------- OSM buildings + roads ---------- */
+    overlay('Fetching OpenStreetMap…', 'Overpass API (buildings, roads)', 0.5);
+    let osm = null;
+    try { osm = await fetchOSM(frame, S); } catch (e) { log(`OpenStreetMap unavailable: ${e.message}`, 'err'); }
+    let nB = 0, nR = 0;
+    if (osm) {
+      const nodes = new Map();
+      for (const el of osm.elements) if (el.type === 'node') nodes.set(el.id, frame.toLocal(el.lat, el.lon));
+      const ways = osm.elements.filter(el => el.type === 'way' && el.nodes);
+      overlay('Extruding buildings…', `${ways.length} OSM ways`, 0.6);
+      await new Promise(r => setTimeout(r, 0));
+
+      const bGeos = [];
+      const roadPos = [], roadCol = [];
+      const tmpColor = new THREE.Color();
+      for (const w of ways) {
+        const tags = w.tags || {};
+        const pts = w.nodes.map(id => nodes.get(id)).filter(Boolean);
+        if (pts.length < 2) continue;
+
+        if (tags.building && tags.building !== 'no') {
+          if (w.nodes[0] !== w.nodes[w.nodes.length - 1] || pts.length < 4) continue;
+          const ring = pts.slice(0, -1);
+          if (ring.some(p => Math.abs(p.x) > S || Math.abs(p.z) > S)) continue;
+          if (polygonArea(ring) < 4) continue;
+          if (bGeos.length >= 8000) continue;
+          let base = Infinity, top = -Infinity;
+          for (const p of ring) { const h = terrainHeight(p.x, p.z); if (h < base) base = h; if (h > top) top = h; }
+          const height = buildingHeight(tags, w.id);
+          const shape = new THREE.Shape(ring.map(p => new THREE.Vector2(p.x, -p.z)));
+          const g = new THREE.ExtrudeGeometry(shape, { depth: (top - base) + height + 1, bevelEnabled: false });
+          g.rotateX(-Math.PI / 2); g.translate(0, base - 1, 0);
+          const col = buildingColor(tags, w.id);
+          const n = g.attributes.position.count, colors = new Float32Array(n * 3);
+          for (let i = 0; i < n; i++) { colors[i * 3] = col.r; colors[i * 3 + 1] = col.g; colors[i * 3 + 2] = col.b; }
+          g.setAttribute('color', new THREE.BufferAttribute(colors, 3));
+          g.deleteAttribute('uv');
+          bGeos.push(g); nB++;
+        } else if (tags.highway) {
+          if (/^(proposed|construction|abandoned|razed|corridor|elevator|bus_stop|platform)$/.test(tags.highway)) continue;
+          const st = roadStyle(tags.highway);
+          const lift = /^(motorway|trunk|primary)/.test(tags.highway) ? 0.55 : /^(secondary|tertiary)/.test(tags.highway) ? 0.45 : 0.35;
+          tmpColor.setHex(st.c);
+          for (const piece of clipPolyline(pts, S)) {
+            const line = densify(piece, 10);
+            const half = st.w / 2, n = line.length; const L = [], Rr = [];
+            for (let i = 0; i < n; i++) {
+              const p = line[i], a = line[Math.max(i - 1, 0)], b = line[Math.min(i + 1, n - 1)];
+              let dx = b.x - a.x, dz = b.z - a.z; const len = Math.hypot(dx, dz) || 1; dx /= len; dz /= len;
+              const nx = -dz, nz = dx, y = terrainHeight(p.x, p.z) + lift;
+              L.push(p.x + nx * half, y, p.z + nz * half); Rr.push(p.x - nx * half, y, p.z - nz * half);
+            }
+            for (let i = 0; i < n - 1; i++) {
+              const a = i * 3, b = (i + 1) * 3;
+              roadPos.push(L[a], L[a + 1], L[a + 2], Rr[a], Rr[a + 1], Rr[a + 2], L[b], L[b + 1], L[b + 2],
+                           Rr[a], Rr[a + 1], Rr[a + 2], Rr[b], Rr[b + 1], Rr[b + 2], L[b], L[b + 1], L[b + 2]);
+              for (let k = 0; k < 6; k++) roadCol.push(tmpColor.r, tmpColor.g, tmpColor.b);
+            }
+            nR++;
+          }
+        }
+      }
+
+      if (bGeos.length) {
+        const merged = BufferGeometryUtils.mergeGeometries(bGeos, false);
+        bGeos.forEach(g => g.dispose());
+        buildingsMesh = new THREE.Mesh(merged, new THREE.MeshStandardMaterial({ vertexColors: true, roughness: 0.85, metalness: 0.02 }));
+        buildingsMesh.castShadow = true; buildingsMesh.receiveShadow = true; buildingsMesh.visible = ui.tBuildings.checked;
+        mapGroup.add(buildingsMesh);
+        overlay('Building colliders…', `${nB} buildings`, 0.85);
+        await new Promise(r => setTimeout(r, 0));
+        const pos = merged.attributes.position.array;
+        const idx = new Uint32Array(pos.length / 3); for (let i = 0; i < idx.length; i++) idx[i] = i;
+        addStaticTrimesh(new Float32Array(pos), idx);
+      }
+      if (roadPos.length) {
+        const rg = new THREE.BufferGeometry();
+        rg.setAttribute('position', new THREE.Float32BufferAttribute(roadPos, 3));
+        rg.setAttribute('color', new THREE.Float32BufferAttribute(roadCol, 3));
+        rg.computeVertexNormals();
+        roadsMesh = new THREE.Mesh(rg, new THREE.MeshStandardMaterial({ vertexColors: true, roughness: 0.95, side: THREE.DoubleSide }));
+        roadsMesh.receiveShadow = true; roadsMesh.visible = ui.tRoads.checked;
+        mapGroup.add(roadsMesh);
+      }
+      log(`OSM: ${nB} buildings, ${nR} road segments`, 'ok');
+    }
+    ui.sBuildings.textContent = osm ? String(nB) : 'n/a';
+    ui.sRoads.textContent = osm ? String(nR) : 'n/a';
+
+    /* ---------- geofence ---------- */
+    overlay('Placing geofence…', `${R} m radius`, 0.93);
+    let fMin = Infinity, fMax = -Infinity; const SEG = 160;
+    const ringPos = [];
+    for (let i = 0; i <= SEG; i++) {
+      const a = i / SEG * Math.PI * 2, cx = Math.cos(a), sz = Math.sin(a);
+      const h = terrainHeight(cx * R, sz * R); if (h < fMin) fMin = h; if (h > fMax) fMax = h;
+      const w = Math.max(1.2, R * 0.006);
+      ringPos.push(cx * (R - w), h + 0.6, sz * (R - w), cx * (R + w), h + 0.6, sz * (R + w));
+    }
+    const ringIdx = [];
+    for (let i = 0; i < SEG; i++) { const a = i * 2; ringIdx.push(a, a + 1, a + 2, a + 1, a + 3, a + 2); }
+    const ringGeo = new THREE.BufferGeometry();
+    ringGeo.setAttribute('position', new THREE.Float32BufferAttribute(ringPos, 3)); ringGeo.setIndex(ringIdx);
+    const ring = new THREE.Mesh(ringGeo, new THREE.MeshBasicMaterial({ color: 0x60a5fa, side: THREE.DoubleSide, transparent: true, opacity: 0.95, depthWrite: false }));
+    mapGroup.add(ring);
+
+    const wallH = (fMax - fMin) + 36;
+    fenceWall = new THREE.Mesh(new THREE.CylinderGeometry(R, R, wallH, SEG, 1, true), new THREE.ShaderMaterial({
+      uniforms: fenceUniforms, transparent: true, depthWrite: false, side: THREE.DoubleSide,
+      vertexShader: `varying vec2 vUv; void main(){ vUv = uv; gl_Position = projectionMatrix * modelViewMatrix * vec4(position,1.0); }`,
+      fragmentShader: `uniform float time; uniform vec3 color; varying vec2 vUv;
+        void main(){ float f = 1.0 - vUv.y; float a = f*f*0.42 + 0.03;
+          float band = smoothstep(0.985, 1.0, fract(vUv.y * 6.0 - time * 0.25)) * 0.35 * f;
+          float grid = smoothstep(0.985, 1.0, fract(vUv.x * 80.0)) * 0.12 * f;
+          gl_FragColor = vec4(color + band, a + band + grid); }`,
+    }));
+    fenceWall.position.y = fMin - 2 + wallH / 2; fenceWall.visible = ui.tFence.checked; mapGroup.add(fenceWall);
+
+    // sensor collider: fires enter/leave events for any dynamic body
+    const sensor = world.createCollider(
+      RAPIER.ColliderDesc.cylinder((fMax - fMin + 400) / 2, R).setSensor(true)
+        .setTranslation(0, (fMin - 100) + (fMax - fMin + 400) / 2, 0)
+        .setActiveEvents(RAPIER.ActiveEvents.COLLISION_EVENTS));
+    fenceHandle = sensor.handle;
+
+    // centre pin
+    const pinY = terrainHeight(0, 0);
+    const pole = new THREE.Mesh(new THREE.CylinderGeometry(0.35, 0.35, 14, 12), new THREE.MeshStandardMaterial({ color: 0xe5e7eb, roughness: 0.4 }));
+    pole.position.set(0, pinY + 7, 0); pole.castShadow = true;
+    const knob = new THREE.Mesh(new THREE.SphereGeometry(2.2, 24, 16), new THREE.MeshStandardMaterial({ color: 0xef4444, roughness: 0.35, emissive: 0x7f1d1d, emissiveIntensity: 0.4 }));
+    knob.position.set(0, pinY + 15, 0); knob.castShadow = true;
+    mapGroup.add(pole, knob);
+
+    /* ---------- lights, fog, camera ---------- */
+    sun.position.set(S * 0.8, S * 1.1, S * 0.5); sun.target.position.set(0, 0, 0);
+    const sc = sun.shadow.camera; sc.left = -S; sc.right = S; sc.top = S; sc.bottom = -S; sc.near = 1; sc.far = S * 4; sc.updateProjectionMatrix();
+    scene.fog = new THREE.Fog(0xbcd4ea, S * 3, S * 10);
+    camera.position.set(0, pinY + S * 0.95, S * 1.25); camera.near = 0.5; camera.far = S * 40; camera.updateProjectionMatrix();
+    controls.target.set(0, pinY, 0); controls.minDistance = 10; controls.maxDistance = S * 8; controls.update();
+
+    ui.sStatic.textContent = String(staticColliders + 1);
+    ui.sTris.textContent = staticTriCount.toLocaleString();
+    log(`Physics: ${staticColliders} static trimesh colliders, ${staticTriCount.toLocaleString()} triangles + 1 fence sensor`, 'ok');
+    overlay('Ready', '', 1);
+    setTimeout(hideOverlay, 250);
+  } catch (e) {
+    console.error(e);
+    log(e.message || String(e), 'err');
+    hideOverlay();
+  } finally {
+    ui.build.disabled = false;
+  }
+}
+
+/* =====================================================================
+   Dynamic bodies
+   ===================================================================== */
+const crateGeo = new THREE.BoxGeometry(3, 3, 3), ballGeo = new THREE.SphereGeometry(1.5, 24, 16);
+const matCrate = new THREE.MeshStandardMaterial({ color: 0xf59e0b, roughness: 0.6 });
+const matBall = new THREE.MeshStandardMaterial({ color: 0x22c55e, roughness: 0.35, metalness: 0.1 });
+const matOut = new THREE.MeshStandardMaterial({ color: 0xef4444, roughness: 0.5, emissive: 0x7f1d1d, emissiveIntensity: 0.5 });
+
+function spawn(kind, spread = 40) {
+  if (!map || !world) return;
+  if (bodies.length >= 250) { log('Body limit reached (250) — clear first', 'warn'); return; }
+  const t = controls.target;
+  const x = t.x + (Math.random() - 0.5) * spread, z = t.z + (Math.random() - 0.5) * spread;
+  const y = map.terrainHeight(x, z) + 70 + Math.random() * 30;
+  const q = new THREE.Quaternion().setFromEuler(new THREE.Euler(Math.random() * 6, Math.random() * 6, Math.random() * 6));
+  const rb = world.createRigidBody(RAPIER.RigidBodyDesc.dynamic().setTranslation(x, y, z).setRotation({ x: q.x, y: q.y, z: q.z, w: q.w })
+    .setCcdEnabled(true).setAngvel({ x: (Math.random() - 0.5) * 2, y: (Math.random() - 0.5) * 2, z: (Math.random() - 0.5) * 2 }));
+  const cd = kind === 'crate' ? RAPIER.ColliderDesc.cuboid(1.5, 1.5, 1.5).setRestitution(0.15).setFriction(0.8)
+                              : RAPIER.ColliderDesc.ball(1.5).setRestitution(0.6).setFriction(0.5);
+  const col = world.createCollider(cd.setDensity(kind === 'crate' ? 0.6 : 1), rb);
+  const inside = Math.hypot(x, z) <= map.R; // sensor events only report transitions, so seed the initial state
+  const mesh = new THREE.Mesh(kind === 'crate' ? crateGeo : ballGeo, !inside ? matOut : kind === 'crate' ? matCrate : matBall);
+  mesh.castShadow = true; mesh.receiveShadow = true;
+  bodyGroup.add(mesh);
+  const entry = { rb, mesh, kind, colliderHandle: col.handle, inside };
+  bodies.push(entry); bodyByCollider.set(col.handle, entry);
+  updateFenceHud();
+}
+function removeBody(entry) {
+  world.removeRigidBody(entry.rb);
+  bodyGroup.remove(entry.mesh);
+  bodyByCollider.delete(entry.colliderHandle);
+  bodies.splice(bodies.indexOf(entry), 1);
+}
+function updateFenceHud() {
+  const inside = bodies.filter(b => b.inside !== false).length, outside = bodies.length - inside;
+  ui.hudInside.textContent = inside; ui.hudOutside.textContent = outside;
+  ui.hudFence.querySelector('.dot').classList.toggle('bad', outside > 0);
+}
+ui.dropCrate.addEventListener('click', () => spawn('crate'));
+ui.dropBalls.addEventListener('click', () => { for (let i = 0; i < 10; i++) spawn('ball', 60); });
+ui.clearBodies.addEventListener('click', () => { while (bodies.length) removeBody(bodies[0]); updateFenceHud(); });
+
+/* =====================================================================
+   Layer toggles
+   ===================================================================== */
+ui.tBuildings.addEventListener('change', () => { if (buildingsMesh) buildingsMesh.visible = ui.tBuildings.checked; });
+ui.tRoads.addEventListener('change', () => { if (roadsMesh) roadsMesh.visible = ui.tRoads.checked; });
+ui.tFence.addEventListener('change', () => { if (fenceWall) fenceWall.visible = ui.tFence.checked; });
+ui.tDebug.addEventListener('change', () => { debugLines.visible = ui.tDebug.checked; });
+ui.tShadows.addEventListener('change', () => { renderer.shadowMap.enabled = ui.tShadows.checked; scene.traverse(o => { if (o.material) o.material.needsUpdate = true; }); });
+
+/* =====================================================================
+   Main loop
+   ===================================================================== */
+const clock = new THREE.Clock();
+let acc = 0, frames = 0, fpsT = 0;
+const _dir = new THREE.Vector3();
+function animate() {
+  requestAnimationFrame(animate);
+  const dt = Math.min(clock.getDelta(), 0.1);
+  fenceUniforms.time.value += dt;
+
+  if (world) {
+    acc += dt;
+    let steps = 0;
+    while (acc >= world.timestep && steps < 4) {
+      world.step(eventQueue); acc -= world.timestep; steps++;
+      eventQueue.drainCollisionEvents((h1, h2, started) => {
+        if (fenceHandle === null || (h1 !== fenceHandle && h2 !== fenceHandle)) return;
+        const e = bodyByCollider.get(h1 === fenceHandle ? h2 : h1); if (!e) return;
+        if (started) { if (e.inside === false) log(`${e.kind} entered the geofence`, 'ok'); e.inside = true; e.mesh.material = e.kind === 'crate' ? matCrate : matBall; }
+        else { e.inside = false; e.mesh.material = matOut; log(`${e.kind} left the geofence`, 'warn'); }
+        updateFenceHud();
+      });
+    }
+    for (let i = bodies.length - 1; i >= 0; i--) {
+      const b = bodies[i], t = b.rb.translation(), r = b.rb.rotation();
+      b.mesh.position.set(t.x, t.y, t.z); b.mesh.quaternion.set(r.x, r.y, r.z, r.w);
+      if (t.y < (map ? map.hMin : 0) - 150) { removeBody(b); updateFenceHud(); }
+    }
+    if (debugLines.visible) {
+      const d = world.debugRender();
+      debugLines.geometry.setAttribute('position', new THREE.BufferAttribute(d.vertices, 3));
+      debugLines.geometry.setAttribute('color', new THREE.BufferAttribute(d.colors, 4));
+    }
+  }
+
+  controls.update();
+  camera.getWorldDirection(_dir);
+  ui.compass.style.transform = `rotate(${(Math.atan2(_dir.x, -_dir.z) * 180 / Math.PI).toFixed(1)}deg)`;
+  renderer.render(scene, camera);
+
+  frames++; fpsT += dt;
+  if (fpsT >= 0.5) { ui.fps.textContent = `${Math.round(frames / fpsT)} fps`; frames = 0; fpsT = 0; }
+}
+animate();
+
+/* =====================================================================
+   Boot
+   ===================================================================== */
+ui.build.addEventListener('click', () => buildMap(ui.link.value, +ui.radius.value));
+ui.link.addEventListener('keydown', e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); ui.build.click(); } });
+
+const params = new URLSearchParams(location.search);
+ui.link.value = params.get('link') || 'https://www.google.com/maps/place/Union+Square/@37.7879,-122.4075,17z/data=!3m1!4b1!4m6!3m5!1s0x8085808f7ba22b39:0xabcd!8m2!3d37.7879938!4d-122.4074374';
+if (params.get('r')) { ui.radius.value = params.get('r'); ui.radiusVal.textContent = `${ui.radius.value} m`; }
+buildMap(ui.link.value, +ui.radius.value);
+</script>
+</body>
+</html>

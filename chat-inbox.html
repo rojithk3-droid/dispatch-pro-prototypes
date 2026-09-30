@@ -1,0 +1,1793 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Dispatch Pro TMS — Messages</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,400..700&display=swap" rel="stylesheet">
+<style>
+/* ============================================================================
+   DISPATCH PRO TMS — CHAT INBOX PANEL
+   ----------------------------------------------------------------------------
+   A docked messages panel with two tabs, built on this project's editorial
+   system (Inter, hairlines at 9% ink, layered neutral planes, blue primary).
+
+   The panel is the component; the thread pane to its right exists so the
+   panel can be read in context. Everything inside .cpanel is self-contained
+   and can be lifted out as a drawer, a popover under a bell icon, or a column.
+
+   Two tabs, two anatomies — on purpose:
+
+     INBOX       a dense ROW. Scannable at ~66px: who, which load, what they
+                 said, when. Colour enters only through the load-state spine
+                 on the left edge, so a column of rows still reads as a list
+                 and not as a paint chart.
+
+     INVITATION  a CARD. An invitation is a decision, not a message: it needs
+                 the counterparty credentials (MC, DOT, authority, shared
+                 lanes) and two consequential buttons. A row cannot carry that
+                 without lying about how much thought it deserves.
+
+   Colour rule inherited from the scheduler build: a state enters the page
+   only as a TRIPLE — --*-ink (text + the 2px spine), --*-line (hairline),
+   --*-fill (~6% wash). Nothing else is tinted.
+   ========================================================================= */
+:root{
+  /* ---- planes ---- */
+  --bg:#F2F4F7;
+  --bg-2:#E9ECF1;
+  --surface:#FFFFFF;
+  --surface-2:#FAFBFC;
+  --chip:#F0F2F5;
+  --track:#E8EBF0;
+
+  /* ---- the one hairline, at three weights ---- */
+  --line:rgba(17,20,28,.09);
+  --line-2:rgba(17,20,28,.055);
+  --line-3:rgba(17,20,28,.17);
+
+  /* ---- ink ramp ---- */
+  --fg:#101422;
+  --fg-2:#3C4354;
+  --muted:#6B7488;
+  --faint:#99A1B3;
+
+  /* ---- PRIMARY: blue. Actions, selection, unread. ---- */
+  --pri:#0F6FFF;
+  --pri-ink:#0F6FFF;
+  --pri-fg:#FFFFFF;
+  --pri-line:rgba(15,111,255,.42);
+  --pri-fill:rgba(15,111,255,.07);
+  --pri-fill-2:rgba(15,111,255,.13);
+
+  /* ---- load-state triples (same hexes as schedule-planner-editorial) ---- */
+  --tran-ink:#19C936;  --tran-line:#19C936;  --tran-fill:#F4FBF4;
+  --late-ink:#C8302A;  --late-line:#F2ACA8;  --late-fill:#FDF0EE;
+  --sent-ink:#BC4A0C;  --sent-line:#FF6D10;  --sent-fill:#FCF3EF;
+  --plan-ink:#0F6FFF;  --plan-line:#0F6FFF;  --plan-fill:#F3FAFF;
+  --deliv-ink:#5B6576; --deliv-line:#CDD4DE; --deliv-fill:#F3F5F8;
+  --hold-ink:#C2261F;  --hold-line:#C2261F;  --hold-fill:#FDEEEC;
+
+  --good:#19C936;  --good-fill:rgba(25,201,54,.10);
+  --warn:#BC4A0C;  --warn-fill:rgba(188,74,12,.09);
+  --bad:#D0342C;   --bad-fill:rgba(208,52,44,.09);
+
+  --r-card:10px;
+  --r:6px;
+  --r-menu:10px;
+  --r-pill:999px;
+
+  --sh-card:0 1px 2px rgba(17,20,28,.04);
+  --sh-xs:0 1px 2px rgba(17,20,28,.06);
+  --sh-chip:0 1px 1px rgba(17,20,28,.05);
+  --sh-menu:0 0 0 1px rgba(17,20,28,.05),0 8px 24px -8px rgba(17,20,28,.2),0 24px 48px -24px rgba(17,20,28,.16);
+  --sh-modal:0 0 0 1px rgba(17,20,28,.06),0 24px 64px -16px rgba(17,20,28,.34);
+
+  --topbar-h:52px;
+  --panel-w:400px;
+
+  --toast-bg:#151A26;
+  --toast-ink:#FFFFFF;
+  --scroll:#C7CDD8;
+}
+:root[data-theme="dark"]{
+  --bg:#0C0E14;
+  --bg-2:#10131B;
+  --surface:#161A23;
+  --surface-2:#1A1F29;
+  --chip:#222835;
+  --track:#262D3B;
+  --line:rgba(255,255,255,.09);
+  --line-2:rgba(255,255,255,.055);
+  --line-3:rgba(255,255,255,.19);
+  --fg:#E9ECF2;
+  --fg-2:#B4BCCB;
+  --muted:#8790A1;
+  --faint:#5C657A;
+
+  --pri:#0F6FFF;
+  --pri-ink:#4E92FF;
+  --pri-fg:#0B1020;
+  --pri-line:rgba(15,111,255,.5);
+  --pri-fill:rgba(15,111,255,.12);
+  --pri-fill-2:rgba(15,111,255,.2);
+
+  --tran-ink:#19C936;  --tran-line:rgba(25,201,54,.45);   --tran-fill:rgba(25,201,54,.13);
+  --late-ink:#F58982;  --late-line:rgba(245,137,130,.45); --late-fill:rgba(245,137,130,.13);
+  --sent-ink:#FF8A3D;  --sent-line:rgba(255,109,16,.45);  --sent-fill:rgba(255,109,16,.13);
+  --plan-ink:#4E92FF;  --plan-line:rgba(15,111,255,.45);  --plan-fill:rgba(15,111,255,.13);
+  --deliv-ink:#9AA5B6; --deliv-line:rgba(154,165,182,.34);--deliv-fill:rgba(154,165,182,.1);
+  --hold-ink:#F26A60;  --hold-line:#F26A60;               --hold-fill:rgba(242,106,96,.13);
+
+  --good:#19C936;  --good-fill:rgba(25,201,54,.15);
+  --warn:#FF8A3D;  --warn-fill:rgba(255,109,16,.15);
+  --bad:#F58982;   --bad-fill:rgba(245,137,130,.14);
+
+  --sh-card:0 1px 2px rgba(0,0,0,.34);
+  --sh-xs:0 1px 2px rgba(0,0,0,.42);
+  --sh-chip:0 1px 1px rgba(0,0,0,.38);
+  --sh-menu:0 0 0 1px rgba(255,255,255,.06),0 8px 24px -8px rgba(0,0,0,.64),0 24px 48px -24px rgba(0,0,0,.64);
+  --sh-modal:0 0 0 1px rgba(255,255,255,.08),0 24px 64px -16px rgba(0,0,0,.72);
+
+  --toast-bg:#E9ECF2;
+  --toast-ink:#101422;
+  --scroll:#39404F;
+}
+html{color-scheme:light}
+html[data-theme="dark"]{color-scheme:dark}
+
+/* ---------- base --------------------------------------------------------- */
+*{box-sizing:border-box}
+html,body{height:100%}
+body{
+  margin:0;background:var(--bg);color:var(--fg);font-size:13px;line-height:18px;
+  font-family:Inter,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+  font-feature-settings:"cv11","ss03";
+  -webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale;overflow:hidden}
+h1,h2,h3,h4,h5,h6{margin:0;font-weight:600;letter-spacing:-.02em}
+p{margin:0}
+a{color:inherit;text-decoration:none}
+button,input,select,textarea{font-family:inherit;font-size:13px;color:inherit;font-feature-settings:inherit}
+button{cursor:pointer}
+kbd{font-family:inherit;font-size:10px;font-weight:500;color:var(--muted);
+  border:1px solid var(--line);border-bottom-width:2px;border-radius:4px;padding:0 5px;line-height:15px;
+  background:var(--surface);font-variant-numeric:tabular-nums}
+.hide{display:none !important}
+.tnum{font-variant-numeric:tabular-nums}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+:focus-visible{outline:none;box-shadow:0 0 0 2px var(--surface),0 0 0 4px var(--pri);border-radius:var(--r)}
+
+*{scrollbar-width:thin;scrollbar-color:var(--scroll) transparent}
+::-webkit-scrollbar{width:10px;height:10px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:var(--scroll);border-radius:0}
+::-webkit-scrollbar-thumb:hover{background:var(--faint)}
+
+/* ---------- motion: a settle, never a bounce, and nothing loops ---------- */
+@keyframes settle{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:none}}
+@keyframes fadeIn{from{opacity:0}to{opacity:1}}
+@keyframes leave{to{opacity:0;transform:translateX(16px)}}
+@media (prefers-reduced-motion:reduce){*{transition:none !important;animation:none !important}}
+
+/* ---------- app shell ---------------------------------------------------- */
+.app{display:flex;flex-direction:column;height:100%}
+.topbar{height:var(--topbar-h);flex:0 0 var(--topbar-h);background:var(--surface);
+  border-bottom:1px solid var(--line);display:flex;align-items:center;gap:13px;padding:0 16px;z-index:70}
+.brand{display:flex;align-items:center;gap:9px;flex:0 0 auto}
+.logo-tile{width:26px;height:26px;background:var(--pri);border-radius:7px;display:flex;
+  align-items:center;justify-content:center;color:#fff;font-weight:700;font-size:9.5px;letter-spacing:.04em}
+.brand .t{font-size:13px;line-height:16px;font-weight:600;letter-spacing:-.01em}
+.brand .s{font-size:11px;line-height:14px;color:var(--muted)}
+.topsep{width:1px;height:22px;background:var(--line);flex:0 0 auto}
+.crumb{display:flex;align-items:center;gap:7px;font-size:12.5px;line-height:16px;color:var(--muted)}
+.crumb b{color:var(--fg);font-weight:600}
+.crumb svg{width:12px;height:12px;opacity:.45}
+.topbar .sp{flex:1 1 auto}
+.icon-btn{position:relative;width:30px;height:30px;border-radius:var(--r);display:flex;
+  align-items:center;justify-content:center;color:var(--muted);background:none;border:0;
+  transition:.14s background,.14s color}
+.icon-btn:hover{background:var(--chip);color:var(--fg)}
+.icon-btn svg{width:15px;height:15px}
+.icon-btn .dot{position:absolute;top:1px;right:-1px;min-width:15px;height:15px;padding:0 3px;
+  border-radius:var(--r-pill);background:var(--pri);color:#fff;font-size:9px;font-weight:700;
+  line-height:15px;box-shadow:0 0 0 2px var(--surface);font-variant-numeric:tabular-nums}
+.user-chip{display:flex;align-items:center;gap:8px;padding:3px 6px 3px 3px;border-radius:var(--r);
+  border:0;background:none;transition:.14s background}
+.user-chip:hover{background:var(--chip)}
+.user-chip .avatar{width:24px;height:24px;border-radius:var(--r);background:var(--pri);color:#fff;
+  font-size:10px;font-weight:600;display:flex;align-items:center;justify-content:center}
+.user-chip .n{font-size:12.5px;line-height:16px;font-weight:500}
+
+/* ---------- controls ----------------------------------------------------- */
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:7px;height:32px;padding:0 12px;
+  border-radius:var(--r);border:1px solid var(--line);background:var(--surface);color:var(--fg);
+  font-size:12.5px;font-weight:500;white-space:nowrap;line-height:1;box-shadow:var(--sh-xs);
+  transition:.14s background,.14s border-color,.14s color,.14s box-shadow}
+.btn svg{flex:none;width:14px;height:14px}
+.btn:hover{background:var(--surface-2);border-color:var(--line-3)}
+.btn:active{background:var(--chip)}
+.btn.pri{background:var(--pri);border-color:var(--pri);color:#fff}
+.btn.pri:hover{background:#0B5EDB;border-color:#0B5EDB}
+.btn.tint{background:var(--pri-fill);border-color:var(--pri-line);color:var(--pri-ink)}
+.btn.tint:hover{background:var(--pri-fill-2)}
+.btn.bare{background:transparent;border-color:transparent;color:var(--fg-2);box-shadow:none}
+.btn.bare:hover{background:var(--chip);color:var(--fg)}
+.btn.sm{height:28px;padding:0 10px;font-size:12px}
+.btn.xs{height:25px;padding:0 9px;font-size:11.5px;gap:5px}
+.btn.xs svg{width:12px;height:12px}
+.btn.ic{width:32px;padding:0}
+.btn.sm.ic{width:28px}
+.btn.xs.ic{width:25px}
+.btn[disabled]{opacity:.42;cursor:not-allowed;pointer-events:none}
+.btn.danger{color:var(--bad)}
+.btn.danger:hover{background:var(--bad-fill);border-color:var(--late-line)}
+
+.search-box{position:relative;background:var(--surface);border:1px solid var(--line);border-radius:var(--r);
+  height:30px;display:flex;align-items:center;padding:0 9px;gap:8px;
+  transition:.14s border-color,.14s box-shadow}
+.search-box:hover{border-color:var(--line-3)}
+.search-box:focus-within{border-color:var(--pri);box-shadow:0 0 0 3px var(--pri-fill)}
+.search-box>svg{color:var(--muted);flex:0 0 auto;width:14px;height:14px}
+.search-box input{border:0;outline:0;font-size:12.5px;line-height:16px;height:16px;color:var(--fg);
+  flex:1;min-width:0;background:transparent}
+.search-box input::placeholder{color:var(--muted)}
+.search-box .kb{font-size:10px;font-weight:500;color:var(--muted);border:1px solid var(--line);
+  border-radius:4px;padding:1px 5px;line-height:13px;flex:0 0 auto;transition:.14s opacity}
+.search-box:focus-within .kb{opacity:0}
+.search-box .clr{display:none;width:16px;height:16px;border:0;background:var(--chip);border-radius:50%;
+  color:var(--muted);align-items:center;justify-content:center;flex:0 0 auto;padding:0}
+.search-box .clr svg{width:9px;height:9px}
+.search-box.has .clr{display:flex}
+.search-box.has .kb{display:none}
+
+/* ---------- shared atoms ------------------------------------------------- */
+/* the monogram. Every avatar is the same grey chip — identity is the letters
+   and the role badge, never a random hue per person. */
+.av{width:32px;height:32px;border-radius:50%;background:var(--chip);color:var(--fg-2);
+  font-size:11px;font-weight:650;letter-spacing:.01em;display:flex;align-items:center;
+  justify-content:center;flex:0 0 auto;border:1px solid var(--line);position:relative}
+.av.sq{border-radius:7px}
+.av.lg{width:38px;height:38px;font-size:12px}
+.av.sm{width:22px;height:22px;font-size:9px}
+.av .pr{position:absolute;right:-1px;bottom:-1px;width:9px;height:9px;border-radius:50%;
+  background:var(--faint);box-shadow:0 0 0 2px var(--surface)}
+.av .pr.on{background:var(--good)}
+.av .pr.away{background:var(--warn)}
+.av-stack{display:flex;flex:0 0 auto}
+.av-stack .av{margin-left:-8px;box-shadow:0 0 0 2px var(--surface)}
+.av-stack .av:first-child{margin-left:0}
+
+/* role badge — the counterparty type. Uppercase micro-caps, hairline, no fill:
+   it is a classification, not a status, so it must not compete with state. */
+.role{flex:0 0 auto;font-size:9px;font-weight:650;letter-spacing:.07em;text-transform:uppercase;
+  color:var(--muted);border:1px solid var(--line);border-radius:3px;padding:0 4px;line-height:14px;
+  background:var(--surface-2);white-space:nowrap}
+.role.acc{color:var(--pri-ink);border-color:var(--pri-line);background:var(--pri-fill)}
+
+/* state pill — carries a load-state triple and nothing else does */
+.spill{display:inline-flex;align-items:center;gap:5px;height:20px;padding:0 7px;border-radius:var(--r-pill);
+  font-size:10.5px;font-weight:650;letter-spacing:.01em;white-space:nowrap;
+  border:1px solid var(--st-line);background:var(--st-fill);color:var(--st-ink)}
+.spill::before{content:"";width:5px;height:5px;border-radius:50%;background:var(--st-ink);flex:0 0 auto}
+[data-st="transit"]{--st-ink:var(--tran-ink);--st-line:var(--tran-line);--st-fill:var(--tran-fill)}
+[data-st="late"]{--st-ink:var(--late-ink);--st-line:var(--late-line);--st-fill:var(--late-fill)}
+[data-st="sent"]{--st-ink:var(--sent-ink);--st-line:var(--sent-line);--st-fill:var(--sent-fill)}
+[data-st="plan"]{--st-ink:var(--plan-ink);--st-line:var(--plan-line);--st-fill:var(--plan-fill)}
+[data-st="delivered"]{--st-ink:var(--deliv-ink);--st-line:var(--deliv-line);--st-fill:var(--deliv-fill)}
+[data-st="hold"]{--st-ink:var(--hold-ink);--st-line:var(--hold-line);--st-fill:var(--hold-fill)}
+[data-st="none"]{--st-ink:var(--muted);--st-line:var(--line);--st-fill:var(--surface-2)}
+
+.dot-sep{color:var(--faint);flex:0 0 auto}
+
+/* ============================================================================
+   THE PANEL
+   ========================================================================= */
+.work{flex:1 1 auto;min-height:0;display:flex;gap:14px;padding:14px;align-items:stretch}
+
+.cpanel{flex:0 0 var(--panel-w);width:var(--panel-w);min-width:0;display:flex;flex-direction:column;
+  background:var(--surface);border:1px solid var(--line);border-radius:var(--r-card);
+  box-shadow:var(--sh-card);overflow:hidden}
+
+/* --- masthead: title, live count, actions ------------------------------- */
+.cp-head{flex:0 0 auto;display:flex;align-items:flex-start;gap:10px;padding:13px 14px 11px}
+.cp-head .ttl{min-width:0;flex:1 1 auto}
+.cp-head h2{font-size:15px;line-height:19px;letter-spacing:-.022em;font-weight:650}
+.cp-head .meta{font-size:11px;line-height:15px;color:var(--muted);margin-top:2px;
+  font-variant-numeric:tabular-nums;display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+.cp-head .meta em{font-style:normal;color:var(--pri-ink);font-weight:600}
+.cp-head .acts{display:flex;align-items:center;gap:6px;flex:0 0 auto}
+
+/* --- tabs: the one tab language in this project --------------------------
+   text only, muted to --pri-ink, a 2px spine sitting on the row hairline. */
+.cp-tabs{flex:0 0 auto;display:flex;align-items:stretch;gap:2px;padding:0 14px;
+  border-bottom:1px solid var(--line);position:relative}
+.cp-tabs button{position:relative;display:flex;align-items:center;gap:7px;height:34px;padding:0 10px;
+  border:0;background:none;font-size:12.5px;line-height:34px;font-weight:500;color:var(--muted);
+  white-space:nowrap;transition:.14s color}
+.cp-tabs button::after{content:"";position:absolute;left:10px;right:10px;bottom:-1px;height:2px;
+  background:var(--pri);opacity:0;transform:scaleX(.6);transform-origin:center;
+  transition:.16s opacity,.16s transform}
+.cp-tabs button:hover{color:var(--fg)}
+.cp-tabs button.on{color:var(--pri-ink);font-weight:600}
+.cp-tabs button.on::after{opacity:1;transform:none}
+.cp-tabs .cnt{font-size:10px;font-weight:650;line-height:15px;min-width:16px;padding:0 4px;
+  border-radius:var(--r-pill);background:var(--chip);color:var(--muted);text-align:center;
+  font-variant-numeric:tabular-nums;transition:.14s background,.14s color}
+.cp-tabs button.on .cnt{background:var(--pri-fill);color:var(--pri-ink)}
+/* An unread/pending count is a READING, not a selection state: it keeps its
+   colour on whichever tab you are standing on. Restate the whole triple —
+   `button.on .cnt` (0,3,1) outranks `.cnt.live` (0,2,0) otherwise. */
+.cp-tabs .cnt.live,.cp-tabs button.on .cnt.live{background:var(--pri);color:#fff}
+.cp-tabs .sp{flex:1 1 auto}
+.cp-tabs .tool{align-self:center;flex:0 0 auto}
+
+/* --- filter band --------------------------------------------------------- */
+.cp-filter{flex:0 0 auto;padding:10px 14px;border-bottom:1px solid var(--line);
+  background:var(--surface-2);display:flex;flex-direction:column;gap:8px}
+.cp-filter .search-box{height:29px}
+.chips{display:flex;align-items:center;gap:5px;flex-wrap:wrap}
+.chip{display:inline-flex;align-items:center;gap:5px;height:23px;padding:0 8px;border-radius:var(--r-pill);
+  border:1px solid transparent;background:none;color:var(--muted);font-size:11.5px;line-height:21px;
+  font-weight:500;white-space:nowrap;transition:.14s background,.14s color,.14s border-color}
+.chip:hover{background:var(--chip);color:var(--fg)}
+.chip.on{background:var(--surface);border-color:var(--line-3);color:var(--fg);font-weight:600;
+  box-shadow:var(--sh-chip)}
+.chip b{font-weight:650;font-variant-numeric:tabular-nums;color:var(--faint)}
+.chip.on b{color:var(--muted)}
+/* when the chips wrap, the link goes to the right edge of the new line, not
+   back to the left margin where it would read as a sixth filter */
+.chips{row-gap:6px}
+.chips .linkbtn{margin-left:auto}
+.av .gl{display:flex}
+.av .gl svg{width:15px;height:15px}
+.av.lg .gl svg{width:17px;height:17px}
+.tping{color:var(--pri-ink);font-weight:550}
+.linkbtn{border:0;background:none;padding:0;font-size:11.5px;line-height:21px;font-weight:550;
+  color:var(--pri-ink);white-space:nowrap}
+.linkbtn:hover{text-decoration:underline}
+.linkbtn[disabled]{color:var(--faint);pointer-events:none}
+
+/* --- the scroller -------------------------------------------------------- */
+.cp-body{flex:1 1 auto;min-height:0;overflow-y:auto;overscroll-behavior:contain}
+.pane{display:none}
+.pane.on{display:block}
+
+/* sticky day divider — the only place the panel uses a grey band */
+.mdiv{position:sticky;top:0;z-index:5;display:flex;align-items:center;gap:8px;
+  padding:6px 14px 5px;background:var(--surface-2);border-bottom:1px solid var(--line-2);
+  font-size:9.5px;font-weight:650;letter-spacing:.09em;text-transform:uppercase;color:var(--muted);
+  line-height:13px}
+.mdiv .n{margin-left:auto;font-weight:600;letter-spacing:.04em;color:var(--faint);
+  font-variant-numeric:tabular-nums}
+.mdiv svg{width:11px;height:11px;opacity:.7}
+
+/* ---------- INBOX ROW ---------------------------------------------------- */
+.conv{position:relative;display:flex;gap:10px;padding:11px 14px 11px 15px;width:100%;
+  border:0;border-bottom:1px solid var(--line-2);background:var(--surface);text-align:left;
+  transition:.12s background}
+/* the state spine: 2px of the thread load state, flush to the panel edge */
+.conv::before{content:"";position:absolute;left:0;top:-1px;bottom:-1px;width:2px;
+  background:var(--st-ink);opacity:0;transition:.14s opacity}
+.conv[data-st]:not([data-st="none"])::before{opacity:.85}
+.conv:hover{background:var(--surface-2)}
+.conv.sel{background:var(--pri-fill)}
+.conv.sel::before{background:var(--pri);opacity:1}
+.conv:last-child{border-bottom:0}
+
+.conv .cmain{min-width:0;flex:1 1 auto;display:flex;flex-direction:column;gap:2px}
+.conv .r1{display:flex;align-items:center;gap:6px;min-width:0}
+.conv .nm{font-size:12.5px;line-height:17px;font-weight:550;letter-spacing:-.011em;color:var(--fg);
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0}
+.conv.unread .nm{font-weight:680}
+.conv .r1 .when{margin-left:auto;flex:0 0 auto;font-size:10.5px;line-height:15px;color:var(--faint);
+  font-variant-numeric:tabular-nums;font-weight:500}
+.conv.unread .r1 .when{color:var(--pri-ink);font-weight:650}
+.conv .r1 svg.mut{width:11px;height:11px;color:var(--faint);flex:0 0 auto}
+
+/* the load line: the single thing that makes this a TMS inbox and not a
+   generic one. Ref in tabular figures, lane after it, both ellipsised. */
+.conv .r2{display:flex;align-items:center;gap:5px;min-width:0;font-size:11px;line-height:15px;
+  color:var(--muted)}
+.conv .r2 .ref{font-weight:650;color:var(--st-ink,var(--fg-2));font-variant-numeric:tabular-nums;
+  flex:0 0 auto;letter-spacing:-.005em}
+.conv .r2 .lane{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0}
+.conv .r2 .lane b{font-weight:500;color:var(--fg-2)}
+
+.conv .r3{display:flex;align-items:flex-start;gap:6px;min-width:0;margin-top:1px}
+.conv .prev{font-size:12px;line-height:16px;color:var(--muted);min-width:0;flex:1 1 auto;
+  overflow:hidden;text-overflow:ellipsis;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}
+.conv.unread .prev{color:var(--fg-2)}
+.conv .prev i{font-style:normal;color:var(--faint);font-weight:550}
+.conv .prev .at{color:var(--pri-ink);font-weight:600;background:var(--pri-fill);border-radius:3px;
+  padding:0 2px}
+.conv .badge{flex:0 0 auto;min-width:17px;height:17px;padding:0 5px;border-radius:var(--r-pill);
+  background:var(--pri);color:#fff;font-size:10px;font-weight:700;line-height:17px;text-align:center;
+  font-variant-numeric:tabular-nums;margin-top:1px}
+.conv.muted .badge{background:var(--chip);color:var(--muted)}
+.conv .tags{display:flex;align-items:center;gap:4px;flex:0 0 auto;margin-top:2px}
+.conv .tags svg{width:12px;height:12px;color:var(--faint)}
+
+/* hover tools — revealed, never resident. Keyboard focus reveals them too. */
+.conv .ctools{position:absolute;right:10px;top:8px;display:flex;align-items:center;gap:2px;
+  padding:2px;border-radius:var(--r);background:var(--surface);border:1px solid var(--line);
+  box-shadow:var(--sh-xs);opacity:0;transform:translateY(-2px);pointer-events:none;
+  transition:.13s opacity,.13s transform}
+.conv:hover .ctools,.conv:focus-visible .ctools,.conv .ctools:focus-within{opacity:1;transform:none;
+  pointer-events:auto}
+.ctool{width:22px;height:22px;border:0;border-radius:4px;background:none;color:var(--muted);
+  display:flex;align-items:center;justify-content:center;transition:.12s background,.12s color;padding:0}
+.ctool svg{width:13px;height:13px}
+.ctool:hover{background:var(--chip);color:var(--fg)}
+.ctool.on{color:var(--pri-ink)}
+.ctool.dg:hover{background:var(--bad-fill);color:var(--bad)}
+
+/* compact drops the row to a two-line read: the preview clamps to one line
+   and the vertical padding halves. Nothing is removed — density is a change
+   of pace, not of information. */
+body[data-density="compact"] .conv{padding-top:7px;padding-bottom:7px}
+body[data-density="compact"] .conv .prev{-webkit-line-clamp:1}
+body[data-density="compact"] .conv .r3{margin-top:0}
+
+/* typing indicator, three dots on the hairline. The only looping animation
+   in the file, and it stops the moment the thread is opened. */
+.typing{display:inline-flex;align-items:center;gap:3px;height:16px;vertical-align:-3px}
+.typing i{width:4px;height:4px;border-radius:50%;background:var(--pri);display:block;
+  animation:tdot 1.2s ease-in-out infinite}
+.typing i:nth-child(2){animation-delay:.16s}
+.typing i:nth-child(3){animation-delay:.32s}
+@keyframes tdot{0%,60%,100%{opacity:.28}30%{opacity:1}}
+
+/* ---------- INVITATION CARD ---------------------------------------------- */
+.invwrap{padding:12px 14px 16px;display:flex;flex-direction:column;gap:10px}
+.inv{position:relative;border:1px solid var(--line);border-radius:var(--r-card);background:var(--surface);
+  box-shadow:var(--sh-card);overflow:hidden;transition:.16s border-color,.16s box-shadow,.16s opacity,
+  .16s transform}
+.inv:hover{border-color:var(--line-3)}
+.inv.going{animation:leave .22s cubic-bezier(.4,0,.7,.2) forwards}
+
+/* identity strip */
+.inv-top{display:flex;gap:10px;padding:12px 13px 10px}
+.inv-id{min-width:0;flex:1 1 auto}
+.inv-nm{display:flex;align-items:center;gap:6px;min-width:0}
+.inv-nm h4{font-size:13px;line-height:17px;font-weight:650;letter-spacing:-.014em;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.inv-sub{font-size:11px;line-height:15px;color:var(--muted);margin-top:1px;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.inv-when{flex:0 0 auto;font-size:10.5px;line-height:15px;color:var(--faint);font-weight:500;
+  font-variant-numeric:tabular-nums;white-space:nowrap}
+
+/* the ask, in the writer's own words */
+.inv-ask{padding:0 13px 10px;font-size:12px;line-height:17px;color:var(--fg-2)}
+.inv-ask .q{display:block;border-left:2px solid var(--line-3);padding:1px 0 1px 9px;color:var(--muted);
+  margin-top:6px;font-size:11.5px;line-height:16px}
+
+/* credentials — the reason this is a card. A 2-col hairline grid; every
+   invitation shows the same four facts in the same two columns, so two
+   carriers can be compared without reading. */
+.inv-facts{display:grid;grid-template-columns:1fr 1fr;gap:0 12px;padding:9px 13px;
+  border-top:1px solid var(--line-2);border-bottom:1px solid var(--line-2);background:var(--surface-2)}
+.inv-facts .f{display:flex;align-items:baseline;gap:6px;min-width:0;padding:1.5px 0}
+.inv-facts .f b{font-size:9.5px;font-weight:650;letter-spacing:.07em;text-transform:uppercase;
+  /* 64px is the widest eyebrow in the set ("AUTHORITY" measures 63). Fixing
+     the column means the values line up across every card, which is how two
+     carriers get compared without reading. */
+  color:var(--faint);line-height:15px;flex:0 0 auto;width:64px;white-space:nowrap}
+.inv-facts .f span{font-size:11.5px;line-height:15px;color:var(--fg-2);font-weight:500;min-width:0;
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-variant-numeric:tabular-nums}
+.inv-facts .f span.good{color:var(--good);font-weight:600}
+.inv-facts .f span.warn{color:var(--warn);font-weight:600}
+
+.inv-acts{display:flex;align-items:center;gap:7px;padding:10px 13px}
+.inv-acts .sp{flex:1 1 auto}
+.inv-acts .note{font-size:10.5px;line-height:14px;color:var(--faint);display:flex;align-items:center;
+  gap:4px}
+.inv-acts .note svg{width:11px;height:11px}
+
+/* a sent invitation is a weaker object: no wash, no credentials block */
+.inv.out{background:var(--surface-2);box-shadow:none}
+.inv.out .inv-top{padding-bottom:8px}
+
+/* section head inside the invitation pane */
+.ihead{display:flex;align-items:center;gap:8px;padding:2px 1px 0;font-size:9.5px;font-weight:650;
+  letter-spacing:.09em;text-transform:uppercase;color:var(--muted);line-height:14px}
+.ihead .n{background:var(--chip);color:var(--muted);border-radius:var(--r-pill);padding:0 5px;
+  font-size:9.5px;line-height:14px;letter-spacing:.04em;font-variant-numeric:tabular-nums}
+.ihead .rule{flex:1 1 auto;height:1px;background:var(--line-2)}
+
+/* ---------- empty states ------------------------------------------------- */
+.empty{display:flex;flex-direction:column;align-items:center;text-align:center;gap:3px;
+  padding:52px 30px 56px;animation:fadeIn .2s both}
+.empty .gl{width:34px;height:34px;border-radius:9px;background:var(--surface-2);
+  border:1px solid var(--line);display:flex;align-items:center;justify-content:center;
+  color:var(--faint);margin-bottom:8px}
+.empty .gl svg{width:16px;height:16px}
+.empty h4{font-size:12.5px;line-height:17px;font-weight:600}
+.empty p{font-size:11.5px;line-height:16px;color:var(--muted);max-width:216px}
+.empty .btn{margin-top:10px}
+
+/* ---------- panel footer ------------------------------------------------- */
+.cp-foot{flex:0 0 auto;display:flex;align-items:center;gap:8px;padding:8px 12px;
+  border-top:1px solid var(--line);background:var(--surface-2);font-size:11px;line-height:15px;
+  color:var(--muted)}
+.cp-foot .sp{flex:1 1 auto}
+.cp-foot kbd{background:var(--surface)}
+.cp-foot .k{display:flex;align-items:center;gap:4px}
+
+/* ============================================================================
+   THREAD PANE — context for the panel, same system
+   ========================================================================= */
+.thread{flex:1 1 auto;min-width:0;display:flex;flex-direction:column;background:var(--surface);
+  border:1px solid var(--line);border-radius:var(--r-card);box-shadow:var(--sh-card);overflow:hidden}
+
+.th-head{flex:0 0 auto;display:flex;align-items:center;gap:11px;padding:11px 14px;
+  border-bottom:1px solid var(--line)}
+.th-head .id{min-width:0;flex:1 1 auto}
+.th-head h3{font-size:14px;line-height:18px;font-weight:650;letter-spacing:-.018em;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.th-head .sub{font-size:11px;line-height:15px;color:var(--muted);margin-top:1px;display:flex;
+  align-items:center;gap:6px;flex-wrap:wrap}
+.th-head .acts{display:flex;align-items:center;gap:6px;flex:0 0 auto}
+
+/* the load strip: what this conversation is actually about */
+.th-load{flex:0 0 auto;display:flex;align-items:stretch;gap:0;padding:0;background:var(--surface-2);
+  border-bottom:1px solid var(--line);overflow-x:auto}
+.th-load .cell{padding:8px 14px;border-right:1px solid var(--line-2);min-width:0;flex:0 0 auto}
+.th-load .cell:last-child{border-right:0}
+.th-load .cell.grow{flex:1 1 auto}
+.th-load .k{font-size:9.5px;font-weight:650;letter-spacing:.08em;text-transform:uppercase;
+  color:var(--faint);line-height:13px}
+.th-load .v{font-size:12px;line-height:17px;font-weight:600;color:var(--fg);margin-top:1px;
+  font-variant-numeric:tabular-nums;white-space:nowrap}
+.th-load .v.mut{font-weight:500;color:var(--fg-2)}
+.th-load .cell.act{margin-left:auto;display:flex;align-items:center;gap:7px;padding-right:12px}
+
+.th-body{flex:1 1 auto;min-height:0;overflow-y:auto;padding:16px 18px 18px;background:var(--bg-2)}
+:root[data-theme="dark"] .th-body{background:var(--bg-2)}
+
+/* day rule — editorial: a hairline through a centred label, no pill */
+.drule{display:flex;align-items:center;gap:10px;margin:14px 0 12px}
+.drule:first-child{margin-top:0}
+.drule .r{flex:1 1 auto;height:1px;background:var(--line)}
+.drule span{font-size:9.5px;font-weight:650;letter-spacing:.09em;text-transform:uppercase;
+  color:var(--muted);line-height:13px;flex:0 0 auto}
+
+/* a system event is not a message: it gets no plane, only a rule and a glyph */
+.sysev{display:flex;align-items:center;gap:8px;margin:10px 0;font-size:11px;line-height:15px;
+  color:var(--muted)}
+.sysev .ic{width:18px;height:18px;border-radius:5px;background:var(--surface);border:1px solid var(--line);
+  display:flex;align-items:center;justify-content:center;color:var(--muted);flex:0 0 auto}
+.sysev .ic svg{width:10px;height:10px}
+.sysev b{font-weight:600;color:var(--fg-2)}
+.sysev .t{margin-left:auto;font-size:10.5px;color:var(--faint);font-variant-numeric:tabular-nums;
+  flex:0 0 auto}
+.sysev .r{flex:1 1 auto;height:1px;background:var(--line)}
+
+.msg{display:flex;gap:9px;margin-bottom:12px;animation:settle .2s both}
+.msg .bub{max-width:min(560px,74%);min-width:0}
+.msg .mh{display:flex;align-items:baseline;gap:7px;margin-bottom:3px}
+.msg .mh .n{font-size:11.5px;line-height:15px;font-weight:650;letter-spacing:-.01em}
+.msg .mh .rl{font-size:10px;line-height:14px;color:var(--faint);font-weight:550;
+  letter-spacing:.04em;text-transform:uppercase}
+.msg .mh .t{font-size:10.5px;line-height:14px;color:var(--faint);font-variant-numeric:tabular-nums}
+.msg .tx{font-size:12.5px;line-height:18px;color:var(--fg-2);background:var(--surface);
+  border:1px solid var(--line);border-radius:3px 9px 9px 9px;padding:8px 11px;
+  box-shadow:var(--sh-chip);white-space:pre-wrap;overflow-wrap:anywhere}
+.msg.me{flex-direction:row-reverse}
+.msg.me .mh{flex-direction:row-reverse}
+.msg.me .tx{background:var(--pri-fill);border-color:var(--pri-line);color:var(--fg);
+  border-radius:9px 3px 9px 9px}
+:root[data-theme="dark"] .msg.me .tx{color:var(--fg)}
+.msg .tx .at{color:var(--pri-ink);font-weight:600}
+/* consecutive messages from one person drop the header and square the corner */
+.msg.cont{margin-top:-8px}
+.msg.cont .av{visibility:hidden}
+.msg.cont .tx{border-radius:9px}
+.msg .rd{font-size:10px;line-height:14px;color:var(--faint);margin-top:3px;display:flex;
+  align-items:center;gap:4px;font-variant-numeric:tabular-nums}
+.msg.me .rd{justify-content:flex-end}
+.msg .rd svg{width:11px;height:11px}
+.msg .rd.seen{color:var(--pri-ink)}
+
+/* an attachment is a document row, not a thumbnail: in a TMS it is a rate con
+   or a BOL and the filename is the content */
+.att{display:flex;align-items:center;gap:9px;margin-top:6px;padding:7px 9px;background:var(--surface);
+  border:1px solid var(--line);border-radius:7px;transition:.14s border-color,.14s background}
+.att:hover{border-color:var(--line-3);background:var(--surface-2)}
+.att .ic{width:26px;height:26px;border-radius:5px;background:var(--chip);color:var(--fg-2);
+  display:flex;align-items:center;justify-content:center;flex:0 0 auto}
+.att .ic svg{width:13px;height:13px}
+.att .m{min-width:0;flex:1 1 auto}
+.att .fn{font-size:11.5px;line-height:15px;font-weight:600;white-space:nowrap;overflow:hidden;
+  text-overflow:ellipsis}
+.att .fs{font-size:10.5px;line-height:14px;color:var(--faint);font-variant-numeric:tabular-nums}
+.att .dl{flex:0 0 auto}
+
+/* --- composer ------------------------------------------------------------ */
+.comp{flex:0 0 auto;border-top:1px solid var(--line);background:var(--surface);padding:10px 14px 11px}
+.comp .box{border:1px solid var(--line);border-radius:9px;background:var(--surface);
+  transition:.14s border-color,.14s box-shadow}
+.comp .box:focus-within{border-color:var(--pri);box-shadow:0 0 0 3px var(--pri-fill)}
+.comp textarea{width:100%;border:0;outline:0;resize:none;background:transparent;padding:9px 11px 4px;
+  font-size:12.5px;line-height:18px;color:var(--fg);max-height:132px;min-height:32px;display:block}
+.comp textarea::placeholder{color:var(--muted)}
+.comp .bar{display:flex;align-items:center;gap:4px;padding:4px 7px 6px 7px}
+.comp .bar .sp{flex:1 1 auto}
+.comp .hint{font-size:10.5px;line-height:14px;color:var(--faint);margin-right:6px}
+.comp .hint kbd{margin:0 1px}
+
+/* quick replies — canned dispatcher lines, the thing that actually gets used */
+.qr{display:flex;align-items:center;gap:5px;margin-bottom:8px;flex-wrap:wrap}
+.qr button{height:24px;padding:0 9px;border-radius:var(--r-pill);border:1px solid var(--line);
+  background:var(--surface-2);color:var(--fg-2);font-size:11.5px;line-height:22px;font-weight:500;
+  white-space:nowrap;transition:.14s background,.14s border-color,.14s color}
+.qr button:hover{background:var(--pri-fill);border-color:var(--pri-line);color:var(--pri-ink)}
+
+/* --- thread empty state -------------------------------------------------- */
+.th-none{flex:1 1 auto;display:flex;flex-direction:column;align-items:center;justify-content:center;
+  gap:4px;text-align:center;padding:40px;background:var(--bg-2)}
+.th-none .gl{width:42px;height:42px;border-radius:11px;background:var(--surface);
+  border:1px solid var(--line);display:flex;align-items:center;justify-content:center;
+  color:var(--faint);margin-bottom:10px;box-shadow:var(--sh-card)}
+.th-none .gl svg{width:19px;height:19px}
+.th-none h3{font-size:13.5px;line-height:18px}
+.th-none p{font-size:12px;line-height:17px;color:var(--muted);max-width:280px}
+
+/* ---------- menu --------------------------------------------------------- */
+.menu{position:fixed;z-index:400;min-width:184px;padding:4px;background:var(--surface);
+  border:1px solid var(--line);border-radius:var(--r-menu);box-shadow:var(--sh-menu);
+  display:none;animation:settle .13s both}
+.menu.show{display:block}
+.menu button{display:flex;align-items:center;gap:9px;width:100%;height:28px;padding:0 8px;border:0;
+  border-radius:5px;background:none;color:var(--fg-2);font-size:12px;line-height:28px;font-weight:500;
+  text-align:left;transition:.12s background,.12s color}
+.menu button:hover{background:var(--chip);color:var(--fg)}
+.menu button svg{width:13px;height:13px;flex:0 0 auto;color:var(--muted)}
+.menu button:hover svg{color:var(--fg-2)}
+.menu button.dg{color:var(--bad)}
+.menu button.dg svg{color:var(--bad)}
+.menu button.dg:hover{background:var(--bad-fill)}
+.menu .sep{height:1px;background:var(--line-2);margin:4px 0}
+.menu .lab{font-size:9.5px;font-weight:650;letter-spacing:.08em;text-transform:uppercase;
+  color:var(--faint);padding:5px 8px 3px;line-height:13px}
+.menu button .tick{margin-left:auto;color:var(--pri-ink);opacity:0}
+.menu button.on .tick{opacity:1}
+.menu button.on{color:var(--fg);font-weight:600}
+
+/* ---------- toast -------------------------------------------------------- */
+.toast{position:fixed;left:50%;bottom:22px;transform:translate(-50%,10px);z-index:500;
+  background:var(--toast-bg);color:var(--toast-ink);font-size:12.5px;line-height:18px;font-weight:450;
+  padding:9px 10px 9px 14px;border-radius:8px;box-shadow:var(--sh-menu);opacity:0;pointer-events:none;
+  transition:.2s opacity,.2s transform;display:flex;align-items:center;gap:12px;max-width:min(560px,92vw)}
+.toast.show{opacity:1;transform:translate(-50%,0);pointer-events:auto}
+.toast b{font-weight:650}
+.toast .undo{border:1px solid rgba(255,255,255,.24);background:transparent;color:inherit;
+  font-size:11.5px;font-weight:550;height:24px;padding:0 9px;border-radius:5px;transition:.14s background}
+:root[data-theme="dark"] .toast .undo{border-color:rgba(17,20,28,.24)}
+.toast .undo:hover{background:rgba(255,255,255,.14)}
+:root[data-theme="dark"] .toast .undo:hover{background:rgba(17,20,28,.1)}
+
+/* ---------- responsive --------------------------------------------------- */
+@media (max-width:1080px){
+  :root{--panel-w:356px}
+  .th-load .cell.hideable{display:none}
+}
+@media (max-width:860px){
+  .work{padding:0;gap:0}
+  .cpanel{flex:1 1 auto;width:auto;border-radius:0;border-width:0 1px 0 0}
+  .thread{display:none}
+  body[data-open="1"] .cpanel{display:none}
+  body[data-open="1"] .thread{display:flex;border-radius:0;border-width:0}
+  .th-back{display:inline-flex !important}
+}
+.th-back{display:none}
+</style>
+</head>
+<body>
+<div class="app">
+
+  <!-- ===================== top bar ===================== -->
+  <header class="topbar">
+    <div class="brand">
+      <div class="logo-tile">DP</div>
+      <div>
+        <div class="t">Dispatch Pro</div>
+        <div class="s">Ridgeline Carrier Group</div>
+      </div>
+    </div>
+    <div class="topsep"></div>
+    <nav class="crumb">
+      <span>Operations</span>
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg>
+      <b>Messages</b>
+    </nav>
+    <div class="sp"></div>
+    <button class="icon-btn" id="btnTheme" title="Toggle theme" aria-label="Toggle theme"></button>
+    <button class="icon-btn" title="Notifications" aria-label="Notifications">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/><path d="M21 18H3l1.6-2.2a4 4 0 0 0 .77-2.36V10a6.63 6.63 0 0 1 13.26 0v3.44a4 4 0 0 0 .77 2.36Z"/></svg>
+      <span class="dot tnum" id="topCount">0</span>
+    </button>
+    <div class="topsep"></div>
+    <button class="user-chip">
+      <span class="avatar">RK</span>
+      <span class="n">R. Keller</span>
+      <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="color:var(--muted)"><path d="m6 9 6 6 6-6"/></svg>
+    </button>
+  </header>
+
+  <!-- ===================== work area ===================== -->
+  <div class="work">
+
+    <!-- ============ THE PANEL ============ -->
+    <section class="cpanel" id="panel" aria-label="Chat inbox">
+      <div class="cp-head">
+        <div class="ttl">
+          <h2>Messages</h2>
+          <div class="meta" id="headMeta"></div>
+        </div>
+        <div class="acts">
+          <button class="btn sm ic bare" id="btnPanelMenu" title="Panel options" aria-label="Panel options"></button>
+          <button class="btn sm pri" id="btnCompose" title="New message">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></svg>
+            New
+          </button>
+        </div>
+      </div>
+
+      <div class="cp-tabs" role="tablist" id="tabs">
+        <button role="tab" data-tab="inbox" class="on" aria-selected="true">
+          Inbox <span class="cnt tnum" id="cntInbox">0</span>
+        </button>
+        <button role="tab" data-tab="inv" aria-selected="false">
+          Invitations <span class="cnt tnum" id="cntInv">0</span>
+        </button>
+        <div class="sp"></div>
+        <button class="btn xs ic bare tool" id="btnSort" title="Sort and display" aria-label="Sort and display"></button>
+      </div>
+
+      <div class="cp-filter">
+        <label class="search-box" id="sbox">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.2-3.2"/></svg>
+          <input id="q" placeholder="Search people, loads, messages" autocomplete="off" aria-label="Search messages">
+          <span class="kb">/</span>
+          <button class="clr" id="qClear" title="Clear" aria-label="Clear search">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><path d="M18 6 6 18M6 6l12 12"/></svg>
+          </button>
+        </label>
+        <div class="chips" id="chips"></div>
+      </div>
+
+      <div class="cp-body" id="body">
+        <div class="pane on" id="paneInbox" role="tabpanel"></div>
+        <div class="pane" id="paneInv" role="tabpanel"></div>
+      </div>
+
+      <div class="cp-foot" id="cpFoot"></div>
+    </section>
+
+    <!-- ============ THREAD PANE ============ -->
+    <section class="thread" id="thread" aria-label="Conversation"></section>
+  </div>
+</div>
+
+<div class="menu" id="menu" role="menu"></div>
+<div class="toast" id="toast" role="status" aria-live="polite">
+  <span id="toastMsg"></span>
+  <button class="undo" id="toastUndo">Undo</button>
+</div>
+
+<script>
+"use strict";
+/* ============================================================================
+   1. ICONS — one stroke weight, one corner language, drawn at 24 and scaled
+   ========================================================================= */
+const svg = (d,w) => '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="'+(w||1.8)+
+  '" stroke-linecap="round" stroke-linejoin="round">'+d+'</svg>';
+const I = {
+  pin:      svg('<path d="M12 17v5"/><path d="M9 3h6l-1 6 3 3v2H7v-2l3-3-1-6Z"/>'),
+  pinOff:   svg('<path d="m2 2 20 20"/><path d="M12 17v5"/><path d="M15 3H9l1 6-3 3v2h8"/>'),
+  mute:     svg('<path d="m2 2 20 20"/><path d="M18.6 13.4A4 4 0 0 0 19 12V10a7 7 0 0 0-10-6.3"/><path d="M5.4 5.4A7 7 0 0 0 5 10v3.4L3 16h13"/><path d="M10.3 20a1.94 1.94 0 0 0 3.4 0"/>'),
+  bell:     svg('<path d="M10.3 20a1.94 1.94 0 0 0 3.4 0"/><path d="M19 16H5l1.2-1.8A3 3 0 0 0 6.7 12.5V10a5.3 5.3 0 0 1 10.6 0v2.5c0 .6.2 1.2.5 1.7Z"/>'),
+  archive:  svg('<rect x="3" y="4" width="18" height="4" rx="1.4"/><path d="M5 8v10a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8"/><path d="M10 12h4"/>'),
+  read:     svg('<path d="m3 12 4.5 4.5L14 8"/><path d="m13 16.5 1.5 1.5L21 9.5"/>',2),
+  unread:   svg('<circle cx="12" cy="12" r="5"/>',2.4),
+  more:     svg('<circle cx="5" cy="12" r="1.3" fill="currentColor"/><circle cx="12" cy="12" r="1.3" fill="currentColor"/><circle cx="19" cy="12" r="1.3" fill="currentColor"/>',0),
+  sliders:  svg('<path d="M4 6h10M18 6h2M4 12h4M12 12h8M4 18h10M18 18h2"/><circle cx="16" cy="6" r="2"/><circle cx="10" cy="12" r="2"/><circle cx="16" cy="18" r="2"/>'),
+  clip:     svg('<path d="M20 11.5 12.2 19.3a4.5 4.5 0 0 1-6.4-6.4l8.5-8.5a3 3 0 0 1 4.3 4.3l-8.5 8.5a1.5 1.5 0 0 1-2.2-2.2l7.8-7.8"/>'),
+  send:     svg('<path d="M4 12 20 4l-4.5 16-3.6-6.2L4 12Z"/><path d="m11.9 13.8 3.6-6"/>'),
+  truck:    svg('<path d="M3 6h11v10H3z"/><path d="M14 9h3.6l2.4 3v4h-6"/><circle cx="7" cy="18" r="1.8"/><circle cx="17" cy="18" r="1.8"/>'),
+  users:    svg('<circle cx="9" cy="8" r="3.2"/><path d="M3.5 19a5.5 5.5 0 0 1 11 0"/><path d="M16 5.2a3.2 3.2 0 0 1 0 5.6"/><path d="M17.5 13.6A5.5 5.5 0 0 1 20.5 19"/>'),
+  at:       svg('<circle cx="12" cy="12" r="4"/><path d="M16 8v5a2.6 2.6 0 0 0 5 0v-1a9 9 0 1 0-3.6 7.2"/>'),
+  inbox:    svg('<path d="M3 13h5l1.4 2.6h5.2L16 13h5"/><path d="M5.2 5h13.6l2.2 8v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4Z"/>'),
+  mail:     svg('<rect x="3" y="5" width="18" height="14" rx="2"/><path d="m3.6 6.6 8.4 6 8.4-6"/>'),
+  hand:     svg('<path d="M9 11V4.6a1.6 1.6 0 0 1 3.2 0V11"/><path d="M12.2 11V6.2a1.6 1.6 0 0 1 3.2 0V11"/><path d="M15.4 11.4V8.6a1.6 1.6 0 0 1 3.2 0V15a6 6 0 0 1-6 6h-1a5 5 0 0 1-4.3-2.5L5 14.4a1.6 1.6 0 0 1 2.6-1.9L9 14.2V11"/>'),
+  check:    svg('<path d="m5 12.5 4.5 4.5L19 7"/>',2.4),
+  x:        svg('<path d="M18 6 6 18M6 6l12 12"/>',2.2),
+  doc:      svg('<path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8Z"/><path d="M14 3v5h5"/>'),
+  dl:       svg('<path d="M12 4v10"/><path d="m8 11 4 4 4-4"/><path d="M5 19h14"/>'),
+  shield:   svg('<path d="M12 3 5 6v5.5c0 4.2 2.9 8 7 9.5 4.1-1.5 7-5.3 7-9.5V6Z"/><path d="m9.2 12 2 2 3.6-3.8"/>'),
+  clock:    svg('<circle cx="12" cy="12" r="8.5"/><path d="M12 7.2V12l3 1.8"/>'),
+  info:     svg('<circle cx="12" cy="12" r="8.5"/><path d="M12 11v5"/><path d="M12 8h.01"/>'),
+  alert:    svg('<path d="M12 4.5 2.8 20h18.4Z"/><path d="M12 10v4"/><path d="M12 17h.01"/>'),
+  sun:      svg('<circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/>'),
+  moon:     svg('<path d="M20 14.5A8.5 8.5 0 0 1 9.5 4 8.5 8.5 0 1 0 20 14.5Z"/>'),
+  back:     svg('<path d="M19 12H5"/><path d="m11 6-6 6 6 6"/>'),
+  building: svg('<path d="M4 21V5a2 2 0 0 1 2-2h7a2 2 0 0 1 2 2v16"/><path d="M15 9h3a2 2 0 0 1 2 2v10"/><path d="M8 7h3M8 11h3M8 15h3"/><path d="M2.5 21h19"/>'),
+  route:    svg('<circle cx="6" cy="6" r="2.5"/><circle cx="18" cy="18" r="2.5"/><path d="M8.5 6H14a3.5 3.5 0 0 1 0 7h-4a3.5 3.5 0 0 0 0 7h5.5"/>'),
+  eye:      svg('<path d="M2.5 12S6 5.8 12 5.8 21.5 12 21.5 12 18 18.2 12 18.2 2.5 12 2.5 12Z"/><circle cx="12" cy="12" r="3"/>'),
+  flag:     svg('<path d="M5 21V4"/><path d="M5 5h11l-1.6 3.4L16 12H5"/>'),
+  plus:     svg('<path d="M12 5v14M5 12h14"/>',2),
+  trash:    svg('<path d="M4 7h16"/><path d="M9 7V5h6v2"/><path d="M6.5 7 7.4 20h9.2L17.5 7"/><path d="M10 11v6M14 11v6"/>'),
+  dblchk:   svg('<path d="m2 12 4.5 4.5L13 8"/><path d="m12 16.5 1.5 1.5L20 9.5"/>',2)
+};
+
+/* ============================================================================
+   2. DATA
+   A TMS conversation is never just between two people — it is about a load.
+   Every thread therefore carries a ref, a lane and the load's state, and that
+   state is what tints the row spine and the thread pill.
+   ========================================================================= */
+const ME = "R. Keller";
+const NOW = new Date(2026, 8, 21, 16, 42);   /* fixed clock: the demo is stable */
+
+const mins = m => new Date(NOW.getTime() - m * 60000);
+
+const THREADS = [
+  {
+    id:"t1", name:"Marcus Hale", role:"Driver", sub:"Unit 4412 · Reefer",
+    ref:"LD-48213", lane:"Montello, WI → Elkhart, IN", st:"late",
+    load:{pickup:"Sep 20, 08:00", drop:"Sep 21, 14:00", miles:"312", rate:"$1,840", eq:"53' Reefer", temp:"34°F"},
+    pinned:true, muted:false, unread:2, tags:["alert"],
+    msgs:[
+      {k:"sys", ic:"truck", tx:"<b>Marcus Hale</b> accepted the load", t:mins(1640)},
+      {k:"m", who:"Marcus Hale", role:"Driver", tx:"Loaded and rolling out of Montello. Seal 884102, temp set to 34.", t:mins(1602)},
+      {k:"m", who:ME, me:true, tx:"Copy. Receiver window at Elkhart is 12:00–14:00, don't be early — they will turn you away.", t:mins(1588), seen:true},
+      {k:"sys", ic:"clock", tx:"Detention clock started at <b>Elkhart DC</b>", t:mins(96)},
+      {k:"m", who:"Marcus Hale", role:"Driver", tx:"I-94 is shut down at mile 38, they are routing everyone through 12. Going to be about 90 minutes late to Elkhart.", t:mins(64)},
+      {k:"m", who:"Marcus Hale", role:"Driver", tx:"Also I am at 1:15 on my clock. If they hold me at the dock I will have to take my ten there.", t:mins(58)}
+    ]
+  },
+  {
+    id:"t2", name:"Kendall Freight Systems", role:"Carrier", sub:"MC 742118 · 24 power units", corp:true,
+    ref:"LD-48260", lane:"Green Bay, WI → Columbus, OH", st:"sent",
+    load:{pickup:"Sep 22, 06:00", drop:"Sep 23, 11:00", miles:"548", rate:"$2,310", eq:"53' Dry Van", temp:"—"},
+    pinned:true, muted:false, unread:1, tags:["clip"],
+    msgs:[
+      {k:"m", who:ME, me:true, tx:"Sending the rate confirmation for 48260. Please sign and return before 18:00 so I can release the pickup number.", t:mins(220), seen:true,
+        att:{name:"RateCon-LD48260.pdf", size:"148 KB"}},
+      {k:"m", who:"Erik Lund", role:"Carrier", tx:"Received. One correction — our MC on the packet is 742118, the con has 742181. Can you reissue?", t:mins(38)}
+    ]
+  },
+  {
+    id:"t3", name:"Load 48213 · Ops", role:"Group", sub:"5 participants", group:true,
+    ref:"LD-48213", lane:"Montello, WI → Elkhart, IN", st:"late",
+    load:{pickup:"Sep 20, 08:00", drop:"Sep 21, 14:00", miles:"312", rate:"$1,840", eq:"53' Reefer", temp:"34°F"},
+    pinned:false, muted:false, unread:3, mention:true, typing:true, typingWho:"Priya", tags:["users"],
+    msgs:[
+      {k:"m", who:"Priya Raman", role:"Dispatch", tx:"Elkhart just called, they are asking who is covering the late arrival on 48213.", t:mins(54)},
+      {k:"m", who:"Sam Ortega", role:"Safety", tx:"Driver has 1:15 left. If detention runs past 17:30 this becomes a HOS violation, not a service failure.", t:mins(48)},
+      {k:"m", who:"Priya Raman", role:"Dispatch", tx:"@R. Keller can you get the customer to hold the door? Otherwise we reschedule for 06:00.", t:mins(41)}
+    ]
+  },
+  {
+    id:"t4", name:"Olivia Brandt", role:"Broker", sub:"Ridgeline Logistics",
+    ref:"LD-48301", lane:"Chicago, IL → Nashville, TN", st:"plan",
+    load:{pickup:"Sep 23, 14:00", drop:"Sep 24, 09:00", miles:"471", rate:"$1,975", eq:"53' Dry Van", temp:"—"},
+    pinned:false, muted:false, unread:0,
+    msgs:[
+      {k:"m", who:"Olivia Brandt", role:"Broker", tx:"I have three more out of Chicago next week if 48301 runs clean. Same lane, same rate.", t:mins(305)},
+      {k:"m", who:ME, me:true, tx:"Noted. Let me see how the Nashville receiver handles us on Thursday and I will commit to the rest Friday.", t:mins(288), seen:true}
+    ]
+  },
+  {
+    id:"t5", name:"Terrell Okafor", role:"Driver", sub:"Unit 3187 · Flatbed",
+    ref:"LD-48244", lane:"Gary, IN → Toledo, OH", st:"transit",
+    load:{pickup:"Sep 21, 05:30", drop:"Sep 21, 19:00", miles:"186", rate:"$960", eq:"48' Flatbed", temp:"—"},
+    pinned:false, muted:false, unread:0,
+    msgs:[
+      {k:"m", who:"Terrell Okafor", role:"Driver", tx:"Straps checked at the Gary scale, all good. ETA Toledo 18:20.", t:mins(140)},
+      {k:"m", who:ME, me:true, tx:"Perfect. Send me a photo of the tarp once you are off the ramp.", t:mins(133), seen:true},
+      {k:"m", who:"Terrell Okafor", role:"Driver", tx:"Will do.", t:mins(130)}
+    ]
+  },
+  {
+    id:"t6", name:"Dana Whitfield", role:"Customer", sub:"Aurora Foods · Accounts",
+    ref:"LD-48155", lane:"Madison, WI → Peoria, IL", st:"delivered",
+    load:{pickup:"Sep 18, 07:00", drop:"Sep 18, 16:30", miles:"228", rate:"$1,120", eq:"53' Reefer", temp:"36°F"},
+    pinned:false, muted:false, unread:0, tags:["clip"],
+    msgs:[
+      {k:"sys", ic:"check", tx:"Load <b>LD-48155</b> delivered · POD uploaded", t:mins(4380)},
+      {k:"m", who:"Dana Whitfield", role:"Customer", tx:"POD looks right, thank you. Invoice can go to AP with the usual net-30.", t:mins(1290),
+        att:{name:"POD-48155-signed.pdf", size:"612 KB"}},
+      {k:"m", who:ME, me:true, tx:"Invoiced this morning. Appreciate the quick turn on the signature.", t:mins(1240), seen:true}
+    ]
+  },
+  {
+    id:"t7", name:"Priya Raman", role:"Dispatch", sub:"Midwest desk",
+    ref:"", lane:"", st:"none",
+    pinned:false, muted:true, unread:0,
+    msgs:[
+      {k:"m", who:"Priya Raman", role:"Dispatch", tx:"Covering your board from 18:00. Anything I should watch besides 48213?", t:mins(2900)},
+      {k:"m", who:ME, me:true, tx:"Just 48213 and the Kendall rate con. Everything else is quiet.", t:mins(2880), seen:true}
+    ]
+  },
+  {
+    id:"t8", name:"Elkhart DC — Receiving", role:"Receiver", sub:"Dock 12 · 24h", corp:true,
+    ref:"LD-48213", lane:"Montello, WI → Elkhart, IN", st:"late",
+    load:{pickup:"Sep 20, 08:00", drop:"Sep 21, 14:00", miles:"312", rate:"$1,840", eq:"53' Reefer", temp:"34°F"},
+    pinned:false, muted:false, unread:0,
+    msgs:[
+      {k:"m", who:"Elkhart DC", role:"Receiver", tx:"Appointment 48213 is on the board for 12:00. After 15:00 we cannot receive reefer without a supervisor.", t:mins(520)},
+      {k:"m", who:ME, me:true, tx:"Understood. I will call the moment I know whether we can make the window.", t:mins(505), seen:true}
+    ]
+  },
+  {
+    id:"t9", name:"Novak Carriers", role:"Carrier", sub:"MC 918440 · 8 power units", corp:true,
+    ref:"LD-48188", lane:"Rockford, IL → Des Moines, IA", st:"hold",
+    load:{pickup:"Sep 22, 09:00", drop:"Sep 22, 21:00", miles:"334", rate:"$1,410", eq:"53' Dry Van", temp:"—"},
+    pinned:false, muted:false, unread:0, tags:["alert"],
+    msgs:[
+      {k:"sys", ic:"alert", tx:"Load placed <b>on hold</b> — insurance certificate expired", t:mins(760)},
+      {k:"m", who:"Novak Carriers", role:"Carrier", tx:"New COI is with our agent, should land this afternoon. Can you hold the load until then?", t:mins(700)},
+      {k:"m", who:ME, me:true, tx:"I can hold until 17:00 today. After that it goes back on the board.", t:mins(690), seen:true}
+    ]
+  }
+];
+
+/* --- invitations. Two directions: received (decide) and sent (withdraw). --- */
+const INVITES = [
+  {
+    id:"i1", dir:"in", name:"Halden Cold Chain", role:"Carrier", corp:true,
+    sub:"Reefer authority · Milwaukee, WI",
+    ask:"Requesting access to your <b>reefer lane board</b> out of Wisconsin.",
+    quote:"We run four reefers out of Milwaukee daily and have capacity Thu–Sat. Happy to start on a trial lane.",
+    by:"Erik Halden, Dispatch Manager", when:"2h ago",
+    facts:[["MC","742118"],["DOT","2184770",""],["Authority","Active 6 yrs","good"],["Lanes","12 shared"]]
+  },
+  {
+    id:"i2", dir:"in", name:"Olivia Brandt", role:"Broker",
+    sub:"Ridgeline Logistics · Chicago, IL",
+    ask:"Invited you to the load thread for <b>LD-48301</b>.",
+    quote:"Adding you so the shipper can talk to you directly instead of going through me every time.",
+    by:"Olivia Brandt", when:"5h ago",
+    facts:[["Loads","38 together"],["On-time","96.4%","good"],["Since","Mar 2024"],["Thread","4 people"]]
+  },
+  {
+    id:"i3", dir:"in", name:"Terrell Okafor", role:"Driver",
+    sub:"Unit 3187 · Flatbed",
+    ask:"Requesting to join the <b>Midwest Drivers</b> channel.",
+    quote:"Would like to see the lane chatter so I can pre-plan my resets.",
+    by:"Terrell Okafor", when:"Yesterday",
+    facts:[["Employee","Since 2023"],["Safety","No events","good"],["Fleet","Midwest"],["Channel","31 members"]]
+  },
+  {
+    id:"i4", dir:"in", name:"Vantage Freight Brokers", role:"Broker", corp:true,
+    sub:"Unverified · Dallas, TX",
+    ask:"Wants to connect and send you <b>spot quotes</b>.",
+    quote:"Cover our overflow out of DFW. We pay quick-pay at 2%.",
+    by:"D. Marsh, Carrier Sales", when:"Yesterday",
+    facts:[["MC","1194302"],["DOT","Not found","warn"],["Credit","62 / 100","warn"],["Lanes","none shared"]]
+  },
+  {
+    id:"i5", dir:"out", name:"Aurora Foods", role:"Shipper", corp:true,
+    sub:"Peoria, IL · Customer portal",
+    ask:"You invited their receiving team to <b>LD-48155</b> documents.",
+    by:"Sent by you", when:"2 days ago", facts:[]
+  },
+  {
+    id:"i6", dir:"out", name:"Sam Ortega", role:"Safety",
+    sub:"Compliance · Internal",
+    ask:"You invited Sam to the <b>Load 48213 · Ops</b> channel.",
+    by:"Sent by you", when:"3 days ago", facts:[]
+  }
+];
+</script>
+<script>
+/* ============================================================================
+   3. STATE + HELPERS
+   ========================================================================= */
+const $  = (s,r) => (r||document).querySelector(s);
+const $$ = (s,r) => Array.from((r||document).querySelectorAll(s));
+const esc = s => String(s).replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+
+const LS = {
+  get(k,d){ try{ const v = localStorage.getItem("dpci."+k); return v===null?d:JSON.parse(v); }catch(e){ return d; } },
+  set(k,v){ try{ localStorage.setItem("dpci."+k, JSON.stringify(v)); }catch(e){} }
+};
+
+const S = {
+  tab: "inbox",
+  filter: "all",
+  ifilter: "all",
+  q: "",
+  sel: null,
+  sort: LS.get("sort","recent"),
+  density: LS.get("density","comfortable"),
+  cursor: -1
+};
+
+/* time, written the way a dispatcher reads it */
+function clock(d){ return d.toLocaleTimeString("en-US",{hour:"2-digit",minute:"2-digit",hour12:false}); }
+function dayKey(d){ return d.getFullYear()+"-"+d.getMonth()+"-"+d.getDate(); }
+function relTime(d){
+  const m = Math.round((NOW - d) / 60000);
+  if (m < 1) return "now";
+  if (m < 60) return m + "m";
+  const h = Math.round(m / 60);
+  if (dayKey(d) === dayKey(NOW)) return clock(d);
+  const dd = Math.round((new Date(NOW.getFullYear(),NOW.getMonth(),NOW.getDate()) - new Date(d.getFullYear(),d.getMonth(),d.getDate())) / 86400000);
+  if (dd === 1) return "Yest";
+  if (dd < 7) return d.toLocaleDateString("en-US",{weekday:"short"});
+  return d.toLocaleDateString("en-US",{month:"short",day:"numeric"});
+}
+function dayLabel(d){
+  const dd = Math.round((new Date(NOW.getFullYear(),NOW.getMonth(),NOW.getDate()) - new Date(d.getFullYear(),d.getMonth(),d.getDate())) / 86400000);
+  if (dd === 0) return "Today";
+  if (dd === 1) return "Yesterday";
+  if (dd < 7) return d.toLocaleDateString("en-US",{weekday:"long"});
+  return d.toLocaleDateString("en-US",{month:"long", day:"numeric"});
+}
+/* the inbox groups by recency band, not by calendar day: a dispatcher asks
+   "what came in since I last looked", not "what came in on the 19th" */
+function band(d){
+  const m = (NOW - d) / 60000;
+  if (m <= 120) return "Last two hours";
+  if (dayKey(d) === dayKey(NOW)) return "Earlier today";
+  const dd = Math.round((new Date(NOW.getFullYear(),NOW.getMonth(),NOW.getDate()) - new Date(d.getFullYear(),d.getMonth(),d.getDate())) / 86400000);
+  if (dd === 1) return "Yesterday";
+  return "Earlier";
+}
+function initials(n){
+  const parts = n.replace(/[^A-Za-z0-9 .&-]/g,"").split(/[ .]+/).filter(Boolean);
+  if (parts.length === 1) return parts[0].slice(0,2).toUpperCase();
+  return (parts[0][0] + parts[parts.length-1][0]).toUpperCase();
+}
+const last = t => t.msgs[t.msgs.length - 1];
+const lastAt = t => last(t).t;
+
+function laneHTML(t){
+  if (!t.ref) return '<span class="lane">Direct message</span>';
+  const [a,b] = t.lane.split("→");
+  return '<span class="ref">'+esc(t.ref)+'</span><span class="dot-sep">·</span>' +
+         '<span class="lane"><b>'+esc(a.trim())+'</b> → <b>'+esc(b.trim())+'</b></span>';
+}
+function previewHTML(t){
+  const m = last(t);
+  if (m.k === "sys") return '<i>'+m.tx.replace(/<b>|<\/b>/g,"")+'</i>';
+  const who = m.me ? '<i>You:</i> ' : (t.group ? '<i>'+esc(m.who.split(" ")[0])+':</i> ' : "");
+  let tx = esc(m.tx);
+  tx = tx.replace(/@([A-Z]\.?\s?[A-Za-z]+)/g, '<span class="at">@$1</span>');
+  return who + tx;
+}
+</script>
+<script>
+/* ============================================================================
+   4. INBOX RENDER
+   ========================================================================= */
+/* Each tab gets its own filter set. The inbox filters (unread, mentions) are
+   meaningless on a pile of invitations, so the band changes with the tab
+   rather than carrying five chips that do nothing on one of them. */
+const FILTERS = [
+  {k:"all",     label:"All"},
+  {k:"unread",  label:"Unread"},
+  {k:"mentions",label:"Mentions"},
+  {k:"loads",   label:"Loads"},
+  {k:"groups",  label:"Groups"}
+];
+const IFILTERS = [
+  {k:"all", label:"All"},
+  {k:"in",  label:"Needs a decision"},
+  {k:"out", label:"Sent by you"}
+];
+
+function matchesFilter(t){
+  if (S.filter === "unread")   return t.unread > 0;
+  if (S.filter === "mentions") return !!t.mention;
+  if (S.filter === "loads")    return !!t.ref;
+  if (S.filter === "groups")   return !!t.group;
+  return true;
+}
+function matchesQuery(t){
+  if (!S.q) return true;
+  const q = S.q.toLowerCase();
+  const hay = [t.name, t.sub, t.ref, t.lane, t.role].concat(t.msgs.map(m => m.tx)).join(" ").toLowerCase();
+  return hay.indexOf(q) >= 0;
+}
+function visibleThreads(){
+  let list = THREADS.filter(t => !t.archived && matchesFilter(t) && matchesQuery(t));
+  if (S.sort === "unread") list.sort((a,b) => (b.unread>0) - (a.unread>0) || lastAt(b) - lastAt(a));
+  else list.sort((a,b) => lastAt(b) - lastAt(a));
+  /* pinned always float, in their own band */
+  return list;
+}
+function filterCount(k){
+  const was = S.filter; S.filter = k;
+  const n = THREADS.filter(t => !t.archived && matchesFilter(t) && matchesQuery(t)).length;
+  S.filter = was; return n;
+}
+
+function renderChips(){
+  if (S.tab === "inv"){
+    const live = INVITES.filter(v => !v.gone && invMatches(v));
+    $("#chips").innerHTML = IFILTERS.map(f => {
+      const n = f.k === "all" ? live.length : live.filter(v => v.dir === f.k).length;
+      return '<button class="chip'+(S.ifilter===f.k?" on":"")+'" data-f="'+f.k+'">'+f.label+
+             (n?' <b>'+n+'</b>':'')+'</button>';
+    }).join("");
+    return;
+  }
+  $("#chips").innerHTML = FILTERS.map(f => {
+    const n = filterCount(f.k);
+    return '<button class="chip'+(S.filter===f.k?" on":"")+'" data-f="'+f.k+'">'+f.label+
+           (n?' <b>'+n+'</b>':'')+'</button>';
+  }).join("") +
+  '<button class="linkbtn" id="mkAll"'+(unreadTotal()?"":" disabled")+'>Mark all read</button>';
+}
+
+function convHTML(t){
+  const m = last(t);
+  const tags = [];
+  if (t.pinned) tags.push(I.pin);
+  if ((t.tags||[]).includes("clip")) tags.push(I.clip);
+  if ((t.tags||[]).includes("users")) tags.push(I.users);
+  if ((t.tags||[]).includes("alert")) tags.push(I.alert);
+
+  const prev = t.typing
+    ? '<span class="tping">'+esc(t.typingWho || t.name.split(" ")[0])+' is typing</span> ' +
+      '<span class="typing"><i></i><i></i><i></i></span>'
+    : previewHTML(t);
+
+  return '' +
+  '<button class="conv'+(t.unread?" unread":"")+(t.muted?" muted":"")+(S.sel===t.id?" sel":"")+'" ' +
+          'data-id="'+t.id+'" data-st="'+t.st+'"'+(S.sel===t.id?' aria-current="true"':'') +
+          ' aria-label="'+esc(t.name+", "+t.role+(t.ref?", "+t.ref:"")+(t.unread?", "+t.unread+" unread":""))+'">' +
+    '<span class="av'+(t.corp||t.group?" sq":"")+'">' +
+      (t.group?'<span class="gl">'+I.users+'</span>':esc(initials(t.name))) +
+      /* presence belongs to a person. A company and a channel have none. */
+      (t.group||t.corp?'':'<span class="pr'+(t.role==="Driver"?" on":(t.role==="Dispatch"?" away":""))+'"></span>') +
+    '</span>' +
+    '<span class="cmain">' +
+      '<span class="r1">' +
+        '<span class="nm">'+esc(t.name)+'</span>' +
+        '<span class="role">'+esc(t.role)+'</span>' +
+        (t.muted?'<span class="mut">'+I.mute+'</span>':'') +
+        '<span class="when">'+relTime(lastAt(t))+'</span>' +
+      '</span>' +
+      '<span class="r2">'+laneHTML(t)+'</span>' +
+      '<span class="r3">' +
+        '<span class="prev">'+prev+'</span>' +
+        (tags.length?'<span class="tags">'+tags.join("")+'</span>':'') +
+        (t.unread?'<span class="badge">'+t.unread+'</span>':'') +
+      '</span>' +
+    '</span>' +
+    '<span class="ctools">' +
+      '<span class="ctool'+(t.pinned?" on":"")+'" data-act="pin" role="button" tabindex="-1" ' +
+        'title="'+(t.pinned?"Unpin":"Pin to top")+'">'+(t.pinned?I.pinOff:I.pin)+'</span>' +
+      '<span class="ctool" data-act="read" role="button" tabindex="-1" ' +
+        'title="'+(t.unread?"Mark as read":"Mark as unread")+'">'+(t.unread?I.read:I.unread)+'</span>' +
+      '<span class="ctool'+(t.muted?" on":"")+'" data-act="mute" role="button" tabindex="-1" ' +
+        'title="'+(t.muted?"Unmute":"Mute")+'">'+(t.muted?I.bell:I.mute)+'</span>' +
+      '<span class="ctool dg" data-act="archive" role="button" tabindex="-1" title="Archive">'+I.archive+'</span>' +
+    '</span>' +
+  '</button>';
+}
+
+function renderInbox(){
+  const list = visibleThreads();
+  const el = $("#paneInbox");
+
+  if (!list.length){
+    el.innerHTML = emptyHTML(
+      S.q ? I.inbox : (S.filter==="unread" ? I.check : I.inbox),
+      S.q ? "Nothing matches" : (S.filter==="unread" ? "Inbox at zero" : "No conversations"),
+      S.q ? 'No thread mentions "'+esc(S.q)+'". Try a load number like 48213, or a lane city.'
+          : (S.filter==="unread" ? "Every thread on your board has been read. New messages will land here."
+                                 : "Start a thread with a driver, carrier, broker or customer."),
+      S.q ? "Clear search" : null);
+    return;
+  }
+
+  const pinned = list.filter(t => t.pinned);
+  const rest   = list.filter(t => !t.pinned);
+  let html = "";
+
+  if (pinned.length && S.sort === "recent" && !S.q){
+    html += divider(I.pin, "Pinned", pinned.length);
+    html += pinned.map(convHTML).join("");
+  }
+  const flow = (pinned.length && S.sort === "recent" && !S.q) ? rest : list;
+  let cur = null;
+  flow.forEach(t => {
+    const b = band(lastAt(t));
+    if (b !== cur){ cur = b; html += divider(null, b, flow.filter(x => band(lastAt(x)) === b).length); }
+    html += convHTML(t);
+  });
+  el.innerHTML = html;
+}
+function divider(icon, label, n){
+  return '<div class="mdiv">'+(icon||"")+'<span>'+esc(label)+'</span><span class="n">'+n+'</span></div>';
+}
+function emptyHTML(icon, title, body, cta){
+  return '<div class="empty"><div class="gl">'+icon+'</div><h4>'+esc(title)+'</h4><p>'+body+'</p>' +
+    (cta?'<button class="btn sm" id="emptyCta">'+esc(cta)+'</button>':'')+'</div>';
+}
+</script>
+<script>
+/* ============================================================================
+   5. INVITATION RENDER
+   A card, not a row: an invitation is a decision with consequences (network
+   access, document access, rate visibility), so it shows the credentials you
+   would otherwise go look up, and puts the two verbs at the bottom.
+   ========================================================================= */
+function invMatches(v){
+  if (!S.q) return true;
+  const q = S.q.toLowerCase();
+  return [v.name, v.sub, v.role, v.ask, v.quote||"", (v.facts||[]).map(f=>f.join(" ")).join(" ")]
+    .join(" ").toLowerCase().indexOf(q) >= 0;
+}
+function invHTML(v){
+  const out = v.dir === "out";
+  const facts = (v.facts||[]).map(f =>
+    '<span class="f"><b>'+esc(f[0])+'</b><span'+(f[2]?' class="'+f[2]+'"':'')+'>'+esc(f[1])+'</span></span>').join("");
+
+  return '' +
+  '<article class="inv'+(out?" out":"")+'" data-id="'+v.id+'">' +
+    '<div class="inv-top">' +
+      '<span class="av lg'+(v.corp?" sq":"")+'">'+esc(initials(v.name))+'</span>' +
+      '<div class="inv-id">' +
+        '<div class="inv-nm"><h4>'+esc(v.name)+'</h4><span class="role'+(v.role==="Driver"?" acc":"")+'">'+esc(v.role)+'</span></div>' +
+        '<div class="inv-sub">'+esc(v.sub)+'</div>' +
+      '</div>' +
+      '<span class="inv-when">'+esc(v.when)+'</span>' +
+    '</div>' +
+    '<div class="inv-ask">'+v.ask +
+      (v.quote?'<span class="q">'+esc(v.quote)+'</span>':'') +
+    '</div>' +
+    (facts?'<div class="inv-facts">'+facts+'</div>':'') +
+    '<div class="inv-acts">' +
+      (out
+        ? '<span class="note">'+I.clock+' Awaiting response</span><span class="sp"></span>' +
+          '<button class="btn xs" data-act="remind">Send reminder</button>' +
+          '<button class="btn xs danger" data-act="withdraw">Withdraw</button>'
+        : '<button class="btn xs bare" data-act="profile">'+I.eye+' Profile</button>' +
+          '<span class="sp"></span>' +
+          '<button class="btn xs" data-act="decline">Decline</button>' +
+          '<button class="btn xs pri" data-act="accept">'+I.check+' Accept</button>') +
+    '</div>' +
+  '</article>';
+}
+function renderInv(){
+  const el = $("#paneInv");
+  const live = INVITES.filter(v => !v.gone && invMatches(v) &&
+    (S.ifilter === "all" || v.dir === S.ifilter));
+  const inb  = live.filter(v => v.dir === "in");
+  const out  = live.filter(v => v.dir === "out");
+
+  if (!live.length){
+    const filtered = S.ifilter !== "all";
+    el.innerHTML = emptyHTML(I.hand,
+      S.q ? "Nothing matches" : (filtered ? "Nothing here" : "No invitations waiting"),
+      S.q ? 'No invitation mentions "'+esc(S.q)+'".'
+          : (filtered ? "No invitations in this group right now."
+                      : "When a carrier, broker or driver asks to connect, it lands here for a decision."),
+      S.q ? "Clear search" : (filtered ? "Show all" : null));
+    return;
+  }
+
+  let html = '<div class="invwrap">';
+  if (inb.length){
+    html += '<div class="ihead"><span>Needs a decision</span><span class="n">'+inb.length+'</span><span class="rule"></span></div>';
+    html += inb.map(invHTML).join("");
+  }
+  if (out.length){
+    html += '<div class="ihead" style="margin-top:6px"><span>Sent by you</span><span class="n">'+out.length+'</span><span class="rule"></span></div>';
+    html += out.map(invHTML).join("");
+  }
+  html += '</div>';
+  el.innerHTML = html;
+}
+</script>
+<script>
+/* ============================================================================
+   6. THREAD RENDER
+   ========================================================================= */
+function threadHTML(t){
+  if (!t) return '' +
+    '<div class="th-none"><div class="gl">'+I.mail+'</div>' +
+    '<h3>No conversation selected</h3>' +
+    '<p>Pick a thread on the left, or open an invitation to see who is asking for access.</p></div>';
+
+  const L = t.load;
+  const parts = t.group ? '<span class="av-stack">' +
+    ["Priya Raman","Sam Ortega","Marcus Hale","R. Keller"].map(n => '<span class="av sm">'+initials(n)+'</span>').join("") +
+    '</span>' : '';
+
+  let body = "";
+  let curDay = null, prevWho = null;
+  t.msgs.forEach(m => {
+    const dk = dayKey(m.t);
+    if (dk !== curDay){
+      curDay = dk; prevWho = null;
+      body += '<div class="drule"><span class="r"></span><span>'+dayLabel(m.t)+'</span><span class="r"></span></div>';
+    }
+    if (m.k === "sys"){
+      prevWho = null;
+      body += '<div class="sysev"><span class="ic">'+(I[m.ic]||I.info)+'</span><span>'+m.tx+'</span>' +
+              '<span class="r"></span><span class="t">'+clock(m.t)+'</span></div>';
+      return;
+    }
+    const cont = prevWho === m.who;
+    prevWho = m.who;
+    let tx = esc(m.tx).replace(/@([A-Z]\.?\s?[A-Za-z]+)/g,'<span class="at">@$1</span>');
+    body += '<div class="msg'+(m.me?" me":"")+(cont?" cont":"")+'">' +
+      '<span class="av sm">'+initials(m.who)+'</span>' +
+      '<div class="bub">' +
+        (cont?'':'<div class="mh"><span class="n">'+esc(m.me?"You":m.who)+'</span>' +
+          (m.role?'<span class="rl">'+esc(m.role)+'</span>':'') +
+          '<span class="t">'+clock(m.t)+'</span></div>') +
+        '<div class="tx">'+tx+'</div>' +
+        (m.att?'<div class="att"><span class="ic">'+I.doc+'</span><span class="m">' +
+          '<span class="fn">'+esc(m.att.name)+'</span><span class="fs">PDF · '+esc(m.att.size)+'</span></span>' +
+          '<button class="btn xs ic bare dl" title="Download">'+I.dl+'</button></div>':'') +
+        (m.me?'<div class="rd'+(m.seen?" seen":"")+'">'+I.dblchk+(m.seen?"Read":"Sent")+'</div>':'') +
+      '</div></div>';
+  });
+
+  const loadStrip = t.ref ? '' +
+    '<div class="th-load" data-st="'+t.st+'">' +
+      '<div class="cell"><div class="k">Load</div><div class="v">'+esc(t.ref)+'</div></div>' +
+      '<div class="cell grow"><div class="k">Lane</div><div class="v mut">'+esc(t.lane)+'</div></div>' +
+      '<div class="cell hideable"><div class="k">Pickup</div><div class="v mut">'+esc(L.pickup)+'</div></div>' +
+      '<div class="cell hideable"><div class="k">Delivery</div><div class="v mut">'+esc(L.drop)+'</div></div>' +
+      '<div class="cell"><div class="k">Miles</div><div class="v">'+esc(L.miles)+'</div></div>' +
+      '<div class="cell"><div class="k">Rate</div><div class="v">'+esc(L.rate)+'</div></div>' +
+      '<div class="cell hideable"><div class="k">Equipment</div><div class="v mut">'+esc(L.eq)+'</div></div>' +
+      '<div class="cell act"><button class="btn xs">'+I.route+' Track</button></div>' +
+    '</div>' : '';
+
+  const QR = t.ref
+    ? ["Send me your ETA","Take your 10 here","I will call the receiver","Send a photo of the BOL"]
+    : ["Thanks","Will confirm shortly","Calling you now"];
+
+  return '' +
+    '<div class="th-head">' +
+      '<button class="btn sm ic bare th-back" id="thBack" title="Back">'+I.back+'</button>' +
+      '<span class="av'+(t.corp||t.group?" sq":"")+'">'+initials(t.name)+'</span>' +
+      '<div class="id">' +
+        '<h3>'+esc(t.name)+'</h3>' +
+        '<div class="sub">' +
+          '<span class="role">'+esc(t.role)+'</span>' +
+          '<span>'+esc(t.sub)+'</span>' +
+          (t.ref?'<span class="dot-sep">·</span><span data-st="'+t.st+'" class="spill">'+stLabel(t.st)+'</span>':'') +
+        '</div>' +
+      '</div>' +
+      parts +
+      '<div class="acts">' +
+        '<button class="btn sm ic bare" id="thPin" title="'+(t.pinned?"Unpin":"Pin")+'">'+(t.pinned?I.pinOff:I.pin)+'</button>' +
+        '<button class="btn sm ic bare" id="thMute" title="'+(t.muted?"Unmute":"Mute")+'">'+(t.muted?I.bell:I.mute)+'</button>' +
+        '<button class="btn sm ic bare" id="thMore" title="More">'+I.more+'</button>' +
+      '</div>' +
+    '</div>' +
+    loadStrip +
+    '<div class="th-body" id="thBody">'+body+'</div>' +
+    '<div class="comp">' +
+      '<div class="qr">'+QR.map(q => '<button data-qr="'+esc(q)+'">'+esc(q)+'</button>').join("")+'</div>' +
+      '<div class="box">' +
+        '<textarea id="cmp" rows="1" placeholder="Message '+esc(t.name.split(" ")[0])+'…"></textarea>' +
+        '<div class="bar">' +
+          '<button class="btn sm ic bare" title="Attach a document">'+I.clip+'</button>' +
+          '<button class="btn sm ic bare" title="Attach the load">'+I.truck+'</button>' +
+          '<button class="btn sm ic bare" title="Mention someone">'+I.at+'</button>' +
+          '<span class="sp"></span>' +
+          '<span class="hint"><kbd>↵</kbd> send <kbd>⇧↵</kbd> newline</span>' +
+          '<button class="btn sm pri" id="btnSend">'+I.send+' Send</button>' +
+        '</div>' +
+      '</div>' +
+    '</div>';
+}
+function stLabel(st){
+  return ({transit:"In transit",late:"Running late",sent:"Sent to driver",plan:"Planned",
+           delivered:"Delivered",hold:"On hold",none:""})[st] || st;
+}
+</script>
+<script>
+/* ============================================================================
+   7. PAINT + COUNTS
+   ========================================================================= */
+function unreadTotal(){ return THREADS.filter(t => !t.archived && !t.muted).reduce((n,t) => n + t.unread, 0); }
+function unreadThreads(){ return THREADS.filter(t => !t.archived && t.unread > 0).length; }
+function invPending(){ return INVITES.filter(v => !v.gone && v.dir === "in").length; }
+
+function syncCounts(){
+  const ui = unreadThreads(), ip = invPending();
+  const ci = $("#cntInbox"), cv = $("#cntInv");
+  ci.textContent = ui; ci.classList.toggle("live", ui > 0);
+  cv.textContent = ip; cv.classList.toggle("live", ip > 0);
+
+  const total = unreadTotal();
+  $("#topCount").textContent = total + ip;
+  $("#topCount").style.display = (total + ip) ? "" : "none";
+
+  const active = THREADS.filter(t => !t.archived).length;
+  $("#headMeta").innerHTML = total
+    ? '<em>'+total+' unread</em><span class="dot-sep">·</span><span>'+active+' threads</span>' +
+      (ip?'<span class="dot-sep">·</span><span>'+ip+' waiting</span>':'')
+    : '<span>All caught up</span><span class="dot-sep">·</span><span>'+active+' threads</span>';
+}
+
+function paint(){
+  syncCounts();
+  renderChips();
+  if (S.tab === "inbox") renderInbox(); else renderInv();
+  $("#paneInbox").classList.toggle("on", S.tab === "inbox");
+  $("#paneInv").classList.toggle("on", S.tab === "inv");
+  $$("#tabs button[data-tab]").forEach(b => {
+    const on = b.dataset.tab === S.tab;
+    b.classList.toggle("on", on); b.setAttribute("aria-selected", on);
+  });
+  $("#sbox").classList.toggle("has", !!S.q);
+  $("#q").placeholder = S.tab === "inbox" ? "Search people, loads, messages" : "Search invitations";
+  renderFoot();
+  applyDensity();
+}
+/* the footer teaches the keys that actually work on the tab you are on */
+function renderFoot(){
+  $("#cpFoot").innerHTML = S.tab === "inbox"
+    ? '<span class="k"><kbd>↑</kbd><kbd>↓</kbd> move</span><span class="dot-sep">·</span>' +
+      '<span class="k"><kbd>↵</kbd> reply</span><span class="dot-sep">·</span>' +
+      '<span class="k"><kbd>E</kbd> archive</span>' +
+      '<div class="sp"></div><span class="k"><kbd>1</kbd><kbd>2</kbd> tabs</span>'
+    : '<span>'+invPending()+' waiting on you</span><span class="dot-sep">·</span>' +
+      '<span class="k"><kbd>/</kbd> search</span>' +
+      '<div class="sp"></div><span class="k"><kbd>1</kbd><kbd>2</kbd> tabs</span>';
+}
+
+function paintThread(scroll){
+  const t = THREADS.find(x => x.id === S.sel);
+  $("#thread").innerHTML = threadHTML(t);
+  document.body.dataset.open = t ? "1" : "0";
+  if (t && scroll !== false){
+    const b = $("#thBody"); if (b) b.scrollTop = b.scrollHeight;
+  }
+}
+
+/* ---------- toast with undo ---------------------------------------------- */
+let undoFn = null, toastT = null;
+function toast(html, undo){
+  $("#toastMsg").innerHTML = html;
+  undoFn = undo || null;
+  $("#toastUndo").style.display = undo ? "" : "none";
+  $("#toast").classList.add("show");
+  clearTimeout(toastT);
+  toastT = setTimeout(() => $("#toast").classList.remove("show"), undo ? 6000 : 3200);
+}
+$("#toastUndo").onclick = () => {
+  if (undoFn) undoFn();
+  undoFn = null;
+  $("#toast").classList.remove("show");
+  paint(); paintThread(false);
+};
+</script>
+<script>
+/* ============================================================================
+   8. ACTIONS
+   ========================================================================= */
+function openThread(id){
+  const t = THREADS.find(x => x.id === id);
+  if (!t) return;
+  S.sel = id;
+  t.unread = 0; t.typing = false; t.mention = false;
+  S.cursor = visibleThreads().findIndex(x => x.id === id);
+  paint(); paintThread();
+}
+function togglePin(t){
+  t.pinned = !t.pinned;
+  toast(t.pinned ? '<b>'+esc(t.name)+'</b> pinned to the top'
+                 : '<b>'+esc(t.name)+'</b> unpinned',
+        () => { t.pinned = !t.pinned; });
+  paint(); if (S.sel === t.id) paintThread(false);
+}
+function toggleMute(t){
+  t.muted = !t.muted;
+  toast(t.muted ? 'Muted <b>'+esc(t.name)+'</b> · badges stay grey'
+                : 'Unmuted <b>'+esc(t.name)+'</b>',
+        () => { t.muted = !t.muted; });
+  paint(); if (S.sel === t.id) paintThread(false);
+}
+function toggleRead(t){
+  if (t.unread){ const n = t.unread; t.unread = 0; t.typing = false;
+    toast('Marked <b>'+esc(t.name)+'</b> as read', () => { t.unread = n; });
+  } else { t.unread = 1;
+    toast('Marked <b>'+esc(t.name)+'</b> as unread', () => { t.unread = 0; });
+  }
+  paint();
+}
+function archive(t){
+  t.archived = true;
+  if (S.sel === t.id){ S.sel = null; paintThread(); }
+  toast('Archived <b>'+esc(t.name)+'</b>', () => { t.archived = false; });
+  paint();
+}
+function markAllRead(){
+  const snap = THREADS.map(t => [t, t.unread, t.typing]);
+  THREADS.forEach(t => { t.unread = 0; t.typing = false; });
+  toast('Marked <b>'+snap.filter(s => s[1]).length+' threads</b> as read',
+        () => snap.forEach(([t,u,ty]) => { t.unread = u; t.typing = ty; }));
+  paint(); paintThread(false);
+}
+
+/* --- invitations ---------------------------------------------------------- */
+function leaveCard(id, after){
+  const el = $('.inv[data-id="'+id+'"]');
+  if (!el) { after(); return; }
+  el.classList.add("going");
+  setTimeout(after, 190);
+}
+function acceptInv(v){
+  leaveCard(v.id, () => {
+    v.gone = true;
+    /* accepting an invitation creates the thread it was asking for — the
+       inbox badge moving is the proof the two tabs are one system */
+    const t = {
+      id:"n"+v.id, name:v.name, role:v.role, sub:v.sub, corp:v.corp,
+      ref:"", lane:"", st:"none", pinned:false, muted:false, unread:1,
+      msgs:[{k:"sys", ic:"check", tx:"You accepted the invitation from <b>"+esc(v.name)+"</b>", t:NOW},
+            {k:"m", who:v.name, role:v.role, tx:v.quote || "Thanks for connecting.", t:NOW}]
+    };
+    THREADS.unshift(t);
+    toast('Accepted <b>'+esc(v.name)+'</b> · thread opened in Inbox', () => {
+      v.gone = false; const i = THREADS.indexOf(t); if (i >= 0) THREADS.splice(i,1);
+    });
+    paint();
+  });
+}
+function declineInv(v){
+  leaveCard(v.id, () => {
+    v.gone = true;
+    toast('Declined <b>'+esc(v.name)+'</b>', () => { v.gone = false; });
+    paint();
+  });
+}
+function withdrawInv(v){
+  leaveCard(v.id, () => {
+    v.gone = true;
+    toast('Withdrew the invitation to <b>'+esc(v.name)+'</b>', () => { v.gone = false; });
+    paint();
+  });
+}
+
+/* --- sending -------------------------------------------------------------- */
+function send(){
+  const ta = $("#cmp"); if (!ta) return;
+  const tx = ta.value.trim(); if (!tx) return;
+  const t = THREADS.find(x => x.id === S.sel); if (!t) return;
+  t.msgs.push({k:"m", who:ME, me:true, tx, t:new Date(), seen:false});
+  ta.value = ""; ta.style.height = "";
+  paint(); paintThread();
+}
+</script>
+<script>
+/* ============================================================================
+   9. WIRING
+   ========================================================================= */
+/* --- tabs ---------------------------------------------------------------- */
+$("#tabs").addEventListener("click", e => {
+  const b = e.target.closest("button[data-tab]"); if (!b) return;
+  setTab(b.dataset.tab);
+});
+function setTab(k){
+  if (S.tab === k) return;
+  S.tab = k; S.cursor = -1;
+  paint();
+  $("#body").scrollTop = 0;
+}
+
+/* --- filters ------------------------------------------------------------- */
+$("#chips").addEventListener("click", e => {
+  const c = e.target.closest(".chip");
+  if (c){
+    if (S.tab === "inv") S.ifilter = c.dataset.f; else S.filter = c.dataset.f;
+    S.cursor = -1; paint(); return;
+  }
+  if (e.target.closest("#mkAll")) markAllRead();
+});
+
+/* --- search -------------------------------------------------------------- */
+$("#q").addEventListener("input", e => { S.q = e.target.value.trim(); S.cursor = -1; paint(); });
+$("#qClear").addEventListener("click", e => {
+  e.preventDefault(); $("#q").value = ""; S.q = ""; paint(); $("#q").focus();
+});
+
+/* --- the list: one delegated listener for rows and their hover tools ----- */
+$("#paneInbox").addEventListener("click", e => {
+  if (e.target.closest("#emptyCta")){ $("#q").value=""; S.q=""; paint(); return; }
+  const tool = e.target.closest(".ctool");
+  const row  = e.target.closest(".conv");
+  if (!row) return;
+  const t = THREADS.find(x => x.id === row.dataset.id); if (!t) return;
+  if (tool){
+    e.stopPropagation();
+    const a = tool.dataset.act;
+    if (a === "pin") togglePin(t);
+    else if (a === "mute") toggleMute(t);
+    else if (a === "read") toggleRead(t);
+    else if (a === "archive") archive(t);
+    return;
+  }
+  openThread(t.id);
+});
+
+/* --- invitations --------------------------------------------------------- */
+$("#paneInv").addEventListener("click", e => {
+  if (e.target.closest("#emptyCta")){
+    $("#q").value=""; S.q=""; S.ifilter="all"; paint(); return;
+  }
+  const btn = e.target.closest("button[data-act]"); if (!btn) return;
+  const card = e.target.closest(".inv");
+  const v = INVITES.find(x => x.id === card.dataset.id); if (!v) return;
+  const a = btn.dataset.act;
+  if (a === "accept")   acceptInv(v);
+  else if (a === "decline")  declineInv(v);
+  else if (a === "withdraw") withdrawInv(v);
+  else if (a === "remind")   toast('Reminder sent to <b>'+esc(v.name)+'</b>');
+  else if (a === "profile")  toast('Opening the profile for <b>'+esc(v.name)+'</b>');
+});
+
+/* --- thread pane --------------------------------------------------------- */
+$("#thread").addEventListener("click", e => {
+  const t = THREADS.find(x => x.id === S.sel);
+  if (e.target.closest("#thBack")){ S.sel = null; paint(); paintThread(); return; }
+  if (!t) return;
+  if (e.target.closest("#btnSend")) return send();
+  if (e.target.closest("#thPin"))   return togglePin(t);
+  if (e.target.closest("#thMute"))  return toggleMute(t);
+  if (e.target.closest("#thMore"))  return openMenu(e.target.closest("#thMore"), threadMenu(t));
+  const qr = e.target.closest("[data-qr]");
+  if (qr){ const ta = $("#cmp"); ta.value = qr.dataset.qr; ta.focus(); autoGrow(ta); }
+});
+$("#thread").addEventListener("keydown", e => {
+  if (e.target.id !== "cmp") return;
+  if (e.key === "Enter" && !e.shiftKey){ e.preventDefault(); send(); }
+});
+$("#thread").addEventListener("input", e => { if (e.target.id === "cmp") autoGrow(e.target); });
+function autoGrow(ta){ ta.style.height = "auto"; ta.style.height = Math.min(ta.scrollHeight, 132) + "px"; }
+
+/* --- menus --------------------------------------------------------------- */
+const MENU = $("#menu");
+let menuOwner = null;
+function openMenu(anchor, items){
+  if (menuOwner === anchor){ closeMenu(); return; }
+  MENU.innerHTML = items.map(it => {
+    if (it === "-") return '<div class="sep"></div>';
+    if (it.lab) return '<div class="lab">'+esc(it.lab)+'</div>';
+    return '<button data-k="'+it.k+'" class="'+(it.on?"on ":"")+(it.dg?"dg":"")+'">' +
+      (it.icon||"") + '<span>'+esc(it.label)+'</span>' +
+      (it.tick!==undefined?'<span class="tick">'+I.check+'</span>':'') + '</button>';
+  }).join("");
+  MENU.classList.add("show");
+  const r = anchor.getBoundingClientRect(), m = MENU.getBoundingClientRect();
+  let left = Math.min(r.right - m.width, window.innerWidth - m.width - 10);
+  let top  = r.bottom + 6;
+  if (top + m.height > window.innerHeight - 10) top = r.top - m.height - 6;
+  MENU.style.left = Math.max(10, left) + "px";
+  MENU.style.top  = top + "px";
+  menuOwner = anchor;
+  MENU.dataset.ctx = anchor.id || "";
+}
+function closeMenu(){ MENU.classList.remove("show"); menuOwner = null; }
+document.addEventListener("pointerdown", e => {
+  if (MENU.classList.contains("show") && !e.target.closest("#menu") && e.target !== menuOwner
+      && !(menuOwner && menuOwner.contains(e.target))) closeMenu();
+});
+MENU.addEventListener("click", e => {
+  const b = e.target.closest("button[data-k]"); if (!b) return;
+  const k = b.dataset.k;
+  closeMenu();
+  handleMenu(k);
+});
+
+function threadMenu(t){
+  return [
+    {k:"read",    label:t.unread?"Mark as read":"Mark as unread", icon:t.unread?I.read:I.unread},
+    {k:"flag",    label:"Flag for follow-up", icon:I.flag},
+    {k:"addppl",  label:"Add participants", icon:I.users},
+    "-",
+    {k:"track",   label:"Open the load", icon:I.truck},
+    {k:"export",  label:"Export transcript", icon:I.doc},
+    "-",
+    {k:"archive", label:"Archive conversation", icon:I.archive, dg:true}
+  ];
+}
+function sortMenu(){
+  return [
+    {lab:"Sort by"},
+    {k:"s-recent", label:"Most recent",  on:S.sort==="recent", tick:1, icon:I.clock},
+    {k:"s-unread", label:"Unread first", on:S.sort==="unread", tick:1, icon:I.unread},
+    "-",
+    {lab:"Display"},
+    {k:"d-comfortable", label:"Comfortable", on:S.density==="comfortable", tick:1},
+    {k:"d-compact",     label:"Compact",     on:S.density==="compact",     tick:1}
+  ];
+}
+function panelMenu(){
+  return [
+    {k:"markall", label:"Mark all as read", icon:I.read},
+    {k:"newgrp",  label:"New load channel", icon:I.users},
+    {k:"invite",  label:"Invite a carrier", icon:I.hand},
+    "-",
+    {k:"arch",    label:"View archived", icon:I.archive},
+    {k:"prefs",   label:"Notification rules", icon:I.sliders}
+  ];
+}
+function handleMenu(k){
+  const t = THREADS.find(x => x.id === S.sel);
+  if (k.startsWith("s-")){ S.sort = k.slice(2); LS.set("sort",S.sort); paint(); return; }
+  if (k.startsWith("d-")){ S.density = k.slice(2); LS.set("density",S.density); applyDensity(); return; }
+  switch(k){
+    case "markall": markAllRead(); break;
+    case "archive": if (t) archive(t); break;
+    case "read":    if (t) toggleRead(t); break;
+    case "invite":  setTab("inv"); toast("Open the Invitations tab to see who is waiting"); break;
+    case "newgrp":  toast("A load channel adds every party on a load to one thread"); break;
+    case "arch":    toast(THREADS.filter(x=>x.archived).length + " archived conversations"); break;
+    default:        toast("Not wired in this prototype");
+  }
+}
+$("#btnSort").addEventListener("click", e => openMenu(e.currentTarget, sortMenu()));
+$("#btnPanelMenu").addEventListener("click", e => openMenu(e.currentTarget, panelMenu()));
+$("#btnCompose").addEventListener("click", () => toast("Compose is out of scope for this panel prototype"));
+
+/* --- density: a body flag, so no row has to be touched to change it ------ */
+function applyDensity(){ document.body.dataset.density = S.density; }
+
+/* --- keyboard ------------------------------------------------------------- */
+document.addEventListener("keydown", e => {
+  const typing = /^(INPUT|TEXTAREA)$/.test(document.activeElement.tagName);
+  if (e.key === "Escape"){
+    if (MENU.classList.contains("show")) return closeMenu();
+    if (typing){ document.activeElement.blur(); return; }
+    if (S.q){ $("#q").value=""; S.q=""; paint(); return; }
+    if (S.sel){ S.sel = null; paint(); paintThread(); }
+    return;
+  }
+  if (typing) return;
+  if (e.key === "/"){ e.preventDefault(); $("#q").focus(); return; }
+  if (e.key === "1"){ setTab("inbox"); return; }
+  if (e.key === "2"){ setTab("inv"); return; }
+  if (S.tab !== "inbox") return;
+  const list = visibleThreads();
+  if (e.key === "ArrowDown" || e.key === "ArrowUp"){
+    e.preventDefault();
+    if (!list.length) return;
+    S.cursor = Math.max(0, Math.min(list.length - 1, S.cursor + (e.key === "ArrowDown" ? 1 : -1)));
+    const t = list[S.cursor];
+    S.sel = t.id; paint(); paintThread();
+    const row = $('.conv[data-id="'+t.id+'"]');
+    if (row) row.scrollIntoView({block:"nearest"});
+    return;
+  }
+  if (e.key === "Enter" && S.sel){ const c = $("#cmp"); if (c) c.focus(); }
+  if (e.key.toLowerCase() === "e" && S.sel){ const t = THREADS.find(x=>x.id===S.sel); if (t) archive(t); }
+});
+
+/* --- theme --------------------------------------------------------------- */
+function applyTheme(){
+  const d = LS.get("theme","light") === "dark";
+  document.documentElement.setAttribute("data-theme", d ? "dark" : "light");
+  $("#btnTheme").innerHTML = d ? I.sun : I.moon;
+}
+$("#btnTheme").addEventListener("click", () => {
+  LS.set("theme", LS.get("theme","light") === "dark" ? "light" : "dark");
+  applyTheme();
+});
+
+/* --- boot ---------------------------------------------------------------- */
+applyTheme();
+paint();
+paintThread();
+/* open the thread that is actually asking for something */
+openThread("t1");
+</script>
+</body>
+</html>

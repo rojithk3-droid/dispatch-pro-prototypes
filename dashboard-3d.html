@@ -1,0 +1,1266 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Terminal Overview 3D</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/lucide@0.469.0/dist/umd/lucide.min.js"></script>
+<script type="importmap">
+{ "imports": {
+  "three": "https://cdn.jsdelivr.net/npm/three@0.170.0/build/three.module.js",
+  "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.170.0/examples/jsm/"
+} }
+</script>
+<style>
+/* ============================================================
+   Dispatch Pro — 3D terminal overview.
+   The house shadcn/ui-at-80% system written as PAINTED px (no body
+   zoom, same as dashboard-shadcn.html): the WebGL canvas and every
+   projected label/card is positioned by JS, so no zoom compensation.
+   Elevation = hairline borders + glass fill, never box-shadow.
+   ============================================================ */
+:root{
+  --blue:#0F6FFF; --blue-dark:#1667CA; --blue-bg:#EFF6FF; --blue-border:#DBEAFE; --blue-soft:#C7DBFF;
+  --red:#E7000B; --red-bg:#FEF2F2; --red-border:#FFE2E2;
+  --green:#047857; --green-dot:#10B981; --green-bg:#ECFDF5; --green-border:#A7F3D0;
+  --amber:#B45309; --amber-bg:#FFFBEB; --amber-border:#FDE68A;
+  --orange:#EE7B1E; --orange-soft:#F9CFA8; --orange-bg:#FFF4EA;
+  --text-dark:#101828; --text-heading:#1E2939; --text-body:#364153; --text-muted:#6A7282; --text-faint:#99A1AF;
+  --border:#E5E7EB; --border-soft:#F3F4F6; --surface:#FFFFFF; --segmented-track:#F1F3F6; --icon-default:#4A5468;
+  --glass:rgba(255,255,255,.86); --glass-border:rgba(222,227,235,.95); --cell-open:#E9EEF5;
+  --bg-a:#FFFFFF; --bg-b:#EEF3FA; --bg-c:#E3EAF4;
+  --ring:rgba(15,111,255,.5);
+
+  --fs-xs:10px; --lh-xs:14px; --fs-sm:11px; --lh-sm:16px; --fs-base:13px; --lh-base:20px;
+  --fs-lg:14px; --lh-lg:22px; --fs-xl:16px; --lh-xl:22px; --fs-2xl:19px; --lh-2xl:26px;
+  --h-8:26px; --h-9:30px; --r-sm:3px; --r-md:5px; --r-lg:6px; --r-xl:10px; --r-2xl:12px;
+}
+[data-theme="dark"]{
+  --blue-bg:#16233A; --blue-border:#2C3E60; --blue-soft:#2B4A80;
+  --red-bg:#2C1416; --red-border:#4A1F24; --green:#6EE7B7; --green-bg:#0E2A22; --green-border:#1C4638;
+  --amber:#FCD34D; --amber-bg:#2A2113; --amber-border:#4A3A18;
+  --orange:#F59142; --orange-soft:#6B4222; --orange-bg:#2A1D12;
+  --text-dark:#F3F5F9; --text-heading:#E9EDF4; --text-body:#A6B0C3; --text-muted:#8B96AC; --text-faint:#7C879B;
+  --border:#263248; --border-soft:#1C2537; --surface:#121B2E; --segmented-track:#17202F; --icon-default:#AEB6C7;
+  --glass:rgba(17,26,44,.84); --glass-border:rgba(48,62,88,.9); --cell-open:#1E2A42;
+  --bg-a:#15213A; --bg-b:#0E1729; --bg-c:#0A1120;
+  --ring:rgba(58,140,255,.55);
+}
+*{box-sizing:border-box}
+html{font-family:'Inter',system-ui,sans-serif}
+button,input,select{font-family:inherit}
+html,body{margin:0;height:100%}
+body{font-size:var(--fs-sm);line-height:var(--lh-sm);color:var(--text-body);overflow:hidden;
+  background:radial-gradient(1400px 800px at 58% 46%,var(--bg-a) 0%,var(--bg-b) 55%,var(--bg-c) 100%);
+  -webkit-font-smoothing:antialiased;font-variant-numeric:tabular-nums}
+svg.lucide{display:block;flex:none}
+
+/* ---- stage (3D) ------------------------------------------------ */
+.stage{position:fixed;inset:0;z-index:0}
+.stage canvas{display:block;width:100%;height:100%;outline:none}
+.stage.pick canvas{cursor:pointer}
+.tags{position:absolute;inset:0;pointer-events:none;overflow:hidden}
+.tag{position:absolute;left:0;top:0;display:flex;align-items:center;gap:6px;height:24px;padding:0 10px 0 8px;border-radius:12px;
+  background:var(--glass);border:1px solid var(--glass-border);backdrop-filter:blur(10px);
+  font-size:var(--fs-xs);line-height:var(--lh-xs);font-weight:500;color:var(--text-body);white-space:nowrap;will-change:transform}
+.tag i{width:6px;height:6px;border-radius:3px;background:var(--blue);flex:none}
+.tag.gate i{background:var(--green-dot)}
+.tag.pool i{background:var(--orange)}
+
+/* priority load card, pinned to the selected truck */
+.plink{position:absolute;inset:0;pointer-events:none;width:100%;height:100%}
+.plink line{stroke:var(--blue);stroke-width:1;stroke-dasharray:3 3}
+.pdot{position:absolute;left:0;top:0;width:10px;height:10px;margin:-5px 0 0 -5px;border-radius:5px;background:var(--blue);border:2px solid var(--surface);pointer-events:none}
+.pdot::after{content:"";position:absolute;inset:-8px;border-radius:50%;border:1px solid var(--blue);animation:ping 1.8s ease-out infinite}
+@keyframes ping{from{transform:scale(.4);opacity:1}to{transform:scale(1.4);opacity:0}}
+.pcard{position:absolute;left:0;top:0;width:240px;padding:12px;will-change:transform}
+.pc-head{display:flex;align-items:center;gap:10px;margin-bottom:10px}
+.pc-ico{width:30px;height:30px;border-radius:var(--r-lg);display:grid;place-items:center;background:var(--blue-bg);color:var(--blue);flex:none}
+.pc-ico svg{width:16px;height:16px}
+.pc-head div{flex:1;min-width:0}
+.pc-head b{display:block;font-size:var(--fs-base);line-height:var(--lh-base);font-weight:600;color:var(--text-dark)}
+.pc-head span{display:block;font-size:var(--fs-xs);line-height:var(--lh-xs);color:var(--text-muted)}
+.pc-row{display:flex;justify-content:space-between;align-items:center;gap:8px;height:20px}
+.pc-row span{color:var(--text-body);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.pc-row b{font-weight:600;color:var(--blue)}
+.pc-row.sm span{color:var(--text-muted)}
+.pc-pri{display:flex;align-items:center;gap:5px;font-weight:600;flex:none}
+.pc-pri i{width:6px;height:6px;border-radius:3px;background:currentColor}
+.pc-pri.red{color:var(--red)} .pc-pri.amber{color:var(--orange)} .pc-pri.blue{color:var(--blue)}
+.pcard .bar{margin:4px 0 12px}
+.pc-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;padding-top:10px;border-top:1px solid var(--border)}
+.pc-grid span{display:block;font-size:var(--fs-xs);line-height:var(--lh-xs);color:var(--text-muted)}
+.pc-grid b{display:block;font-size:var(--fs-sm);line-height:var(--lh-sm);font-weight:600;color:var(--text-dark);white-space:nowrap}
+.pc-grid b.blue{color:var(--blue)}
+
+/* ---- topbar ---------------------------------------------------- */
+.top{position:relative;z-index:3;height:56px;display:flex;align-items:center;gap:16px;padding:0 20px;pointer-events:none}
+.top>*{pointer-events:auto}
+.logo{display:flex;align-items:center;gap:10px;width:272px;flex:none}
+.logo-mark{width:30px;height:30px;border-radius:var(--r-lg);background:var(--blue);color:#fff;display:grid;place-items:center}
+.logo-mark svg{width:18px;height:18px}
+.logo b{font-size:var(--fs-xl);line-height:var(--lh-xl);font-weight:700;letter-spacing:.6px;color:var(--text-dark);white-space:nowrap}
+.logo b em{font-style:normal;color:var(--blue)}
+.nav{flex:1;display:flex;justify-content:center;min-width:0}
+.nav-in{display:flex;gap:2px;padding:3px;border-radius:18px;background:var(--glass);border:1px solid var(--glass-border);backdrop-filter:blur(12px);overflow-x:auto;scrollbar-width:none}
+.nav button{height:30px;padding:0 14px;border:0;border-radius:15px;background:none;color:var(--text-body);font-size:var(--fs-base);line-height:var(--lh-base);font-weight:500;cursor:pointer;white-space:nowrap}
+.nav button:hover{background:var(--blue-bg);color:var(--blue)}
+.nav button.on{background:var(--blue);color:#fff}
+.acts{display:flex;align-items:center;gap:4px;width:300px;justify-content:flex-end;flex:none}
+.ibtn{position:relative;width:30px;height:30px;border:1px solid transparent;border-radius:var(--r-lg);background:none;color:var(--icon-default);display:grid;place-items:center;cursor:pointer}
+.ibtn svg{width:16px;height:16px}
+.ibtn:hover{background:var(--blue-bg);color:var(--blue);border-color:var(--blue-border)}
+.ibtn:focus-visible,.nav button:focus-visible,.seg button:focus-visible,.trow:focus-visible,.chip-btn:focus-visible{outline:none;box-shadow:0 0 0 2px var(--ring)}
+.ibtn .pip{position:absolute;top:6px;right:6px;width:6px;height:6px;border-radius:3px;background:var(--red);border:1px solid var(--surface);box-sizing:content-box;margin:-1px}
+.ibtn.sm{width:26px;height:26px}
+.ibtn.sm svg{width:14px;height:14px}
+.avatar{position:relative;width:30px;height:30px;border-radius:15px;background:var(--blue);color:#fff;display:grid;place-items:center;font-size:var(--fs-sm);font-weight:600;margin-left:6px}
+.avatar::after{content:"";position:absolute;right:-1px;bottom:-1px;width:8px;height:8px;border-radius:5px;background:var(--green-dot);border:1px solid var(--surface)}
+
+/* ---- HUD grid -------------------------------------------------- */
+.hud{position:fixed;top:64px;left:20px;right:20px;bottom:20px;z-index:2;display:grid;
+  grid-template-columns:272px minmax(0,1fr) 300px;grid-template-rows:minmax(0,1fr) auto;gap:14px 16px;pointer-events:none}
+.lcol{grid-column:1;grid-row:1;display:flex;flex-direction:column;gap:14px;min-height:0}
+.mid{grid-column:2;grid-row:1;align-self:start;display:flex;justify-content:space-between;align-items:flex-start;gap:12px;min-width:0}
+.mid>*{pointer-events:auto}
+.rcol{grid-column:3;grid-row:1;align-self:end}
+.b1{grid-column:1;grid-row:2}.b2{grid-column:2;grid-row:2}.b3{grid-column:3;grid-row:2}
+
+.card{pointer-events:auto;background:var(--glass);border:1px solid var(--glass-border);border-radius:var(--r-2xl);padding:14px;backdrop-filter:blur(16px) saturate(1.3);-webkit-backdrop-filter:blur(16px) saturate(1.3);min-width:0}
+.chead{display:flex;align-items:flex-start;justify-content:space-between;gap:8px;margin-bottom:12px}
+.chead h3{margin:0;font-size:var(--fs-base);line-height:var(--lh-base);font-weight:600;color:var(--text-dark)}
+.chead p{margin:0;font-size:var(--fs-sm);line-height:var(--lh-sm);color:var(--text-muted)}
+.chead .aside{font-size:var(--fs-xs);line-height:var(--lh-xs);color:var(--text-faint);padding-top:3px;white-space:nowrap}
+.big{font-size:28px;line-height:32px;font-weight:600;letter-spacing:-.8px;color:var(--text-dark)}
+.cap{font-size:var(--fs-sm);line-height:var(--lh-sm);color:var(--text-muted)}
+.bar{height:4px;border-radius:2px;background:var(--border-soft);overflow:hidden}
+[data-theme="dark"] .bar{background:#223050}
+.bar i{display:block;height:100%;border-radius:2px;background:var(--blue);transition:width .6s ease}
+
+.badge{display:inline-flex;align-items:center;gap:4px;height:20px;padding:0 7px;border-radius:10px;border:1px solid transparent;font-size:var(--fs-sm);line-height:var(--lh-sm);font-weight:600;white-space:nowrap}
+.badge svg{width:12px;height:12px}
+.badge.up{background:var(--green-bg);color:var(--green);border-color:var(--green-border)}
+.badge.down{background:var(--red-bg);color:var(--red);border-color:var(--red-border)}
+.badge.out{background:var(--surface);border-color:var(--border);color:var(--text-body);font-weight:500}
+
+/* live loads */
+.ll-top{display:flex;align-items:flex-end;justify-content:space-between;gap:10px}
+.spark{display:flex;align-items:flex-end;gap:3px;height:32px}
+.spark i{width:5px;border-radius:2px 2px 1px 1px;background:var(--blue-soft);transition:height .6s ease}
+.spark i:last-child{background:var(--blue)}
+.ll-delta{display:flex;align-items:center;gap:6px;margin:8px 0 14px}
+.rowlbl{display:flex;justify-content:space-between;height:16px;margin-bottom:6px}
+.rowlbl b{color:var(--blue);font-weight:600}
+.trip{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:14px}
+.trip b{display:block;font-size:var(--fs-2xl);line-height:var(--lh-2xl);font-weight:600;color:var(--text-dark);letter-spacing:-.3px}
+.trip span{display:block;font-size:var(--fs-xs);line-height:var(--lh-xs);color:var(--text-muted)}
+
+/* terminal status */
+.term{display:flex;flex-direction:column;min-height:0;flex:0 1 auto}
+.seg{display:inline-flex;gap:2px;padding:2px;border-radius:var(--r-lg);background:var(--segmented-track);margin-bottom:6px;align-self:flex-start}
+.seg button{height:22px;padding:0 9px;border:0;border-radius:var(--r-md);background:none;color:var(--text-muted);font-size:var(--fs-sm);line-height:var(--lh-sm);font-weight:500;cursor:pointer}
+.seg button:hover{color:var(--blue);background:var(--blue-bg)}
+.seg button.on{background:var(--surface);color:var(--text-dark)}
+.tlist{overflow:auto;min-height:0;margin:0 -14px;padding:0 6px;scrollbar-width:thin}
+.trow{display:block;width:100%;text-align:left;background:none;border:0;border-bottom:1px solid var(--border-soft);padding:8px;border-radius:var(--r-lg);cursor:pointer;color:inherit}
+.trow:last-child{border-bottom:0}
+.trow:hover{background:var(--blue-bg)}
+.trow:hover .tr-top b{color:var(--blue)}
+.trow.on{background:var(--blue-bg);border-bottom-color:transparent}
+.tr-top{display:flex;align-items:center;gap:6px;height:20px;margin-bottom:6px}
+.tr-top b{font-size:var(--fs-base);line-height:var(--lh-base);font-weight:600;color:var(--text-dark);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.tr-top .code{font-size:var(--fs-xs);line-height:var(--lh-xs);color:var(--text-faint);white-space:nowrap}
+.st{margin-left:auto;display:flex;align-items:center;gap:5px;font-size:var(--fs-xs);line-height:var(--lh-xs);font-weight:500;white-space:nowrap;color:var(--text-body)}
+.st i{width:6px;height:6px;border-radius:3px}
+.st.healthy i{background:var(--green-dot)} .st.busy i{background:var(--orange)} .st.delay i{background:var(--red)}
+.bar.healthy i{background:var(--blue)} .bar.busy i{background:var(--orange)} .bar.delay i{background:var(--red)}
+.tr-meta{display:flex;justify-content:space-between;margin-top:6px;font-size:var(--fs-xs);line-height:var(--lh-xs);color:var(--text-muted)}
+.tr-meta em{font-style:normal;color:var(--text-body);font-weight:500}
+
+/* mid overlay: live chip + view controls */
+.live{display:flex;align-items:center;gap:8px;height:32px;padding:0 12px 0 10px;border-radius:16px;background:var(--glass);border:1px solid var(--glass-border);backdrop-filter:blur(12px);white-space:nowrap;min-width:0;overflow:hidden}
+.live .dot{width:8px;height:8px;border-radius:4px;background:var(--green-dot);flex:none;animation:blink 2s ease-in-out infinite}
+@keyframes blink{50%{opacity:.35}}
+.live b{font-size:var(--fs-sm);line-height:var(--lh-sm);font-weight:600;color:var(--text-dark)}
+.live span{font-size:var(--fs-sm);line-height:var(--lh-sm);color:var(--text-muted);overflow:hidden;text-overflow:ellipsis}
+.live .sep{width:1px;height:12px;background:var(--border);flex:none}
+.vctl{display:flex;gap:2px;padding:2px;border-radius:var(--r-xl);background:var(--glass);border:1px solid var(--glass-border);backdrop-filter:blur(12px);flex:none}
+
+/* on-time rhythm */
+.rhythm{display:flex;align-items:flex-end;justify-content:space-between;gap:6px;height:96px;position:relative;margin-top:4px}
+.rhythm .tgt{position:absolute;left:0;right:0;border-top:1px dashed var(--text-faint);opacity:.6;pointer-events:none}
+.rhythm .tgt span{position:absolute;right:0;top:-16px;font-size:var(--fs-xs);line-height:var(--lh-xs);color:var(--text-faint)}
+.rb{flex:1;display:flex;flex-direction:column;align-items:center;gap:6px;height:100%;justify-content:flex-end;cursor:default}
+.rb i{width:100%;max-width:26px;border-radius:6px 6px 3px 3px;background:var(--blue-soft);transition:height .6s ease,background .15s}
+.rb.today i{background:var(--blue)}
+.rb.low i{background:var(--orange)}
+.rb span{font-size:var(--fs-xs);line-height:var(--lh-xs);color:var(--text-muted)}
+.rb:hover i{background:var(--blue)}
+.rb:hover span{color:var(--blue)}
+
+/* trailer pool */
+.tp-mid{display:flex;justify-content:space-between;align-items:flex-end;gap:10px;margin-bottom:12px}
+.legend{display:flex;flex-direction:column;gap:4px}
+.legend span,.lgd span{display:flex;align-items:center;gap:6px;font-size:var(--fs-xs);line-height:var(--lh-xs);color:var(--text-muted);white-space:nowrap}
+.legend i,.lgd i{width:8px;height:8px;border-radius:2px;flex:none}
+.tp-ico{width:30px;height:30px;border-radius:var(--r-lg);background:var(--blue-bg);color:var(--blue);display:grid;place-items:center;flex:none}
+.tp-ico svg{width:16px;height:16px}
+.stats4{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;padding-top:10px;border-top:1px solid var(--border)}
+.stats4 span{display:block;font-size:var(--fs-xs);line-height:var(--lh-xs);color:var(--text-muted);white-space:nowrap}
+.stats4 b{display:block;font-size:var(--fs-base);line-height:var(--lh-base);font-weight:600;color:var(--text-dark)}
+.stats4 b.o{color:var(--orange)}
+
+/* dock door map */
+.lgd{display:flex;gap:12px;padding-top:3px}
+.zones{display:flex;justify-content:space-between;gap:12px;overflow:hidden}
+.zone{flex:none}
+.zone>span{display:block;font-size:var(--fs-xs);line-height:var(--lh-xs);color:var(--text-muted);margin-bottom:6px}
+.zgrid{display:grid;grid-template-columns:repeat(4,14px);grid-auto-rows:14px;gap:4px}
+.cell{width:14px;height:14px;border-radius:3px;background:var(--cell-open);border:0;padding:0;cursor:pointer;transition:background .3s}
+.cell.occ{background:var(--orange)} .cell.res{background:var(--blue)}
+.cell:hover{outline:2px solid var(--blue);outline-offset:1px}
+.cell.live{position:relative}
+.cell.live::after{content:"";position:absolute;left:5px;top:5px;width:4px;height:4px;border-radius:2px;background:var(--surface);opacity:.9}
+
+/* fleet utilisation */
+.fu-k{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:10px}
+.fu-k b{display:block;font-size:var(--fs-2xl);line-height:var(--lh-2xl);font-weight:600;letter-spacing:-.3px}
+.fu-k span{display:block;font-size:var(--fs-xs);line-height:var(--lh-xs);color:var(--text-muted)}
+.fu-k .c1{color:var(--blue)} .fu-k .c2{color:var(--orange)} .fu-k .c3{color:var(--text-faint)}
+.fu-bars{display:flex;align-items:flex-end;gap:4px;height:48px;padding-top:6px;border-top:1px solid var(--border)}
+.fu-bars i{flex:1;border-radius:3px 3px 2px 2px;background:var(--orange-soft);transition:height .6s ease}
+.fu-bars i.pk{background:var(--orange)}
+.fu-bars i:hover{background:var(--blue)}
+.fu-x{display:flex;justify-content:space-between;margin-top:6px;font-size:var(--fs-xs);line-height:var(--lh-xs);color:var(--text-faint)}
+
+/* tooltip + toast */
+.tip{position:fixed;left:0;top:0;z-index:20;pointer-events:none;padding:6px 8px;border-radius:var(--r-lg);background:var(--text-dark);color:var(--surface);font-size:var(--fs-sm);line-height:var(--lh-sm);white-space:nowrap;opacity:0;transition:opacity .12s}
+.tip.on{opacity:1}
+.tip em{font-style:normal;opacity:.7}
+.toast{position:fixed;left:50%;bottom:28px;z-index:30;translate:-50% 0;padding:8px 14px;border-radius:var(--r-xl);background:var(--text-dark);color:var(--surface);font-size:var(--fs-base);line-height:var(--lh-base);opacity:0;pointer-events:none;transition:opacity .2s}
+.toast.on{opacity:1}
+
+/* loader */
+.loader{position:fixed;inset:0;z-index:1;display:grid;place-items:center;pointer-events:none;color:var(--text-muted);font-size:var(--fs-base);transition:opacity .4s}
+.loader.done{opacity:0}
+
+/* ---- narrow screens: stage on top, cards stacked below ---------- */
+@media (max-width:960px){
+  body{overflow:auto;display:flex;flex-direction:column}
+  .top{order:-2;padding:0 16px;gap:10px}
+  .stage{order:-1}
+  .hud,.hud>*{min-width:0}
+  .live{flex:1 1 0}
+  .live span{min-width:0;white-space:nowrap}
+  .logo{width:auto}.logo b{display:none}
+  .acts{width:auto}.acts .ibtn.hide-sm{display:none}
+  .nav{justify-content:flex-start}
+  .stage{position:relative;height:480px;flex:none}
+  .loader{display:none}
+  .hud{position:static;display:flex;flex-direction:column;padding:12px 16px 24px;gap:12px}
+  .lcol{gap:12px}
+  .mid{order:-1;align-self:stretch}
+  .rcol{align-self:auto}
+  .tlist{max-height:none}
+  .zones{flex-wrap:wrap;justify-content:flex-start}
+  .pcard{width:220px}
+}
+</style>
+</head>
+<body>
+
+<div class="stage" id="stage">
+  <canvas id="scene" aria-label="3D view of the Dallas cross-dock terminal with live truck movements"></canvas>
+  <div class="tags" id="tags"></div>
+  <svg class="plink" id="plink"><line id="plinkLine" x1="0" y1="0" x2="0" y2="0"/></svg>
+  <div class="pdot" id="pdot"></div>
+  <div class="card pcard" id="pcard">
+    <div class="pc-head">
+      <span class="pc-ico"><i data-lucide="truck"></i></span>
+      <div><b id="pcTitle">Priority Load</b><span id="pcId">LD-208431</span></div>
+      <button class="ibtn sm" id="pcNext" title="Next truck on site" aria-label="Next truck on site"><i data-lucide="chevrons-right"></i></button>
+    </div>
+    <div class="pc-row"><span id="pcCarrier">—</span><span class="pc-pri blue" id="pcPri"><i></i><em style="font-style:normal" id="pcPriTx">Standard</em></span></div>
+    <div class="pc-row sm"><span id="pcLane">—</span><b id="pcPct">0%</b></div>
+    <div class="bar"><i id="pcBar" style="width:0"></i></div>
+    <div class="pc-grid">
+      <div><span>State</span><b id="pcState">—</b></div>
+      <div><span id="pcEtaL">ETA</span><b id="pcEta">—</b></div>
+      <div><span>Door</span><b id="pcDoor" class="blue">—</b></div>
+    </div>
+  </div>
+</div>
+<div class="loader" id="loader">Loading terminal…</div>
+
+<header class="top">
+  <div class="logo">
+    <span class="logo-mark"><i data-lucide="send"></i></span>
+    <b>DISPATCH<em>PRO</em></b>
+  </div>
+  <nav class="nav" aria-label="Modules"><div class="nav-in" id="nav">
+    <button class="on">Overview</button><button>Loads</button><button>Dispatch Board</button><button>Fleet</button><button>Drivers</button><button>Yard &amp; Docks</button><button>Analytics</button>
+  </div></nav>
+  <div class="acts">
+    <button class="ibtn" title="Search" aria-label="Search"><i data-lucide="search"></i></button>
+    <button class="ibtn hide-sm" title="Notifications" aria-label="Notifications"><i data-lucide="bell"></i><span class="pip"></span></button>
+    <button class="ibtn" id="themeBtn" title="Toggle theme" aria-label="Toggle theme"><i data-lucide="moon"></i></button>
+    <span class="avatar" title="Rojith">RJ</span>
+  </div>
+</header>
+
+<main class="hud">
+  <div class="lcol">
+    <section class="card">
+      <div class="chead"><div><h3>Live Loads</h3><p>Today's network performance</p></div><button class="ibtn sm" title="Loads in motion across every terminal" aria-label="About this metric"><i data-lucide="info"></i></button></div>
+      <div class="ll-top">
+        <div><div class="big" id="llNum">1,284</div><div class="cap">Loads in motion today</div></div>
+        <div class="spark" id="spark"></div>
+      </div>
+      <div class="ll-delta"><span class="badge up"><i data-lucide="arrow-up"></i><span id="llDelta">6.4%</span></span><span class="cap">vs yesterday</span></div>
+      <div class="rowlbl"><span class="cap">On-time delivery target</span><b id="otdPct">94%</b></div>
+      <div class="bar"><i id="otdBar" style="width:94%"></i></div>
+      <div class="trip">
+        <div><b id="tPick">212</b><span>at pickup</span></div>
+        <div><b id="tTrans">486</b><span>in transit</span></div>
+        <div><b id="tDel">138</b><span>delivering</span></div>
+      </div>
+    </section>
+
+    <section class="card term">
+      <div class="chead"><div><h3>Terminal Status</h3></div><span class="aside" id="termCount">4 terminals</span></div>
+      <div class="seg" id="termSeg">
+        <button class="on" data-f="all">All</button><button data-f="healthy">Healthy</button><button data-f="busy">Busy</button><button data-f="delay">Delay</button>
+      </div>
+      <div class="tlist" id="tlist"></div>
+    </section>
+  </div>
+
+  <div class="mid">
+    <div class="live"><span class="dot"></span><b id="liveTerm">DAL-01 · Dallas Cross-Dock</b><span class="sep"></span><span id="liveSub">6 trucks on site</span></div>
+    <div class="vctl">
+      <button class="ibtn sm" id="pauseBtn" title="Pause simulation" aria-label="Pause simulation"><i data-lucide="pause"></i></button>
+      <button class="ibtn sm" id="resetBtn" title="Reset view" aria-label="Reset view"><i data-lucide="rotate-ccw"></i></button>
+    </div>
+  </div>
+
+  <section class="card rcol">
+    <div class="chead"><div><h3>On-time Rhythm</h3><p>Daily on-time delivery %</p></div><span class="badge up"><i data-lucide="arrow-up"></i>2.1</span></div>
+    <div class="rhythm" id="rhythm"></div>
+  </section>
+
+  <section class="card b1">
+    <div class="chead"><div><h3>Trailer Pool</h3><p id="tpSub">Yard allocation · DAL-01</p></div><span class="tp-ico"><i data-lucide="container"></i></span></div>
+    <div class="tp-mid">
+      <div><div class="big" id="tpNum">1,127</div><div class="cap">Trailers on yard</div></div>
+      <div class="legend"><span><i style="background:var(--orange)"></i>Loaded</span><span><i style="background:var(--blue-soft)"></i>Empty</span></div>
+    </div>
+    <div class="stats4">
+      <div><span>Available</span><b id="tpA">349</b></div>
+      <div><span>Reserved</span><b id="tpR">198</b></div>
+      <div><span>Out of svc</span><b id="tpO">42</b></div>
+      <div><span>Utilized</span><b class="o" id="tpU">86%</b></div>
+    </div>
+  </section>
+
+  <section class="card b2">
+    <div class="chead"><div><h3>Dock Door Map</h3><p id="ddSub">60 doors · Zone A is live in the 3D view</p></div>
+      <div class="lgd"><span><i style="background:var(--orange)"></i>Occupied</span><span><i style="background:var(--blue)"></i>Reserved</span><span><i style="background:var(--cell-open)"></i>Open</span></div></div>
+    <div class="zones" id="zones"></div>
+  </section>
+
+  <section class="card b3">
+    <div class="chead"><div><h3>Fleet Utilization</h3><p>Tractor hours by state</p></div><span class="badge out">30 days</span></div>
+    <div class="fu-k">
+      <div><b class="c1">61%</b><span>Loaded</span></div>
+      <div><b class="c2">14%</b><span>Deadhead</span></div>
+      <div><b class="c3">25%</b><span>Idle</span></div>
+    </div>
+    <div class="fu-bars" id="fuBars"></div>
+    <div class="fu-x"><span>W1</span><span>W4</span><span>W7</span><span>W10</span><span>W12</span></div>
+  </section>
+</main>
+
+<div class="tip" id="tip"></div>
+<div class="toast" id="toast"></div>
+
+<script type="module">
+import * as THREE from 'three';
+import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+import { RoundedBoxGeometry } from 'three/addons/geometries/RoundedBoxGeometry.js';
+import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
+
+/* ================================================================
+   Data
+   ================================================================ */
+const $ = id => document.getElementById(id);
+const fmt = n => Math.round(n).toLocaleString('en-US');
+const rnd = (a, b) => a + Math.random() * (b - a);
+const pick = a => a[Math.floor(Math.random() * a.length)];
+const store = {
+  get(k) { try { return localStorage.getItem('dp3d.' + k); } catch (e) { return null; } },
+  set(k, v) { try { localStorage.setItem('dp3d.' + k, v); } catch (e) {} }
+};
+
+const TERMINALS = [
+  { id: 'DAL-01', name: 'Dallas Cross-Dock', status: 'healthy', util: 86, doors: '22/24', loads: 412, otd: 99.2, pool: 1127 },
+  { id: 'ATL-02', name: 'Atlanta Hub',       status: 'busy',    util: 94, doors: '24/24', loads: 388, otd: 96.4, pool: 964 },
+  { id: 'CHI-03', name: 'Chicago Rail Yard', status: 'healthy', util: 61, doors: '11/18', loads: 145, otd: 99.6, pool: 742 },
+  { id: 'LRD-04', name: 'Laredo Border',     status: 'delay',   util: 78, doors: '14/18', loads: 233, otd: 92.7, pool: 1308 }
+];
+const ST_LABEL = { healthy: 'Healthy', busy: 'Busy', delay: 'Delay' };
+const CARRIERS = ['Northline Freight', 'Blue Mesa Logistics', 'Keystone Carriers', 'Prairie Haul Co.', 'Ridgeway Transport', 'Summit Line Express'];
+const CITIES = ['Houston, TX', 'Memphis, TN', 'Phoenix, AZ', 'Denver, CO', 'Atlanta, GA', 'Kansas City, MO', 'Oklahoma City, OK', 'San Antonio, TX', 'Little Rock, AR'];
+const PRIORITY = [['Hot Load', 'red'], ['High Priority', 'amber'], ['Standard', 'blue'], ['Standard', 'blue']];
+let loadSeq = 208431;
+function newLoad() {
+  const p = pick(PRIORITY);
+  let to = pick(CITIES);
+  return { id: 'LD-' + (loadSeq += Math.floor(rnd(3, 40))), carrier: pick(CARRIERS), pri: p[0], tone: p[1], to, miles: Math.floor(rnd(240, 1100)) };
+}
+let term = TERMINALS[0];
+
+/* ================================================================
+   Three.js scene
+   ================================================================ */
+const stage = $('stage'), canvas = $('scene');
+const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: true });
+renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+renderer.outputColorSpace = THREE.SRGBColorSpace;
+renderer.toneMapping = THREE.NeutralToneMapping;
+renderer.toneMappingExposure = 1.0;
+renderer.shadowMap.enabled = true;
+renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+
+const scene = new THREE.Scene();
+const pmrem = new THREE.PMREMGenerator(renderer);
+scene.environment = pmrem.fromScene(new RoomEnvironment(), 0.04).texture;
+scene.environmentIntensity = 0.55;
+
+const hemi = new THREE.HemisphereLight(0xffffff, 0xdfe6f0, 0.9);
+scene.add(hemi);
+const sun = new THREE.DirectionalLight(0xffffff, 1.7);
+const SUN_TGT = new THREE.Vector3(38, 0, 6);
+sun.position.copy(SUN_TGT).add(new THREE.Vector3(-45, 95, -35));
+sun.target.position.copy(SUN_TGT);
+sun.castShadow = true;
+sun.shadow.mapSize.set(4096, 4096);
+Object.assign(sun.shadow.camera, { left: -105, right: 105, top: 105, bottom: -105, near: 1, far: 320 });
+sun.shadow.bias = -0.0004;
+sun.shadow.normalBias = 0.03;
+scene.add(sun, sun.target);
+
+const camera = new THREE.OrthographicCamera(-1, 1, 1, -1, 1, 1200);
+const CAM_TGT = new THREE.Vector3(12, 0, 8);
+const CAM_DIR = new THREE.Vector3(1, 0.98, 1.22).normalize();
+function resetCamera() {
+  camera.position.copy(CAM_TGT).addScaledVector(CAM_DIR, 300);
+  camera.zoom = 1;
+  controls.target.copy(CAM_TGT);
+  camera.updateProjectionMatrix();
+  controls.update();
+}
+const controls = new OrbitControls(camera, canvas);
+controls.enableDamping = true;
+controls.dampingFactor = 0.08;
+controls.minZoom = 0.7; controls.maxZoom = 2.6;
+controls.minPolarAngle = 0.55; controls.maxPolarAngle = 1.2;
+controls.screenSpacePanning = true;
+const AZ0 = Math.atan2(CAM_DIR.x, CAM_DIR.z);
+controls.minAzimuthAngle = AZ0 - 0.75; controls.maxAzimuthAngle = AZ0 + 0.75;
+resetCamera();
+
+/* ---- palettes (light / dark) ----------------------------------- */
+const PAL = {
+  light: { ground: '#E4EAF3', pad: '#EEF2F7', apron: '#E8EDF4', road: '#D6DEE9', line: '#FFFFFF', floor: '#F6F8FB', wall: '#FFFFFF', trim: '#D3DCE8',
+    shelf: '#E6EBF2', cab: '#FFFFFF', trailer: '#F7F9FC', office: '#FFFFFF', tire: '#2A3140', dark: '#3A4454', leaf: '#9CCB9F', leaf2: '#B7D9A8',
+    trunk: '#B89A7A', grass: '#D3E7CC', glass: '#A3C6F4', shutter: '#DCE3EC', car1: '#FFFFFF', car2: '#C9D3E0', hemi: 0.9, sun: 1.7, env: 0.55, hemiG: '#DFE6F0' },
+  dark: { ground: '#101B30', pad: '#16233B', apron: '#15213A', road: '#1C2A45', line: '#52627F', floor: '#1B2843', wall: '#24345A', trim: '#31466E',
+    shelf: '#2B3C5C', cab: '#DCE4F0', trailer: '#C7D1E0', office: '#24345A', tire: '#0B111C', dark: '#0E1524', leaf: '#3F7C5A', leaf2: '#4C8A5E',
+    trunk: '#6B5642', grass: '#1C3A34', glass: '#3F74C6', shutter: '#33466A', car1: '#C9D3E0', car2: '#5A6A86', hemi: 0.55, sun: 1.15, env: 0.35, hemiG: '#1A2540' }
+};
+const M = {};
+const mat = (k, o = {}) => (M[k] = new THREE.MeshStandardMaterial({ color: PAL.light[k] || '#ffffff', roughness: 0.85, metalness: 0, ...o }));
+['pad', 'apron', 'road', 'floor', 'wall', 'trim', 'shelf', 'cab', 'trailer', 'office', 'tire', 'dark', 'leaf', 'leaf2', 'trunk', 'grass', 'shutter', 'car1', 'car2'].forEach(k => mat(k));
+mat('line', { roughness: 1 });
+mat('glass', { roughness: 0.15, metalness: 0.2 });
+M.blue = new THREE.MeshStandardMaterial({ color: '#0F6FFF', roughness: 0.55 });
+M.blueDeep = new THREE.MeshStandardMaterial({ color: '#1A56C8', roughness: 0.6 });
+M.box = new THREE.MeshStandardMaterial({ color: '#D9A86E', roughness: 0.9 });
+M.box2 = new THREE.MeshStandardMaterial({ color: '#E8BF8A', roughness: 0.9 });
+M.wrap = new THREE.MeshStandardMaterial({ color: '#F1F4F8', roughness: 0.5 });
+M.wood = new THREE.MeshStandardMaterial({ color: '#C39A6B', roughness: 1 });
+M.orange = new THREE.MeshStandardMaterial({ color: '#EE7B1E', roughness: 0.6 });
+M.green = new THREE.MeshStandardMaterial({ color: '#10B981', roughness: 0.5, emissive: '#10B981', emissiveIntensity: 0.4 });
+M.leaf.flatShading = true; M.leaf2.flatShading = true;
+
+// ground: a soft disc whose edge fades into the CSS backdrop
+function radialAlpha() {
+  const c = document.createElement('canvas'); c.width = c.height = 256;
+  const g = c.getContext('2d'), gr = g.createRadialGradient(128, 128, 40, 128, 128, 128);
+  gr.addColorStop(0, '#fff'); gr.addColorStop(0.62, '#fff'); gr.addColorStop(1, '#000');
+  g.fillStyle = gr; g.fillRect(0, 0, 256, 256);
+  return new THREE.CanvasTexture(c);
+}
+M.ground = new THREE.MeshStandardMaterial({ color: PAL.light.ground, roughness: 1, transparent: true, alphaMap: radialAlpha(), depthWrite: false });
+const ground = new THREE.Mesh(new THREE.CircleGeometry(175, 72), M.ground);
+ground.rotation.x = -Math.PI / 2; ground.position.set(38, 0, 6); ground.receiveShadow = true; ground.renderOrder = -1;
+scene.add(ground);
+
+/* ---- geometry helpers ------------------------------------------ */
+const GC = new Map();
+function G(w, h, d, r = 0) {
+  const k = `${w}|${h}|${d}|${r}`;
+  if (!GC.has(k)) GC.set(k, r > 0 ? new RoundedBoxGeometry(w, h, d, 2, Math.min(r, Math.min(w, h, d) / 2 - 0.001)) : new THREE.BoxGeometry(w, h, d));
+  return GC.get(k);
+}
+function mesh(geo, m, x, y, z, parent = scene, shadow = true) {
+  const o = new THREE.Mesh(geo, m); o.position.set(x, y, z);
+  o.castShadow = shadow; o.receiveShadow = true; parent.add(o); return o;
+}
+// box whose BOTTOM sits at y
+const B = (w, h, d, m, x, y, z, parent, r = 0, shadow = true) => mesh(G(w, h, d, r), m, x, y + h / 2, z, parent, shadow);
+const flat = (w, d, m, x, y, z, parent = scene) => { const o = mesh(G(w, 0.02, d), m, x, y, z, parent, false); return o; };
+
+const FLOOR = 1.0;              // dock height: the building slab top
+const BX0 = -29, BX1 = 29, BZ0 = -16, BZ1 = 16;
+const WALL_H = 7.2;
+const DOORS = Array.from({ length: 8 }, (_, i) => ({ i, z: -12.25 + i * 3.5, state: 'open', truck: null, shutter: 0, shutterT: 0, pallets: [], refill: 0 }));
+
+/* ---- site: pads, road, apron ----------------------------------- */
+B(140, 0.05, 72, M.pad, 38, 0, 5, scene, 0, false);                 // site pad
+B(36, 0.07, 52, M.apron, 47, 0, 2, scene, 0, false);                // truck apron in front of the docks
+B(18, 0.09, 190, M.road, 74, 0, 35, scene, 0, false);               // two-lane yard road (x 65..83)
+for (let z = -55; z < 130; z += 6) B(0.25, 0.11, 3, M.line, 74, 0, z, scene, 0, false);
+B(22, 0.07, 52, M.apron, 97, 0, 2, scene, 0, false);                // trailer pool
+for (let z = -22; z <= 26; z += 3.6) B(18, 0.09, 0.14, M.line, 97, 0, z - 1.8, scene, 0, false);
+B(16, 0.07, 30, M.apron, -40, 0, 0, scene, 0, false);               // staff car park
+for (let z = -13; z <= 13; z += 3.2) B(6, 0.09, 0.12, M.line, -43, 0, z, scene, 0, false);
+B(64, 0.06, 5, M.grass, 0, 0, 21, scene, 0, false);                 // planting strip south of the building
+B(5, 0.06, 40, M.grass, 60, 0, -32, scene, 0, false);
+
+/* ---- building shell ------------------------------------------- */
+B(BX1 - BX0, FLOOR, BZ1 - BZ0, M.floor, 0, 0, 0);                  // slab (its top is the warehouse floor)
+const wallT = 0.5;
+B(BX1 - BX0, WALL_H, wallT, M.wall, 0, 0, BZ0 + wallT / 2);        // north (full)
+B(wallT, WALL_H, BZ1 - BZ0, M.wall, BX0 + wallT / 2, 0, 0);        // west (full)
+B(BX1 - BX0 - 0.5, FLOOR + 1.1, wallT, M.wall, -0.25, 0, BZ1 - wallT / 2); // south: cut away low so the floor reads
+B(BX1 - BX0 + 0.2, 0.18, wallT + 0.2, M.trim, 0, WALL_H, BZ0 + wallT / 2);
+B(wallT + 0.2, 0.18, BZ1 - BZ0 + 0.2, M.trim, BX0 + wallT / 2, WALL_H, 0);
+B(BX1 - BX0 - 0.5, 0.14, wallT + 0.16, M.trim, -0.25, FLOOR + 1.1, BZ1 - wallT / 2);
+// east dock wall, pierced by 8 door openings
+const EX = BX1 - wallT / 2, DOOR_W = 3, DOOR_TOP = FLOOR + 3.8;
+{
+  const edges = [BZ0];
+  DOORS.forEach(d => edges.push(d.z - DOOR_W / 2, d.z + DOOR_W / 2));
+  edges.push(BZ1);
+  for (let k = 0; k < edges.length; k += 2) {
+    const z0 = edges[k], z1 = edges[k + 1];
+    if (z1 - z0 > 0.01) B(wallT, WALL_H - FLOOR, z1 - z0, M.wall, EX, FLOOR, (z0 + z1) / 2);
+  }
+  B(wallT, FLOOR, BZ1 - BZ0, M.trim, EX, 0, 0);
+  B(wallT + 0.2, 0.18, BZ1 - BZ0 + 0.2, M.trim, EX, WALL_H, 0);
+  DOORS.forEach(d => {
+    B(wallT, WALL_H - DOOR_TOP, DOOR_W, M.wall, EX, DOOR_TOP, d.z);                  // lintel
+    // blue dock shelter around the opening + bumpers
+    B(0.45, 4.3, 0.35, M.blue, BX1 + 0.2, FLOOR - 0.2, d.z - DOOR_W / 2 - 0.2, scene, 0.08);
+    B(0.45, 4.3, 0.35, M.blue, BX1 + 0.2, FLOOR - 0.2, d.z + DOOR_W / 2 + 0.2, scene, 0.08);
+    B(0.45, 0.5, DOOR_W + 0.75, M.blue, BX1 + 0.2, DOOR_TOP + 0.1, d.z, scene, 0.08);
+    B(0.3, 0.45, 0.35, M.dark, BX1 + 0.15, 0.45, d.z - 1.05);
+    B(0.3, 0.45, 0.35, M.dark, BX1 + 0.15, 0.45, d.z + 1.05);
+    // roll-up shutter: scaled down into the head when a truck is docked
+    d.shutterMesh = B(0.12, 3.8, DOOR_W - 0.1, M.shutter, EX - 0.05, FLOOR, d.z, scene, 0, false);
+    // door number plate above the shelter
+    const p = new THREE.Mesh(new THREE.PlaneGeometry(1.6, 0.7), new THREE.MeshBasicMaterial({ map: textTex('A0' + (d.i + 1), 160, 70, 40), transparent: true }));
+    p.position.set(BX1 + 0.46, DOOR_TOP + 1.2, d.z); p.rotation.y = Math.PI / 2; scene.add(p);
+  });
+}
+function textTex(text, w, h, size, color = '#0F6FFF', bg = null, weight = 700) {
+  const c = document.createElement('canvas'); c.width = w * 2; c.height = h * 2;
+  const g = c.getContext('2d'); g.scale(2, 2);
+  if (bg) { g.fillStyle = bg; g.beginPath(); g.roundRect(0, 0, w, h, h / 2); g.fill(); }
+  g.fillStyle = color; g.font = `${weight} ${size}px Inter, system-ui, sans-serif`; g.textAlign = 'center'; g.textBaseline = 'middle';
+  g.fillText(text, w / 2, h / 2 + 1);
+  const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = 8; return t;
+}
+// branded sign on the inside face of the north wall
+const signMat = new THREE.MeshBasicMaterial({ transparent: true });
+const sign = new THREE.Mesh(new THREE.PlaneGeometry(30, 2.4), signMat);
+sign.position.set(4, 5.4, BZ0 + wallT + 0.02); scene.add(sign);
+function paintSign(dark) {
+  const c = document.createElement('canvas'); c.width = 2400; c.height = 192;
+  const g = c.getContext('2d');
+  g.font = '700 120px Inter, system-ui, sans-serif'; g.textBaseline = 'middle';
+  g.fillStyle = dark ? '#8DB5FF' : '#0F6FFF'; g.fillText('DISPATCHPRO', 40, 100);
+  const w = g.measureText('DISPATCHPRO').width;
+  g.font = '500 84px Inter, system-ui, sans-serif'; g.fillStyle = dark ? '#8392AE' : '#8A96A8';
+  g.fillText(`${term.id}  ·  ${term.name.toUpperCase()}`, 40 + w + 70, 104);
+  if (signMat.map) signMat.map.dispose();
+  signMat.map = new THREE.CanvasTexture(c); signMat.map.colorSpace = THREE.SRGBColorSpace; signMat.map.anisotropy = 8; signMat.needsUpdate = true;
+}
+
+/* ---- office block (NW corner) ------------------------------------ */
+B(8.5, 5.2, 5.6, M.office, -24.5, FLOOR, -12.7, scene, 0.1);
+B(8.62, 1.3, 5.72, M.glass, -24.5, FLOOR + 3.2, -12.7, scene, 0, false);
+B(8.62, 1.0, 5.72, M.glass, -24.5, FLOOR + 1.2, -12.7, scene, 0, false);
+B(8.9, 0.2, 6.0, M.trim, -24.5, FLOOR + 5.2, -12.7);
+
+/* ---- racks (west half) ------------------------------------------ */
+const RACK_ROWS = [-11.4, -6.4, -1.4, 3.6, 8.6];
+const RX0 = -17.5, RX1 = -3.5, BAY = 2.8, RACK_D = 1.4, LV = [0, 1.6, 3.2, 4.8];
+{
+  const upr = [], shelves = [], boxes = [];
+  RACK_ROWS.forEach(rz => {
+    for (let x = RX0; x <= RX1 + 0.01; x += BAY) { upr.push([x, rz - RACK_D / 2]); upr.push([x, rz + RACK_D / 2]); }
+    LV.slice(1).forEach(y => shelves.push([rz, y]));
+    for (let x = RX0; x < RX1 - 0.01; x += BAY) LV.forEach(y => {
+      if (Math.random() < 0.78) boxes.push([x + 0.75, y, rz, rnd(0.9, 1.35)]);
+      if (Math.random() < 0.7) boxes.push([x + 2.05, y, rz, rnd(0.9, 1.35)]);
+    });
+  });
+  const dummy = new THREE.Object3D();
+  const im = (geo, m, n) => { const o = new THREE.InstancedMesh(geo, m, n); o.castShadow = o.receiveShadow = true; scene.add(o); return o; };
+  const U = im(G(0.16, 5.4, 0.16), M.blue, upr.length);
+  upr.forEach(([x, z], k) => { dummy.position.set(x, FLOOR + 2.7, z); dummy.updateMatrix(); U.setMatrixAt(k, dummy.matrix); });
+  const S = im(G(RX1 - RX0, 0.1, RACK_D + 0.1), M.shelf, shelves.length);
+  shelves.forEach(([z, y], k) => { dummy.position.set((RX0 + RX1) / 2, FLOOR + y - 0.05, z); dummy.updateMatrix(); S.setMatrixAt(k, dummy.matrix); });
+  const beams = im(G(RX1 - RX0, 0.14, 0.08), M.orange, shelves.length * 2);
+  shelves.forEach(([z, y], k) => [-1, 1].forEach((s, j) => { dummy.position.set((RX0 + RX1) / 2, FLOOR + y - 0.08, z + s * (RACK_D / 2 + 0.04)); dummy.updateMatrix(); beams.setMatrixAt(k * 2 + j, dummy.matrix); }));
+  const BXm = im(G(1, 1, 1, 0.06), M.box, boxes.length);
+  const col = new THREE.Color();
+  boxes.forEach(([x, y, z, h], k) => {
+    dummy.position.set(x, FLOOR + y + 0.02 + h * 0.5, z); dummy.scale.set(1.15, h, 1.1); dummy.updateMatrix(); BXm.setMatrixAt(k, dummy.matrix);
+    BXm.setColorAt(k, col.set(Math.random() < 0.18 ? '#F1F4F8' : Math.random() < 0.5 ? '#FFFFFF' : '#F4DDBE'));
+  });
+  dummy.scale.set(1, 1, 1);
+}
+
+/* ---- sortation conveyor ------------------------------------------ */
+const CV_X0 = -1.2, CV_X1 = 14.2, CV_Z = 1.1;
+B(CV_X1 - CV_X0, 0.75, 1.5, M.trim, (CV_X0 + CV_X1) / 2, FLOOR, CV_Z);
+B(CV_X1 - CV_X0, 0.08, 1.2, M.dark, (CV_X0 + CV_X1) / 2, FLOOR + 0.75, CV_Z, scene, 0, false);
+B(CV_X1 - CV_X0, 0.3, 0.1, M.blue, (CV_X0 + CV_X1) / 2, FLOOR + 0.75, CV_Z - 0.75, scene, 0, false);
+B(CV_X1 - CV_X0, 0.3, 0.1, M.blue, (CV_X0 + CV_X1) / 2, FLOOR + 0.75, CV_Z + 0.75, scene, 0, false);
+B(1.6, 2.6, 2.2, M.wall, 6, FLOOR, CV_Z, scene, 0.12);                       // scanner arch
+B(1.62, 0.3, 2.22, M.blue, 6, FLOOR + 2.3, CV_Z);
+const CV_N = 9;
+const cvBoxes = new THREE.InstancedMesh(G(0.8, 0.55, 0.7, 0.05), M.box, CV_N);
+cvBoxes.castShadow = true; scene.add(cvBoxes);
+
+/* ---- floor marking + animated flow paths ---------------------------- */
+function dashTex() {
+  const c = document.createElement('canvas'); c.width = 64; c.height = 8;
+  const g = c.getContext('2d'); g.fillStyle = '#fff'; g.fillRect(0, 1, 34, 6);
+  const t = new THREE.CanvasTexture(c); t.wrapS = THREE.RepeatWrapping; return t;
+}
+const flows = [];
+function flow(x0, z0, x1, z1, color = '#0F6FFF') {
+  const len = Math.hypot(x1 - x0, z1 - z0);
+  const t = dashTex(); t.repeat.set(len / 1.6, 1);
+  const m = new THREE.MeshBasicMaterial({ color, map: t, transparent: true, opacity: 0.9, depthWrite: false });
+  const p = new THREE.Mesh(new THREE.PlaneGeometry(len, 0.28), m);
+  p.rotation.x = -Math.PI / 2; p.rotation.z = -Math.atan2(z1 - z0, x1 - x0);
+  p.position.set((x0 + x1) / 2, FLOOR + 0.03, (z0 + z1) / 2); scene.add(p);
+  flows.push(t);
+}
+flow(-3, -3.9, 17.3, -3.9); flow(-3, 5.9, 17.3, 5.9); flow(17.3, -14, 17.3, 14.2);
+flow(-18.8, -14.2, -18.8, 12.5); flow(-18.8, 12.5, 17.3, 12.5);
+// staging lanes behind each door
+DOORS.forEach(d => {
+  flat(9, 0.12, M.blue, 23.8, FLOOR + 0.02, d.z - 1.45);
+  flat(9, 0.12, M.blue, 23.8, FLOOR + 0.02, d.z + 1.45);
+  for (let s = 0; s < 3; s++) {
+    const g = new THREE.Group(); g.position.set(21 + s * 2.3, FLOOR, d.z);
+    B(1.3, 0.16, 1.3, M.wood, 0, 0, 0, g);
+    const h = rnd(0.7, 1.4);
+    B(1.2, h, 1.2, Math.random() < 0.3 ? M.wrap : M.box, 0, 0.16, 0, g, 0.06);
+    if (Math.random() < 0.5) B(1.1, 0.5, 1.1, M.box2, 0, 0.16 + h, 0, g, 0.05);
+    g.visible = Math.random() < 0.8; scene.add(g); d.pallets.push(g);
+  }
+});
+
+/* ---- forklifts / AGVs ---------------------------------------------- */
+function roundedRect(x0, z0, x1, z1, r) {
+  const pts = [], seg = 5;
+  const corners = [[x1 - r, z0 + r, -Math.PI / 2], [x1 - r, z1 - r, 0], [x0 + r, z1 - r, Math.PI / 2], [x0 + r, z0 + r, Math.PI]];
+  corners.forEach(([cx, cz, a0]) => { for (let k = 0; k <= seg; k++) { const a = a0 + (k / seg) * Math.PI / 2; pts.push(new THREE.Vector3(cx + Math.cos(a) * r, 0, cz + Math.sin(a) * r)); } });
+  return new THREE.CatmullRomCurve3(pts, true, 'centripetal');
+}
+function makeLift() {
+  const g = new THREE.Group();
+  B(1.9, 0.9, 1.25, M.cab, 0, 0.2, 0, g, 0.18);
+  B(1.0, 0.9, 1.1, M.cab, -0.35, 1.1, 0, g, 0.12);
+  B(0.3, 0.18, 0.3, M.blue, -0.35, 2.0, 0, g, 0.06);
+  B(1.92, 0.22, 1.27, M.blueDeep, 0, 0.35, 0, g, 0.04, false);
+  B(0.12, 2.4, 0.12, M.dark, 1.02, 0.1, -0.4, g); B(0.12, 2.4, 0.12, M.dark, 1.02, 0.1, 0.4, g);
+  B(1.1, 0.06, 0.14, M.dark, 1.6, 0.14, -0.3, g); B(1.1, 0.06, 0.14, M.dark, 1.6, 0.14, 0.3, g);
+  const load = new THREE.Group(); load.position.set(1.65, 0.2, 0);
+  B(1.1, 0.12, 1.1, M.wood, 0, 0, 0, load); B(1.05, 0.8, 1.05, M.box, 0, 0.12, 0, load, 0.05);
+  g.add(load); g.userData.load = load;
+  const wg = new THREE.CylinderGeometry(0.24, 0.24, 0.2, 14); wg.rotateX(Math.PI / 2);
+  [[-0.6, -0.62], [-0.6, 0.62], [0.6, -0.62], [0.6, 0.62]].forEach(([x, z]) => mesh(wg, M.tire, x, 0.24, z, g));
+  scene.add(g); return g;
+}
+const LIFTS = [
+  { path: roundedRect(-19, -8.9, 16.4, -3.9, 1.6), speed: 3.2, u: 0.1 },
+  { path: roundedRect(-19, 1.1, 16.4, 5.9, 1.6), speed: 3.0, u: 0.55 },
+  { path: roundedRect(15.4, -13.5, 19.4, 13.5, 1.4), speed: 3.6, u: 0.3 },
+  { path: roundedRect(-18.8, 6.8, 16.4, 12.5, 1.6), speed: 2.8, u: 0.8 }
+].map(l => ({ ...l, g: makeLift(), len: l.path.getLength() }));
+
+/* ---- trucks ------------------------------------------------------- */
+const TRUCK_LEN = 17.2;
+const selTex = (() => {
+  const c = document.createElement('canvas'); c.width = 512; c.height = 128;
+  const g = c.getContext('2d');
+  g.strokeStyle = '#0F6FFF'; g.lineWidth = 10; g.beginPath(); g.roundRect(10, 10, 492, 108, 40); g.stroke();
+  g.fillStyle = 'rgba(15,111,255,.14)'; g.fill();
+  const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; return t;
+})();
+const wheelGeo = (() => { const g = new THREE.CylinderGeometry(0.52, 0.52, 0.34, 18); g.rotateX(Math.PI / 2); return g; })();
+function makeTruck(withCab = true, stripe = M.blue) {
+  const g = new THREE.Group();
+  // trailer: rear at x=0, nose at x=13 — origin is the trailer's rear centre on the ground
+  B(13, 2.9, 2.5, M.trailer, 6.5, 1.25, 0, g, 0.16);
+  B(12.4, 1.0, 2.54, stripe, 6.6, 1.55, 0, g, 0.06, false);
+  B(12.6, 0.28, 2.1, M.dark, 6.6, 0.95, 0, g);
+  B(0.06, 2.6, 2.3, M.trim, -0.02, 1.4, 0, g, 0, false);
+  [1.2, 2.5].forEach(x => [-1.02, 1.02].forEach(z => mesh(wheelGeo, M.tire, x, 0.52, z, g)));
+  if (withCab) {
+    B(4.4, 0.35, 2.0, M.dark, 14.6, 0.75, 0, g);
+    B(3.2, 3.0, 2.5, M.cab, 15.4, 0.95, 0, g, 0.38);
+    B(0.08, 1.0, 2.1, M.glass, 17.0, 2.55, 0, g, 0, false);
+    B(2.6, 0.55, 2.56, stripe, 15.5, 1.35, 0, g, 0.05, false);
+    B(0.3, 0.45, 2.5, M.dark, 17.1, 0.55, 0, g, 0.08);
+    B(1.5, 0.5, 2.4, M.trim, 14.9, 3.95, 0, g, 0.2);
+    [[13.9, -1.02], [13.9, 1.02], [16.3, -1.02], [16.3, 1.02]].forEach(([x, z]) => mesh(wheelGeo, M.tire, x, 0.52, z, g));
+  } else {
+    B(0.2, 1.0, 0.2, M.dark, 10.5, 0.2, -0.8, g); B(0.2, 1.0, 0.2, M.dark, 10.5, 0.2, 0.8, g);
+  }
+  scene.add(g); return g;
+}
+// static trailer pool + staff cars
+for (let k = 0; k < 13; k++) {
+  if (Math.random() < 0.22) continue;
+  const t = makeTruck(false, Math.random() < 0.5 ? M.blue : M.orange);
+  t.position.set(104.5, 0.02, -21.8 + k * 3.6); t.rotation.y = Math.PI;
+}
+function makeCar(x, z, rot) {
+  const g = new THREE.Group(); const m = Math.random() < 0.6 ? M.car1 : Math.random() < 0.5 ? M.car2 : M.blue;
+  B(4.2, 0.9, 1.8, m, 0, 0.3, 0, g, 0.3); B(2.3, 0.7, 1.6, M.glass, -0.2, 1.1, 0, g, 0.25);
+  const wg = new THREE.CylinderGeometry(0.34, 0.34, 0.24, 12); wg.rotateX(Math.PI / 2);
+  [[-1.3, -0.82], [-1.3, 0.82], [1.3, -0.82], [1.3, 0.82]].forEach(([a, b]) => mesh(wg, M.tire, a, 0.34, b, g));
+  g.position.set(x, 0.05, z); g.rotation.y = rot; scene.add(g);
+}
+for (let k = 0; k < 8; k++) if (Math.random() < 0.8) makeCar(-43, -11.4 + k * 3.2, Math.random() < 0.5 ? 0 : Math.PI);
+
+/* ---- gate ---------------------------------------------------------- */
+const GATE_Z = 36;
+B(2.4, 2.8, 2.6, M.wall, 74, 0.1, GATE_Z + 1, scene, 0.15);
+B(2.46, 0.9, 2.66, M.glass, 74, 1.6, GATE_Z + 1, scene, 0, false);
+B(3.0, 0.25, 3.2, M.blue, 74, 2.9, GATE_Z + 1, scene, 0.06);
+function gateArm(px, yaw) {
+  B(0.5, 1.2, 0.5, M.trim, px, 0.1, GATE_Z - 1.2);
+  const piv = new THREE.Group(); piv.position.set(px, 1.2, GATE_Z - 1.2); piv.rotation.set(0, yaw, 0);
+  const arm = new THREE.Group(); piv.add(arm);
+  for (let s = 0; s < 4; s++) B(1.9, 0.16, 0.16, s % 2 ? M.wall : M.orange, 0.2 + s * 1.9 + 0.95, -0.08, 0, arm, 0, true);
+  scene.add(piv); return { arm, lift: 0, x0: Math.min(px, px + Math.cos(yaw) * 8), x1: Math.max(px, px + Math.cos(yaw) * 8) };
+}
+const ARMS = [gateArm(65.6, 0), gateArm(82.4, Math.PI)];
+
+/* ---- trees --------------------------------------------------------- */
+const leafGeo = new THREE.IcosahedronGeometry(1.3, 1), trunkGeo = new THREE.CylinderGeometry(0.16, 0.2, 1.2, 8);
+function tree(x, z, s = 1) {
+  mesh(trunkGeo, M.trunk, x, 0.6, z);
+  const l = mesh(leafGeo, Math.random() < 0.5 ? M.leaf : M.leaf2, x, 1.2 + 1.1 * s, z); l.scale.setScalar(s);
+}
+for (let x = -28; x <= 26; x += 6.5) tree(x + rnd(-0.8, 0.8), 21 + rnd(-1, 1), rnd(0.8, 1.1));
+[[62, -40], [60, -28], [59, -20], [86, 40], [87, 46], [61, 40], [-34, 18], [-48, 18], [-34, -18], [-50, -16], [110, -30], [112, 32]].forEach(([x, z]) => tree(x, z, rnd(0.8, 1.15)));
+
+/* ================================================================
+   Truck simulation
+   ================================================================ */
+const trucks = [];
+const IN_X = 70, OUT_X = 78;
+const V3 = (x, z) => new THREE.Vector3(x, 0, z);
+function lineLeg(a, b, reverse = false) { const c = new THREE.LineCurve3(a, b); return { c, len: c.getLength(), reverse }; }
+function curveLeg(pts, reverse = false) { const c = new THREE.CatmullRomCurve3(pts, false, 'centripetal'); return { c, len: c.getLength(), reverse }; }
+
+function spawnTruck(door, docked = false) {
+  const load = newLoad();
+  const t = { g: makeTruck(true), door, load, leg: null, legs: [], s: 0, v: 0, state: 'inbound', yaw: Math.PI / 2, dwell: rnd(16, 28), dwellT: 0, blocked: 0, ignore: 0, outT: 0 };
+  const sel = new THREE.Mesh(new THREE.PlaneGeometry(19, 4.4), new THREE.MeshBasicMaterial({ map: selTex, transparent: true, depthWrite: false }));
+  sel.rotation.x = -Math.PI / 2; sel.position.set(8.6, 0.14, 0); sel.visible = false; t.g.add(sel); t.sel = sel;
+  t.g.traverse(o => { o.userData.truck = t; });
+  const dz = door.z;
+  door.truck = t;
+  if (docked) {
+    door.state = 'occupied'; door.shutterT = 1; door.shutter = 1;
+    t.state = 'docked'; t.dwellT = rnd(0, t.dwell * 0.7); t.yaw = 0;
+    t.g.position.set(BX1 + 0.3, 0.02, dz); t.g.rotation.y = 0;
+  } else {
+    door.state = 'reserved';
+    t.legs = [
+      lineLeg(V3(IN_X, 150), V3(IN_X, dz - 6)),
+      curveLeg([V3(IN_X, dz - 6), V3(IN_X, dz - 3.2), V3(66.2, dz - 0.2), V3(56, dz), V3(BX1 + 0.3, dz)], true)
+    ];
+    t.leg = t.legs.shift(); t.s = 0; t.yaw = Math.PI / 2;
+  }
+  trucks.push(t);
+  paintDoorMap();
+  return t;
+}
+function departTruck(t) {
+  const dz = t.door.z;
+  t.state = 'outbound';
+  t.door.shutterT = 0; t.door.state = 'open'; t.door.truck = null; t.door.refill = 3;
+  t.legs = [curveLeg([V3(BX1 + 0.3, dz), V3(52, dz), V3(68, dz + 2.5), V3(76.5, dz + 11), V3(OUT_X, dz + 22), V3(OUT_X, 175)])];
+  t.leg = t.legs.shift(); t.s = 0; t.v = 0;
+  paintDoorMap();
+}
+const segDist = (px, pz, ax, az, bx, bz) => {
+  const vx = bx - ax, vz = bz - az, l2 = vx * vx + vz * vz || 1;
+  const k = Math.max(0, Math.min(1, ((px - ax) * vx + (pz - az) * vz) / l2));
+  return Math.hypot(px - (ax + vx * k), pz - (az + vz * k));
+};
+function truckSeg(t) {
+  const p = t.g.position, c = Math.cos(t.yaw), s = -Math.sin(t.yaw);
+  return [p.x, p.z, p.x + c * TRUCK_LEN, p.z + s * TRUCK_LEN];
+}
+const tmpP = new THREE.Vector3(), tmpT = new THREE.Vector3();
+function stepTruck(t, dt) {
+  if (t.state === 'docked') {
+    t.dwellT += dt;
+    const prog = t.dwellT / t.dwell;
+    t.door.pallets.forEach((p, k) => { if (prog > (k + 1) / 3.2) p.visible = false; });
+    if (t.dwellT >= t.dwell) departTruck(t);
+    return;
+  }
+  const L = t.leg;
+  const remain = L.len - t.s;
+  const vmax = L.reverse ? 3.2 : 9;
+  let target = Math.min(vmax, Math.sqrt(2 * 3.2 * Math.max(remain, 0)) + (t.legs.length || t.state === 'outbound' ? 1.2 : 0.25));
+  // look ahead along the motion direction; hold if another rig is in the way
+  const u = Math.min(t.s / L.len, 1);
+  L.c.getPointAt(u, tmpP); L.c.getTangentAt(Math.min(u, 0.999), tmpT);
+  const [ax, az, bx, bz] = truckSeg(t);
+  const lead = L.reverse ? [ax, az] : [bx, bz];
+  const px = lead[0] + tmpT.x * 4.5, pz = lead[1] + tmpT.z * 4.5;
+  let hit = false;
+  if (t.ignore <= 0) for (const o of trucks) {
+    if (o === t) continue;
+    const [ox, oz, qx, qz] = truckSeg(o);
+    if (segDist(px, pz, ox, oz, qx, qz) < 2.7) { hit = true; break; }
+  }
+  if (hit) { target = 0; t.blocked += dt; if (t.blocked > 3) { t.ignore = 1.6; t.blocked = 0; } }
+  else t.blocked = 0;
+  t.ignore -= dt;
+  t.v += Math.sign(target - t.v) * Math.min(Math.abs(target - t.v), (target < t.v ? 9 : 4) * dt);
+  t.s = Math.min(L.len, t.s + t.v * dt);
+  const u2 = t.s / L.len;
+  L.c.getPointAt(u2, tmpP); L.c.getTangentAt(Math.min(u2, 0.999), tmpT);
+  t.g.position.set(tmpP.x, 0.02, tmpP.z);
+  const hx = L.reverse ? -tmpT.x : tmpT.x, hz = L.reverse ? -tmpT.z : tmpT.z;
+  const want = Math.atan2(-hz, hx);
+  let d = want - t.yaw; d = Math.atan2(Math.sin(d), Math.cos(d));
+  t.yaw += d * Math.min(1, dt * 7);
+  t.g.rotation.y = t.yaw;
+  if (t.state === 'outbound') t.outT += dt;
+  if (t.s >= L.len - 0.01) {
+    if (t.legs.length) {
+      t.leg = t.legs.shift(); t.s = 0;
+      if (t.leg.reverse) { t.state = 'backing'; t.v = 0; }
+    } else if (t.state === 'backing') {
+      t.state = 'docked'; t.v = 0; t.dwellT = 0; t.door.state = 'occupied'; t.door.shutterT = 1; paintDoorMap();
+    } else if (t.state === 'outbound') {
+      removeTruck(t);
+    }
+  }
+  if (t.state === 'inbound' && t.s > L.len - 0.1 && !t.legs.length) t.state = 'backing';
+}
+function removeTruck(t) {
+  scene.remove(t.g);
+  t.g.traverse(o => { if (o.material && o.material.map === selTex) o.material.dispose(); });
+  trucks.splice(trucks.indexOf(t), 1);
+  if (selected === t) selectTruck(bestTruck());
+}
+let spawnIn = 1.5;
+function spawner(dt) {
+  spawnIn -= dt;
+  if (spawnIn > 0) return;
+  spawnIn = rnd(5, 9);
+  const free = DOORS.filter(d => d.state === 'open' && !d.truck);
+  if (!free.length || trucks.length >= 9) return;
+  const laneBusy = trucks.some(o => o.state === 'inbound' && o.g.position.z > 118);
+  if (laneBusy) return;
+  const t = spawnTruck(pick(free));
+  t.g.position.set(IN_X, 0.02, 150); t.g.rotation.y = t.yaw;
+}
+
+/* ================================================================
+   Labels + priority card (HTML projected from 3D)
+   ================================================================ */
+const TAGS = [
+  { p: V3(-10.5, -13.4), y: 8.2, t: 'Rack Zone A' },
+  { p: V3(6, CV_Z), y: 4.4, t: 'Sortation Line' },
+  { p: V3(BX1 + 0.4, BZ0 - 0.6), y: 9, t: 'Dock Zone A · A01–A08' },
+  { p: V3(74, GATE_Z + 1), y: 5.2, t: 'Gate 1 · Inbound', cls: 'gate' },
+  { p: V3(97, -24), y: 5, t: 'Trailer Pool', cls: 'pool' },
+  { p: V3(-40, -15), y: 2.5, t: 'Staff Parking' }
+].map(d => {
+  const el = document.createElement('div'); el.className = 'tag ' + (d.cls || ''); el.innerHTML = `<i></i>${d.t}`;
+  $('tags').appendChild(el); d.el = el; d.v = new THREE.Vector3(d.p.x, d.y, d.p.z); return d;
+});
+let W = 1, H = 1;
+const pv = new THREE.Vector3();
+function toScreen(v) { pv.copy(v).project(camera); return [(pv.x + 1) / 2 * W, (1 - pv.y) / 2 * H, pv.z]; }
+
+let selected = null;
+function bestTruck() {
+  const pri = t => (t.state === 'docked' ? 3 : t.state === 'backing' ? 2 : t.state === 'inbound' ? 1 : 0) + (t.load.tone === 'red' ? 0.5 : 0);
+  return [...trucks].sort((a, b) => pri(b) - pri(a))[0] || null;
+}
+function selectTruck(t) {
+  if (selected) selected.sel.visible = false;
+  selected = t;
+  if (t) t.sel.visible = true;
+  cardPos = null;
+  renderCard();
+}
+const pc = { card: $('pcard'), dot: $('pdot'), line: $('plinkLine') };
+let cardPos = null;
+const anchorV = new THREE.Vector3();
+function placeCard() {
+  const show = !!selected;
+  pc.card.style.visibility = pc.dot.style.visibility = pc.line.style.visibility = show ? 'visible' : 'hidden';
+  if (!show) return;
+  // once a departed rig is well down the road, hand the card to whoever is working a door
+  if (selected.state === 'outbound' && selected.outT > 10) { const nb = bestTruck(); if (nb && nb.state !== 'outbound') { selectTruck(nb); return; } }
+  const t = selected, c = Math.cos(t.yaw), s = -Math.sin(t.yaw);
+  anchorV.set(t.g.position.x + c * 14.8, 4.6, t.g.position.z + s * 14.8);
+  const [x, y] = toScreen(anchorV);
+  const cw = pc.card.offsetWidth, ch = pc.card.offsetHeight;
+  // keep the card inside the free middle of the stage (clear of the HUD columns)
+  const r = freeRect();
+  let tx = x + 44, ty = y - ch - 24;
+  // the right column only fills the lower stage, so above it the card may run to the edge
+  const right = ty + ch < r.rt ? W - 20 : r.r;
+  if (tx + cw > right) tx = x - cw - 44;
+  tx = Math.max(r.l, Math.min(right - cw, tx));
+  ty = Math.max(r.t, Math.min(r.b - ch, ty));
+  if (innerWidth <= 960) { tx = 8; ty = H - ch - 8; }     // phones: dock the card in the stage's bottom-left corner
+  if (!cardPos) cardPos = { x: tx, y: ty };
+  cardPos.x += (tx - cardPos.x) * 0.12; cardPos.y += (ty - cardPos.y) * 0.12;
+  const cx = Math.round(cardPos.x), cy = Math.round(cardPos.y);
+  pc.card.style.transform = `translate(${cx}px,${cy}px)`;
+  pc.dot.style.transform = `translate(${Math.round(x)}px,${Math.round(y)}px)`;
+  const ex = x < cx ? cx : x > cx + cw ? cx + cw : x, ey = y < cy ? cy : y > cy + ch ? cy + ch : y;
+  pc.line.setAttribute('x1', x); pc.line.setAttribute('y1', y); pc.line.setAttribute('x2', ex); pc.line.setAttribute('y2', ey);
+}
+const STATE_TX = { inbound: 'Inbound', backing: 'Backing in', docked: 'Loading', outbound: 'Departed' };
+let lastCard = '';
+function renderCard() {
+  const t = selected; if (!t) return;
+  const L = t.load, door = 'A0' + (t.door.i + 1);
+  let pct, lane, eta, etaL = 'ETA';
+  if (t.state === 'docked') { pct = t.dwellT / t.dwell; lane = 'Loading progress'; eta = Math.max(1, Math.ceil(t.dwell - t.dwellT)) + ' min'; etaL = 'Departs'; }
+  else if (t.state === 'outbound') { pct = Math.min(0.99, 0.02 + t.outT / 400); lane = `To ${L.to} · ${L.miles} mi`; const h = L.miles / 52; eta = `${Math.floor(h)}h ${Math.round((h % 1) * 60)}m`; }
+  else { const rem = (t.leg ? t.leg.len - t.s : 0) + (t.legs[0] ? t.legs[0].len : 0); pct = Math.max(0, 1 - rem / 190); lane = 'Arrival to door'; eta = Math.max(1, Math.ceil(rem / 7)) + ' min'; etaL = 'At door'; }
+  const html = [L.id, L.carrier, L.pri, L.tone, lane, Math.round(pct * 100), STATE_TX[t.state], etaL, eta, door].join('|');
+  if (html === lastCard) return; lastCard = html;
+  $('pcTitle').textContent = L.tone === 'blue' ? 'Load on site' : 'Priority Load';
+  $('pcId').textContent = L.id + ' · ' + (t.state === 'outbound' ? 'Outbound' : 'Inbound');
+  $('pcCarrier').textContent = L.carrier;
+  $('pcPri').className = 'pc-pri ' + L.tone; $('pcPriTx').textContent = L.pri;
+  $('pcLane').textContent = lane;
+  $('pcPct').textContent = Math.round(pct * 100) + '%';
+  $('pcBar').style.width = Math.round(pct * 100) + '%';
+  $('pcState').textContent = STATE_TX[t.state];
+  $('pcEtaL').textContent = etaL; $('pcEta').textContent = eta;
+  $('pcDoor').textContent = door;
+}
+$('pcNext').addEventListener('click', () => {
+  if (!trucks.length) return;
+  const k = trucks.indexOf(selected);
+  selectTruck(trucks[(k + 1) % trucks.length]);
+});
+
+/* ---- picking ------------------------------------------------------- */
+const ray = new THREE.Raycaster(), ndc = new THREE.Vector2();
+let downAt = null;
+function hitTruck(e) {
+  const r = canvas.getBoundingClientRect();
+  ndc.set(((e.clientX - r.left) / r.width) * 2 - 1, -((e.clientY - r.top) / r.height) * 2 + 1);
+  ray.setFromCamera(ndc, camera);
+  const hits = ray.intersectObjects(trucks.map(t => t.g), true);
+  return hits.length ? hits[0].object.userData.truck : null;
+}
+canvas.addEventListener('pointerdown', e => { downAt = [e.clientX, e.clientY]; });
+canvas.addEventListener('pointerup', e => {
+  if (!downAt || Math.hypot(e.clientX - downAt[0], e.clientY - downAt[1]) > 4) return;
+  const t = hitTruck(e); if (t) selectTruck(t);
+});
+let hoverTick = 0;
+canvas.addEventListener('pointermove', e => {
+  if (e.buttons || ++hoverTick % 3) return;
+  stage.classList.toggle('pick', !!hitTruck(e));
+});
+
+/* ---- layout: frustum sized to the free middle of the screen ---------- */
+const hud = document.querySelector('.hud');
+function freeRect() {
+  const sr = stage.getBoundingClientRect();
+  if (innerWidth <= 960) return { l: 8, r: W - 8, t: 8, b: H - 8, rt: 0 };
+  const lc = document.querySelector('.lcol').getBoundingClientRect();
+  const mid = document.querySelector('.mid').getBoundingClientRect();
+  const b2 = document.querySelector('.b2').getBoundingClientRect();
+  const rc = document.querySelector('.rcol').getBoundingClientRect();
+  return { l: lc.right + 12 - sr.left, r: rc.left - 12 - sr.left, t: mid.bottom + 10 - sr.top, b: b2.top - 12 - sr.top, rt: rc.top - 12 - sr.top };
+}
+function layout() {
+  W = stage.clientWidth; H = stage.clientHeight;
+  renderer.setSize(W, H, false);
+  const narrow = innerWidth <= 960;
+  let cx = W / 2, cy = H / 2, span = W;
+  if (!narrow) {
+    const r = freeRect();
+    cx = (r.l + r.r) / 2; cy = (r.t + r.b) / 2 + 30; span = (r.r - r.l) + 120;
+  }
+  const wpp = (narrow ? 74 : 92) / Math.max(320, span);   // world units per pixel
+  camera.left = -cx * wpp; camera.right = (W - cx) * wpp;
+  camera.top = cy * wpp; camera.bottom = -(H - cy) * wpp;
+  camera.updateProjectionMatrix();
+}
+new ResizeObserver(layout).observe(stage);
+addEventListener('resize', layout);
+
+/* ================================================================
+   Theme
+   ================================================================ */
+let dark = false;
+function applyTheme(isDark) {
+  dark = isDark;
+  document.documentElement.dataset.theme = isDark ? 'dark' : 'light';
+  const P = isDark ? PAL.dark : PAL.light;
+  Object.keys(M).forEach(k => { if (P[k]) M[k].color.set(P[k]); });
+  hemi.intensity = P.hemi; hemi.groundColor.set(P.hemiG); sun.intensity = P.sun; scene.environmentIntensity = P.env;
+  paintSign(isDark);
+  const b = $('themeBtn'); b.innerHTML = `<i data-lucide="${isDark ? 'sun' : 'moon'}"></i>`;
+  lucide.createIcons();
+  store.set('theme', isDark ? 'dark' : 'light');
+}
+$('themeBtn').addEventListener('click', () => applyTheme(!dark));
+
+/* ================================================================
+   HUD cards
+   ================================================================ */
+// Live Loads
+const live = { n: 1284, pick: 212, trans: 486, del: 138, otd: 94, spark: [42, 48, 45, 56, 61, 58, 66, 72, 70, 78, 84, 91] };
+function renderLive() {
+  $('llNum').textContent = fmt(live.n);
+  $('tPick').textContent = live.pick; $('tTrans').textContent = live.trans; $('tDel').textContent = live.del;
+  $('otdPct').textContent = live.otd + '%'; $('otdBar').style.width = live.otd + '%';
+  const mx = Math.max(...live.spark);
+  $('spark').innerHTML = live.spark.map(v => `<i style="height:${Math.round(8 + (v / mx) * 24)}px"></i>`).join('');
+}
+function tickLive() {
+  const d = Math.round(rnd(-2, 6));
+  live.n += d; live.trans += Math.round(rnd(-2, 4)); live.pick += Math.round(rnd(-2, 2)); live.del += Math.round(rnd(-1, 3));
+  live.spark[live.spark.length - 1] = Math.max(20, live.spark[live.spark.length - 1] + d);
+  renderLive();
+}
+
+// Terminal Status
+let termFilter = 'all';
+function renderTerms() {
+  const rows = TERMINALS.filter(t => termFilter === 'all' || t.status === termFilter);
+  $('tlist').innerHTML = rows.map(t => `
+    <button class="trow ${t === term ? 'on' : ''}" data-id="${t.id}">
+      <div class="tr-top"><b>${t.name}</b><span class="code">${t.id}</span><span class="st ${t.status}"><i></i>${ST_LABEL[t.status]}</span></div>
+      <div class="bar ${t.status}"><i style="width:${t.util}%"></i></div>
+      <div class="tr-meta"><span>Util · <em>${t.util}%</em></span><span>Doors · <em>${t.doors}</em></span><span>OTD · <em>${t.otd}%</em></span></div>
+    </button>`).join('') || `<div class="cap" style="padding:8px">No terminals in this state.</div>`;
+  $('termCount').textContent = `${TERMINALS.length} terminals`;
+}
+$('termSeg').addEventListener('click', e => {
+  const b = e.target.closest('button'); if (!b) return;
+  termFilter = b.dataset.f;
+  $('termSeg').querySelectorAll('button').forEach(x => x.classList.toggle('on', x === b));
+  renderTerms();
+});
+$('tlist').addEventListener('click', e => {
+  const b = e.target.closest('.trow'); if (!b) return;
+  term = TERMINALS.find(t => t.id === b.dataset.id);
+  renderTerms(); renderTerm(); shuffleZones(true); paintSign(dark);
+  toast(`Viewing ${term.name} (${term.id})`);
+});
+function renderTerm() {
+  $('liveTerm').textContent = `${term.id} · ${term.name}`;
+  $('tpSub').textContent = `Yard allocation · ${term.id}`;
+  const p = term.pool;
+  $('tpNum').textContent = fmt(p);
+  $('tpA').textContent = fmt(p * 0.31); $('tpR').textContent = fmt(p * 0.176); $('tpO').textContent = fmt(p * 0.037);
+  $('tpU').textContent = term.util + '%';
+}
+
+// On-time rhythm (Mon..Sun, today = Wednesday 23 Sep 2026)
+const RHY = [['M', 95.8], ['T', 94.1], ['W', 97.2], ['T', 91.4], ['F', 96.6], ['S', 98.1], ['S', 93.0]];
+const TODAY = 2;
+function renderRhythm() {
+  const lo = 86, hi = 100, H0 = 96 - 20;
+  const y = v => Math.round(((v - lo) / (hi - lo)) * H0);
+  $('rhythm').innerHTML = `<div class="tgt" style="bottom:${20 + y(95)}px"><span>95% target</span></div>` +
+    RHY.map(([d, v], k) => `<div class="rb ${k === TODAY ? 'today' : ''} ${v < 93 ? 'low' : ''}" data-tip="${['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'][k]} · <b>${v}%</b> on time${k === TODAY ? ' <em>(today, so far)</em>' : ''}"><i style="height:${y(v)}px"></i><span>${d}</span></div>`).join('');
+}
+
+// Dock door map
+const ZONES = ['A', 'B', 'C', 'D', 'E'];
+const zoneState = {};
+function shuffleZones(all) {
+  ZONES.forEach(z => {
+    if (!zoneState[z] || all) zoneState[z] = Array.from({ length: 12 }, () => { const r = Math.random(); return r < 0.45 ? 'occ' : r < 0.7 ? 'res' : 'open'; });
+  });
+  paintDoorMap();
+}
+function paintDoorMap() {
+  if (!zoneState.A) return;
+  DOORS.forEach(d => { zoneState.A[d.i] = d.state === 'occupied' ? 'occ' : d.state === 'reserved' ? 'res' : 'open'; });
+  const occ = Object.values(zoneState).flat().filter(s => s === 'occ').length;
+  $('ddSub').textContent = `${occ} of 60 doors occupied · Zone A is live in 3D`;
+  const html = ZONES.map(z => `<div class="zone"><span>Zone ${z}</span><div class="zgrid">${zoneState[z].map((s, k) => {
+    const id = z + String(k + 1).padStart(2, '0');
+    const liveCell = z === 'A' && k < 8;
+    return `<button class="cell ${s} ${liveCell ? 'live' : ''}" data-door="${id}" data-k="${k}" data-z="${z}" aria-label="Door ${id}"></button>`;
+  }).join('')}</div></div>`).join('');
+  $('zones').innerHTML = html;
+}
+setInterval(() => {                 // background doors in zones B–E churn slowly
+  const z = pick(ZONES.slice(1)), k = Math.floor(Math.random() * 12);
+  zoneState[z][k] = pick(['occ', 'res', 'open']);
+  paintDoorMap();
+}, 2600);
+const STATE_NAME = { occ: 'Occupied', res: 'Reserved', open: 'Open' };
+$('zones').addEventListener('click', e => {
+  const c = e.target.closest('.cell'); if (!c) return;
+  if (c.dataset.z === 'A' && +c.dataset.k < 8) {
+    const d = DOORS[+c.dataset.k];
+    if (d.truck) selectTruck(d.truck); else toast(`Door ${c.dataset.door} is open — no truck assigned`);
+  } else toast(`Door ${c.dataset.door} · ${STATE_NAME[zoneState[c.dataset.z][+c.dataset.k]]}`);
+});
+
+// Fleet utilisation
+const FU = [52, 58, 55, 61, 57, 64, 60, 66, 59, 71, 63, 62];
+function renderFU() {
+  const mx = Math.max(...FU);
+  $('fuBars').innerHTML = FU.map((v, k) => `<i class="${v === mx ? 'pk' : ''}" style="height:${Math.round(10 + (v / mx) * 32)}px" data-tip="Week ${k + 1} · <b>${v}%</b> loaded"></i>`).join('');
+}
+
+// tooltips (door cells, bars) + toast
+const tip = $('tip');
+document.addEventListener('pointerover', e => {
+  const c = e.target.closest('.cell');
+  const b = e.target.closest('[data-tip]');
+  if (c) {
+    const s = zoneState[c.dataset.z][+c.dataset.k];
+    let extra = '';
+    if (c.dataset.z === 'A' && +c.dataset.k < 8) { const d = DOORS[+c.dataset.k]; if (d.truck) extra = ` · ${d.truck.load.id}`; }
+    tip.innerHTML = `Door <b>${c.dataset.door}</b> · ${STATE_NAME[s]}${extra}`;
+  } else if (b) tip.innerHTML = b.dataset.tip;
+  else { tip.classList.remove('on'); return; }
+  tip.classList.add('on');
+});
+document.addEventListener('pointermove', e => {
+  if (!tip.classList.contains('on')) return;
+  const w = tip.offsetWidth;
+  tip.style.transform = `translate(${Math.round(Math.min(innerWidth - w - 8, e.clientX + 12))}px,${Math.round(e.clientY - 38)}px)`;
+});
+let toastT;
+function toast(msg) { const t = $('toast'); t.textContent = msg; t.classList.add('on'); clearTimeout(toastT); toastT = setTimeout(() => t.classList.remove('on'), 2200); }
+
+$('nav').addEventListener('click', e => {
+  const b = e.target.closest('button'); if (!b || b.classList.contains('on')) return;
+  toast(`${b.textContent} isn't part of this prototype yet — showing Overview`);
+});
+let paused = false;
+$('pauseBtn').addEventListener('click', () => {
+  paused = !paused;
+  $('pauseBtn').innerHTML = `<i data-lucide="${paused ? 'play' : 'pause'}"></i>`;
+  $('pauseBtn').title = paused ? 'Resume simulation' : 'Pause simulation';
+  lucide.createIcons();
+});
+$('resetBtn').addEventListener('click', resetCamera);
+
+/* ================================================================
+   Boot + loop
+   ================================================================ */
+renderLive(); renderTerms(); renderTerm(); renderRhythm(); renderFU(); shuffleZones(true);
+applyTheme(store.get('theme') === 'dark');
+// seed: four rigs already at the doors
+[1, 3, 4, 6].forEach(i => spawnTruck(DOORS[i], true));
+selectTruck(DOORS[3].truck);
+layout();
+setInterval(tickLive, 3000);
+
+const clock = new THREE.Clock();
+let t0 = 0;
+function frame() {
+  requestAnimationFrame(frame);
+  const dt = Math.min(clock.getDelta(), 0.05);
+  controls.update();
+  if (!paused) sim(dt);
+  renderer.render(scene, camera);
+  // HTML overlays
+  TAGS.forEach(d => { const [x, y] = toScreen(d.v); d.el.style.transform = `translate(${Math.round(x - d.el.offsetWidth / 2)}px,${Math.round(y - 12)}px)`; });
+  placeCard();
+  if (!paused) renderCard();
+  $('liveSub').textContent = `${trucks.length} trucks on site · ${DOORS.filter(d => d.state === 'occupied').length}/8 Zone A doors busy`;
+}
+function sim(dt) {
+  {
+    t0 += dt;
+    spawner(dt);
+    [...trucks].forEach(t => stepTruck(t, dt));
+    // shutters + staging refill
+    DOORS.forEach(d => {
+      d.shutter += (d.shutterT - d.shutter) * Math.min(1, dt * 2.5);
+      const k = 1 - d.shutter * 0.95;
+      d.shutterMesh.scale.y = k; d.shutterMesh.position.y = DOOR_TOP - 3.8 * k / 2;
+      if (d.state === 'open' && d.refill > 0) {
+        d.refill -= dt;
+        if (d.refill <= 0) { const p = d.pallets.find(p => !p.visible); if (p) { p.visible = true; d.refill = 4; } }
+      }
+    });
+    // conveyor
+    const dm = new THREE.Object3D();
+    for (let k = 0; k < CV_N; k++) {
+      const x = CV_X0 + 0.5 + ((t0 * 1.8 + k * (CV_X1 - CV_X0) / CV_N) % (CV_X1 - CV_X0 - 1));
+      dm.position.set(x, FLOOR + 0.83 + 0.275, CV_Z); dm.updateMatrix(); cvBoxes.setMatrixAt(k, dm.matrix);
+    }
+    cvBoxes.instanceMatrix.needsUpdate = true;
+    // forklifts
+    LIFTS.forEach(l => {
+      l.u = (l.u + (l.speed * dt) / l.len) % 1;
+      l.path.getPointAt(l.u, tmpP); l.path.getTangentAt(l.u, tmpT);
+      l.g.position.set(tmpP.x, FLOOR, tmpP.z);
+      l.g.rotation.y = Math.atan2(-tmpT.z, tmpT.x);
+      l.g.userData.load.visible = l.u < 0.5;
+    });
+    flows.forEach(f => { f.offset.x -= dt * 0.9; });
+    // gate arms lift for any rig close to the barrier in their lane
+    ARMS.forEach(a => {
+      const near = trucks.some(t => { const [ax, az, bx, bz] = truckSeg(t); return [[ax, az], [bx, bz]].some(([x, z]) => x > a.x0 - 1 && x < a.x1 + 1 && Math.abs(z - (GATE_Z - 1.2)) < 16); });
+      a.lift += ((near ? 1.35 : 0) - a.lift) * Math.min(1, dt * 3);
+      a.arm.rotation.z = a.lift;
+    });
+    if (selected) selected.sel.material.opacity = 0.65 + Math.sin(t0 * 4) * 0.35;
+  }
+}
+lucide.createIcons();
+window.__dp3d = { trucks, DOORS, camera, controls, selectTruck, sim };
+frame();
+$('loader').classList.add('done');
+</script>
+</body>
+</html>

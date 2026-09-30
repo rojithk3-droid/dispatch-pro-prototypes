@@ -1,0 +1,10 @@
+# Third-party 3D models are never committed here.
+*.glb
+*.gltf
+*.fbx
+*.obj
+*.max
+*.blend
+
+.claude/scheduled_tasks.lock
+node_modules/

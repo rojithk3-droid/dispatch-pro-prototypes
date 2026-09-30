@@ -1,0 +1,42 @@
+<!doctype html><html><head><meta charset="utf-8"><title>World test</title>
+<style>body{margin:0;background:#111;color:#fff;font:12px monospace}#s{position:fixed;left:8px;top:8px;background:#0008;padding:6px;white-space:pre}</style></head><body><div id="s">loading…</div>
+<script type="importmap">{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.170.0/build/three.module.js","three/addons/":"https://cdn.jsdelivr.net/npm/three@0.170.0/examples/jsm/"}}</script>
+<script type="module">
+import * as THREE from 'three';
+import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+import { MAP_BY_ID } from '../js/maps.js';
+import { generateWorld } from '../js/world.js';
+import { loadSky } from '../js/assets.js';
+const q = new URLSearchParams(location.search);
+const map = MAP_BY_ID[q.get('map') || 'bangalore'];
+const S = document.getElementById('s');
+const r = new THREE.WebGLRenderer({ antialias: true }); r.setSize(innerWidth, innerHeight); r.setPixelRatio(1);
+r.toneMapping = THREE.ACESFilmicToneMapping; r.toneMappingExposure = map.exposure; r.shadowMap.enabled = true; r.shadowMap.type = THREE.PCFSoftShadowMap;
+document.body.appendChild(r.domElement);
+const scene = new THREE.Scene();
+const cam = new THREE.PerspectiveCamera(60, innerWidth / innerHeight, 0.3, 4000);
+cam.position.set(+(q.get('x') || 0) + 60, 90, +(q.get('z') || 0) + 120);
+const oc = new OrbitControls(cam, r.domElement); oc.target.set(+(q.get('x') || 0), 0, +(q.get('z') || 0));
+const sun = new THREE.DirectionalLight(0xffffff, map.sun); scene.add(sun, sun.target);
+sun.castShadow = true; sun.shadow.mapSize.set(2048, 2048); Object.assign(sun.shadow.camera, { left: -150, right: 150, top: 150, bottom: -150, far: 800 }); sun.shadow.bias = -0.0004;
+window.__t = { errors: [] };
+window.addEventListener('error', (e) => window.__t.errors.push(e.message));
+const t0 = performance.now();
+const [world, sky] = await Promise.all([generateWorld(map, { quality: 'medium', onProgress: (p, m) => S.textContent = m + ' ' + Math.round(p * 100) + '%' }), loadSky(map.sky, '1k')]);
+scene.add(world.group);
+if (sky) {
+  const pm = new THREE.PMREMGenerator(r); scene.environment = pm.fromEquirectangular(sky.tex).texture; scene.background = sky.tex; scene.environmentIntensity = map.env;
+  sun.position.copy(sky.sunDir).multiplyScalar(400); sun.color.copy(sky.sunColor);
+  scene.fog = new THREE.FogExp2(map.fogColor || sky.horizon.clone().convertLinearToSRGB().getStyle(), map.fog);
+}
+window.__t.cam = cam; window.__t.oc = oc; window.__t.r = r; window.__t.scene = scene;
+window.__t.look = (x, y, z, tx, ty, tz) => { cam.position.set(x, y, z); oc.target.set(tx, ty, tz); oc.update(); };
+window.__t.world = world; window.__t.ms = Math.round(performance.now() - t0);
+const info = () => `${map.id} gen ${window.__t.ms}ms  calls ${r.info.render.calls} tris ${r.info.render.triangles}  loot ${world.loot.length} eggs ${world.eggs.length}`;
+const clk = new THREE.Clock();
+r.setAnimationLoop(() => {
+  const dt = clk.getDelta(); oc.update();
+  sun.target.position.copy(oc.target); sun.position.copy(oc.target).add((sky ? sky.sunDir : new THREE.Vector3(0.4, 0.8, 0.3)).clone().multiplyScalar(400));
+  world.update(dt, cam.position); r.render(scene, cam); S.textContent = info();
+});
+</script></body></html>

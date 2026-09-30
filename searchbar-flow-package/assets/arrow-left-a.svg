@@ -1,0 +1,20 @@
+<svg preserveAspectRatio="none" overflow="visible" style="display: block;" width="32.9258" height="20" viewBox="0 0 32.9258 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+<g id="Group 31474">
+<g id="Rectangle 8636" filter="url(#filter0_i_8_1138)">
+<path d="M13.4258 10C13.4258 4.7533 17.6791 0.5 22.9258 0.5C28.1725 0.5 32.4258 4.7533 32.4258 10C32.4258 15.2467 28.1725 19.5 22.9258 19.5C17.6791 19.5 13.4258 15.2467 13.4258 10Z" stroke="#3B7CD1"/>
+</g>
+<path id="Icon ionic-ios-arrow-back" d="M1.37453 9.99849L4.39229 6.98311C4.61547 6.75993 4.61547 6.39903 4.39229 6.17822C4.1691 5.95503 3.80821 5.95741 3.58502 6.17822L0.166007 9.59486C-0.0500558 9.81092 -0.0548039 10.1576 0.149387 10.3808L3.58264 13.8211C3.69424 13.9327 3.84145 13.9873 3.98628 13.9873C4.13111 13.9873 4.27832 13.9327 4.38992 13.8211C4.6131 13.598 4.6131 13.2371 4.38992 13.0162L1.37453 9.99849Z" fill="#305F9C"/>
+</g>
+<defs>
+<filter id="filter0_i_8_1138" x="12.9258" y="0" width="20" height="23" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB">
+<feFlood flood-opacity="0" result="BackgroundImageFix"/>
+<feBlend mode="normal" in="SourceGraphic" in2="BackgroundImageFix" result="shape"/>
+<feColorMatrix in="SourceAlpha" type="matrix" values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 127 0" result="hardAlpha"/>
+<feOffset dy="3"/>
+<feGaussianBlur stdDeviation="3"/>
+<feComposite in2="hardAlpha" operator="arithmetic" k2="-1" k3="1"/>
+<feColorMatrix type="matrix" values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0.160784 0"/>
+<feBlend mode="normal" in2="shape" result="effect1_innerShadow_8_1138"/>
+</filter>
+</defs>
+</svg>

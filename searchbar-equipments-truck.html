@@ -1,0 +1,413 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Searchbar · Equipments &amp; Trucks</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --border: #cbcbcb;
+    --placeholder: #7c8c9d;
+    --accent: #305F9C;
+    --accent-soft: #eaf0f8;
+    --text: #22303f;
+    --muted: #7c8c9d;
+    --bg: #f4f6f8;
+    --card: #ffffff;
+    --shadow: 0 10px 30px rgba(21, 41, 66, 0.08);
+  }
+
+  *{ box-sizing: border-box; }
+
+  body{
+    margin:0;
+    min-height:100vh;
+    background:var(--bg);
+    font-family:'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    color:var(--text);
+    display:flex;
+    align-items:flex-start;
+    justify-content:center;
+    padding:64px 24px;
+  }
+
+  .page{
+    width:100%;
+    max-width:960px;
+  }
+
+  .page-header{
+    margin-bottom:28px;
+  }
+
+  .page-header h1{
+    font-size:22px;
+    font-weight:700;
+    margin:0 0 6px;
+  }
+
+  .page-header p{
+    margin:0;
+    color:var(--muted);
+    font-size:14px;
+  }
+
+  /* ---------- Searchbar component (from Figma) ---------- */
+
+  .searchbar-wrap{
+    position:relative;
+    display:inline-flex;
+    width:293px;
+  }
+
+  .searchbar{
+    position:relative;
+    display:flex;
+    align-items:center;
+    width:293px;
+    height:35px;
+    background:#fff;
+    border:1px solid var(--border);
+    border-radius:10px;
+  }
+
+  .searchbar input{
+    flex:1;
+    height:100%;
+    border:none;
+    outline:none;
+    background:transparent;
+    font-family:inherit;
+    font-size:14px;
+    font-weight:500;
+    color:var(--text);
+    padding:0 0 0 15px;
+    border-radius:10px 0 0 10px;
+  }
+
+  .searchbar input::placeholder{
+    color:var(--placeholder);
+    font-weight:500;
+  }
+
+  .search-icon-btn{
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    width:24px;
+    height:24px;
+    margin-right:8px;
+    border:none;
+    background:transparent;
+    cursor:pointer;
+    padding:0;
+  }
+
+  .search-icon-btn svg{ display:block; width:13.65px; height:13.65px; }
+
+  .dropdown-toggle{
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    width:45px;
+    height:35px;
+    flex-shrink:0;
+    background:#fff;
+    border:1px solid var(--border);
+    border-left:1px solid var(--border);
+    border-radius:0 10px 10px 0;
+    margin-left:-1px;
+    cursor:pointer;
+    transition:background .15s ease;
+  }
+
+  .dropdown-toggle:hover{ background:#f7f9fb; }
+
+  .dropdown-toggle svg{
+    width:10.6px;
+    height:5.3px;
+    transition:transform .18s ease;
+  }
+
+  .searchbar-wrap.open .dropdown-toggle svg{
+    transform:rotate(180deg);
+  }
+
+  .dropdown-panel{
+    position:absolute;
+    top:41px;
+    left:0;
+    width:293px;
+    background:#fff;
+    border:1px solid var(--border);
+    border-radius:10px;
+    box-shadow:var(--shadow);
+    padding:8px;
+    display:none;
+    z-index:20;
+  }
+
+  .searchbar-wrap.open .dropdown-panel{ display:block; }
+
+  .dropdown-option{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:8px;
+    padding:9px 10px;
+    border-radius:7px;
+    font-size:14px;
+    font-weight:500;
+    color:var(--text);
+    cursor:pointer;
+  }
+
+  .dropdown-option:hover{ background:var(--accent-soft); }
+
+  .dropdown-option.active{
+    background:var(--accent-soft);
+    color:var(--accent);
+  }
+
+  .dropdown-option .check{
+    color:var(--accent);
+    font-size:13px;
+    opacity:0;
+  }
+
+  .dropdown-option.active .check{ opacity:1; }
+
+  /* ---------- Demo: live filtered results ---------- */
+
+  .results-card{
+    margin-top:24px;
+    background:var(--card);
+    border:1px solid #e7ebee;
+    border-radius:12px;
+    box-shadow:var(--shadow);
+    overflow:hidden;
+  }
+
+  .results-head{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    padding:16px 20px;
+    border-bottom:1px solid #eef1f3;
+  }
+
+  .results-head span{
+    font-size:13px;
+    color:var(--muted);
+  }
+
+  .filter-pill{
+    display:inline-flex;
+    align-items:center;
+    gap:6px;
+    background:var(--accent-soft);
+    color:var(--accent);
+    font-size:12px;
+    font-weight:600;
+    padding:5px 10px;
+    border-radius:20px;
+  }
+
+  table{
+    width:100%;
+    border-collapse:collapse;
+  }
+
+  thead th{
+    text-align:left;
+    font-size:12px;
+    text-transform:uppercase;
+    letter-spacing:.03em;
+    color:var(--muted);
+    padding:10px 20px;
+    font-weight:600;
+  }
+
+  tbody td{
+    padding:14px 20px;
+    font-size:14px;
+    border-top:1px solid #f0f2f4;
+  }
+
+  tbody tr:hover{ background:#fafbfc; }
+
+  .unit{
+    display:inline-flex;
+    align-items:center;
+    gap:8px;
+    font-weight:600;
+  }
+
+  .unit .dot{
+    width:8px;height:8px;border-radius:50%;
+    background:var(--accent);
+  }
+
+  .badge{
+    display:inline-block;
+    padding:3px 9px;
+    border-radius:20px;
+    font-size:12px;
+    font-weight:600;
+  }
+
+  .badge.truck{ background:#e7f3ea; color:#2f8b4a; }
+  .badge.equipment{ background:#eaf0f8; color:var(--accent); }
+  .badge.trailer{ background:#fbeee0; color:#b06a1c; }
+
+  .empty-state{
+    padding:40px 20px;
+    text-align:center;
+    color:var(--muted);
+    font-size:14px;
+  }
+</style>
+</head>
+<body>
+
+<div class="page">
+  <div class="page-header">
+    <h1>Equipment &amp; Truck Search</h1>
+    <p>Search the fleet by unit, driver, or type — use the dropdown to filter results.</p>
+  </div>
+
+  <!-- Searchbar component -->
+  <div class="searchbar-wrap" id="searchbarWrap">
+    <div class="searchbar">
+      <input type="text" id="searchInput" placeholder="Search" autocomplete="off" />
+      <button class="search-icon-btn" id="searchBtn" aria-label="Search" type="button">
+        <svg viewBox="0 0 13.6505 13.6505" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M11.3559 6.17795C11.3559 9.03766 9.03765 11.3559 6.17795 11.3559C3.31825 11.3559 1 9.03765 1 6.17795C1 3.31825 3.31825 1 6.17795 1C9.03766 1 11.3559 3.31825 11.3559 6.17795Z" stroke="#305F9C" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+          <path d="M12.6505 12.6505L9.83496 9.83496" stroke="#305F9C" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </button>
+      <div class="dropdown-toggle" id="dropdownToggle" role="button" aria-haspopup="listbox" aria-expanded="false">
+        <svg viewBox="0 0 10.6076 5.30381" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M0 0L5.30381 5.30381L10.6076 0H0Z" fill="#305F9C"/>
+        </svg>
+      </div>
+    </div>
+
+    <div class="dropdown-panel" id="dropdownPanel" role="listbox">
+      <div class="dropdown-option active" data-filter="all">All <span class="check">✓</span></div>
+      <div class="dropdown-option" data-filter="truck">Trucks <span class="check">✓</span></div>
+      <div class="dropdown-option" data-filter="trailer">Trailers <span class="check">✓</span></div>
+      <div class="dropdown-option" data-filter="equipment">Equipment <span class="check">✓</span></div>
+    </div>
+  </div>
+
+  <!-- Live-filtered results, wired to the searchbar above -->
+  <div class="results-card">
+    <div class="results-head">
+      <span id="resultsCount">7 results</span>
+      <span class="filter-pill" id="filterPill">All</span>
+    </div>
+    <table>
+      <thead>
+        <tr>
+          <th>Unit</th>
+          <th>Type</th>
+          <th>Assigned To</th>
+          <th>Status</th>
+        </tr>
+      </thead>
+      <tbody id="resultsBody"></tbody>
+    </table>
+    <div class="empty-state" id="emptyState" style="display:none;">No results match your search.</div>
+  </div>
+</div>
+
+<script>
+  const data = [
+    { unit: "DTL88", type: "truck",     label: "Truck",     assigned: "Bill Falin",        status: "Available" },
+    { unit: "DTL20", type: "truck",     label: "Truck",     assigned: "Richard Nicole",     status: "In Transit" },
+    { unit: "TR-441", type: "trailer",  label: "Trailer",   assigned: "Steve Hobi",         status: "Available" },
+    { unit: "DTL29", type: "truck",     label: "Truck",     assigned: "James Madison",      status: "On Hold" },
+    { unit: "EQ-117", type: "equipment",label: "Equipment", assigned: "George Washington",  status: "Available" },
+    { unit: "TR-509", type: "trailer",  label: "Trailer",   assigned: "Michael Jordan",     status: "In Transit" },
+    { unit: "EQ-203", type: "equipment",label: "Equipment", assigned: "Curtis Hariston",    status: "Maintenance" },
+  ];
+
+  const wrap = document.getElementById('searchbarWrap');
+  const toggle = document.getElementById('dropdownToggle');
+  const panel = document.getElementById('dropdownPanel');
+  const input = document.getElementById('searchInput');
+  const searchBtn = document.getElementById('searchBtn');
+  const body = document.getElementById('resultsBody');
+  const emptyState = document.getElementById('emptyState');
+  const resultsCount = document.getElementById('resultsCount');
+  const filterPill = document.getElementById('filterPill');
+
+  let activeFilter = 'all';
+
+  function statusColor(status){
+    switch(status){
+      case 'Available': return '#2f8b4a';
+      case 'In Transit': return '#305F9C';
+      case 'On Hold': return '#b06a1c';
+      case 'Maintenance': return '#b0341c';
+      default: return '#7c8c9d';
+    }
+  }
+
+  function render(){
+    const query = input.value.trim().toLowerCase();
+    const rows = data.filter(row => {
+      const matchesFilter = activeFilter === 'all' || row.type === activeFilter;
+      const matchesQuery = !query ||
+        row.unit.toLowerCase().includes(query) ||
+        row.assigned.toLowerCase().includes(query) ||
+        row.label.toLowerCase().includes(query);
+      return matchesFilter && matchesQuery;
+    });
+
+    body.innerHTML = rows.map(row => `
+      <tr>
+        <td><span class="unit"><span class="dot"></span>${row.unit}</span></td>
+        <td><span class="badge ${row.type}">${row.label}</span></td>
+        <td>${row.assigned}</td>
+        <td style="color:${statusColor(row.status)}; font-weight:600;">${row.status}</td>
+      </tr>
+    `).join('');
+
+    resultsCount.textContent = `${rows.length} result${rows.length === 1 ? '' : 's'}`;
+    emptyState.style.display = rows.length ? 'none' : 'block';
+  }
+
+  toggle.addEventListener('click', (e) => {
+    e.stopPropagation();
+    const isOpen = wrap.classList.toggle('open');
+    toggle.setAttribute('aria-expanded', String(isOpen));
+  });
+
+  panel.querySelectorAll('.dropdown-option').forEach(opt => {
+    opt.addEventListener('click', () => {
+      panel.querySelectorAll('.dropdown-option').forEach(o => o.classList.remove('active'));
+      opt.classList.add('active');
+      activeFilter = opt.dataset.filter;
+      filterPill.textContent = opt.textContent.trim().replace('✓', '').trim();
+      wrap.classList.remove('open');
+      render();
+    });
+  });
+
+  document.addEventListener('click', (e) => {
+    if (!wrap.contains(e.target)) wrap.classList.remove('open');
+  });
+
+  input.addEventListener('input', render);
+  searchBtn.addEventListener('click', () => input.focus());
+
+  render();
+</script>
+
+</body>
+</html>

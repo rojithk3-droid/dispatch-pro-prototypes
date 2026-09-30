@@ -1,0 +1,22 @@
+<!doctype html><html><head><meta charset="utf-8"><title>Map test</title></head><body style="background:#111;color:#ddd;font:12px monospace"><pre id="o">running…</pre>
+<script type="importmap">{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.170.0/build/three.module.js","three/addons/":"https://cdn.jsdelivr.net/npm/three@0.170.0/examples/jsm/"}}</script>
+<script type="module">
+import { MAPS } from '../js/maps.js';
+import { generateWorld } from '../js/world.js';
+const out = [];
+const errs = [];
+const oe = console.error; console.error = (...a) => { errs.push(a.map(String).join(' ')); oe(...a); };
+window.addEventListener('error', (e) => errs.push('ERR ' + e.message));
+const only = new URLSearchParams(location.search).get('maps');
+for (const m of MAPS) {
+  if (only && !only.split(',').includes(m.id)) continue;
+  const t = performance.now(); const before = errs.length;
+  try {
+    const w = await generateWorld(m, { quality: 'medium' });
+    out.push(`${m.id}: ${Math.round(performance.now() - t)}ms colliders=${w.phys.surf.length} loot=${w.loot.length} bld=${w.buildings.length} eggs=${w.eggs.length}/${m.props.filter(p=>p.egg).length + m.landmarks.filter(l=>l.egg).length} veh=${w.vehicleSpawns.length} climbs=${w.climbs.length} errs=${errs.length - before}`);
+    w.dispose();
+  } catch (e) { out.push(`${m.id}: FAILED ${e.message} ${e.stack.split('\n')[1]}`); }
+  document.getElementById('o').textContent = out.join('\n') + '\n\n' + errs.join('\n');
+}
+window.__done = { out, errs };
+</script></body></html>

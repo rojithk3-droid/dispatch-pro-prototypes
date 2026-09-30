@@ -1,0 +1,720 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>TrueTrack — Tire Pressure Monitor</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+<script type="importmap">
+{
+  "imports": {
+    "three": "https://cdn.jsdelivr.net/npm/three@0.170.0/build/three.module.js",
+    "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.170.0/examples/jsm/"
+  }
+}
+</script>
+<style>
+/* ============================================================
+   TrueTrack design system — derived from the TrueTrack shot
+   Palette (published by six2eight):
+   #E9E4DF cream · #E77026 coral (single accent) · #DE8837/#E59E5B/#C67148
+   amber-terracotta · #6B857F slate-green · #BFAE9E taupe · #232221 ink
+   Language: radial gauges, soft glassmorphism, one confident coral accent,
+   consistent card language, a calm warm workspace.
+   ============================================================ */
+:root{
+  --cream:#E9E4DF; --cream-2:#EFEAE4; --cream-3:#E2DBD2;
+  --ink:#232221; --ink-2:#4A4744; --muted:#8A8178;
+  --taupe:#BFAE9E; --taupe-line:rgba(35,34,33,.08);
+  --coral:#E77026; --coral-soft:#F4A165; --amber:#DE8837; --terra:#C67148;
+  --slate:#6B857F; --slate-soft:#8FA6A0;
+  --good:#6B857F; --warn:#DE8837; --crit:#E77026;
+  --glass:rgba(255,255,255,.55); --glass-2:rgba(255,255,255,.42);
+  --glass-line:rgba(255,255,255,.65);
+  --shadow:0 10px 34px rgba(35,34,33,.08),0 2px 6px rgba(35,34,33,.04);
+  --shadow-sm:0 4px 16px rgba(35,34,33,.06);
+  --r-lg:24px; --r-md:18px; --r-sm:13px;
+  --font:"Manrope",system-ui,-apple-system,Segoe UI,Roboto,sans-serif;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%}
+body{
+  font-family:var(--font); color:var(--ink);
+  background:
+    radial-gradient(1100px 700px at 78% -8%, rgba(231,112,38,.10), transparent 60%),
+    radial-gradient(900px 620px at 8% 110%, rgba(107,133,127,.12), transparent 62%),
+    var(--cream);
+  overflow:hidden; -webkit-font-smoothing:antialiased; text-rendering:optimizeLegibility;
+}
+button{font-family:inherit;cursor:pointer;border:none;background:none;color:inherit}
+.app{position:fixed;inset:0;display:flex;flex-direction:column}
+
+/* ---------- Header ---------- */
+.top{display:flex;align-items:center;gap:16px;padding:14px 22px;flex-shrink:0}
+.brand{display:flex;align-items:center;gap:11px}
+.logo{width:34px;height:34px;border-radius:11px;display:grid;place-items:center;
+  background:linear-gradient(150deg,var(--coral),var(--terra));
+  box-shadow:0 6px 16px rgba(231,112,38,.34)}
+.logo svg{width:19px;height:19px}
+.brand .wm{font-weight:800;font-size:17px;letter-spacing:-.02em}
+.brand .wm span{color:var(--coral)}
+.brand .sub{font-size:11px;color:var(--muted);font-weight:600;letter-spacing:.04em;
+  text-transform:uppercase;margin-top:1px}
+.veh{margin-left:8px;display:flex;align-items:center;gap:10px;padding:7px 8px 7px 14px;
+  background:var(--glass);border:1px solid var(--glass-line);border-radius:999px;
+  box-shadow:var(--shadow-sm);backdrop-filter:blur(16px)}
+.veh .vt{font-weight:700;font-size:13px}
+.veh .vs{font-size:11px;color:var(--muted);font-weight:600}
+.veh .chev{width:26px;height:26px;border-radius:50%;display:grid;place-items:center;
+  background:rgba(35,34,33,.05)}
+.spacer{flex:1}
+.pillbtns{display:flex;align-items:center;gap:8px}
+.unit{display:flex;background:var(--glass);border:1px solid var(--glass-line);
+  border-radius:999px;padding:3px;box-shadow:var(--shadow-sm);backdrop-filter:blur(16px)}
+.unit button{font-size:12px;font-weight:700;color:var(--muted);padding:5px 12px;border-radius:999px}
+.unit button.on{background:var(--ink);color:#fff}
+.live{display:flex;align-items:center;gap:7px;padding:8px 14px;border-radius:999px;
+  background:var(--glass);border:1px solid var(--glass-line);box-shadow:var(--shadow-sm);
+  font-size:12px;font-weight:700;color:var(--ink-2);backdrop-filter:blur(16px)}
+.dot{width:8px;height:8px;border-radius:50%;background:var(--good);position:relative}
+.dot::after{content:"";position:absolute;inset:-4px;border-radius:50%;
+  background:var(--good);opacity:.35;animation:ping 1.8s ease-out infinite}
+@keyframes ping{0%{transform:scale(.7);opacity:.5}70%,100%{transform:scale(2.1);opacity:0}}
+.ghost{width:38px;height:38px;border-radius:12px;display:grid;place-items:center;
+  background:var(--glass);border:1px solid var(--glass-line);box-shadow:var(--shadow-sm);
+  color:var(--ink-2);backdrop-filter:blur(16px)}
+.ghost svg{width:18px;height:18px}
+
+/* ---------- Layout ---------- */
+.main{flex:1;display:grid;grid-template-columns:1fr 372px;gap:18px;padding:4px 22px 20px;min-height:0}
+.left{display:flex;flex-direction:column;gap:16px;min-width:0}
+.rail{display:flex;flex-direction:column;gap:16px;min-height:0;overflow:auto;padding-right:2px}
+.rail::-webkit-scrollbar{width:0}
+
+/* ---------- Card ---------- */
+.card{background:var(--glass);border:1px solid var(--glass-line);border-radius:var(--r-lg);
+  box-shadow:var(--shadow);backdrop-filter:blur(22px);position:relative}
+.card.pad{padding:18px 20px}
+.ch{display:flex;align-items:center;gap:10px;margin-bottom:4px}
+.ch h3{font-size:13.5px;font-weight:800;letter-spacing:-.01em}
+.ch .ci{width:28px;height:28px;border-radius:9px;display:grid;place-items:center;
+  background:rgba(231,112,38,.10);color:var(--coral)}
+.ch .ci svg{width:16px;height:16px}
+.ch .meta{margin-left:auto;font-size:11px;font-weight:700;color:var(--muted)}
+.lbl{font-size:10.5px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:var(--muted)}
+
+/* ---------- Stage ---------- */
+.stage{flex:1;position:relative;border-radius:var(--r-lg);overflow:hidden;
+  background:
+    radial-gradient(120% 90% at 50% 18%, rgba(255,255,255,.5), transparent 60%),
+    linear-gradient(180deg,#EFEAE3,#E4DCD1);
+  border:1px solid var(--glass-line);box-shadow:var(--shadow);min-height:0}
+#scene{position:absolute;inset:0;width:100%;height:100%;display:block}
+.stage-chip{position:absolute;top:16px;left:16px;display:flex;align-items:center;gap:9px;
+  padding:8px 14px;border-radius:999px;background:var(--glass);border:1px solid var(--glass-line);
+  box-shadow:var(--shadow-sm);backdrop-filter:blur(16px);font-size:12px;font-weight:700;z-index:4}
+.stage-chip .sq{width:22px;height:22px;border-radius:7px;display:grid;place-items:center;
+  background:var(--ink);color:#fff}
+.stage-chip .sq svg{width:13px;height:13px}
+.stage-legend{position:absolute;top:16px;right:16px;display:flex;gap:6px;z-index:4}
+.stage-legend .lg{display:flex;align-items:center;gap:6px;padding:6px 11px;border-radius:999px;
+  background:var(--glass);border:1px solid var(--glass-line);box-shadow:var(--shadow-sm);
+  backdrop-filter:blur(16px);font-size:11px;font-weight:700;color:var(--ink-2)}
+.stage-legend .lg i{width:8px;height:8px;border-radius:50%}
+
+/* projected tire tags */
+.tag{position:absolute;transform:translate(-50%,-50%);z-index:5;pointer-events:auto;cursor:pointer;
+  will-change:left,top}
+.tag .bub{display:flex;align-items:center;gap:5px;padding:5px 9px;border-radius:999px;
+  background:rgba(255,255,255,.82);border:1.5px solid;box-shadow:0 6px 16px rgba(35,34,33,.18);
+  backdrop-filter:blur(6px);font-size:12px;font-weight:800;line-height:1;white-space:nowrap;
+  transition:transform .15s ease}
+.tag .bub b{font-size:12.5px}
+.tag .bub small{font-size:9px;font-weight:700;color:var(--muted);letter-spacing:.03em}
+.tag:hover .bub,.tag.sel .bub{transform:scale(1.08)}
+.tag.sel .bub{box-shadow:0 8px 22px rgba(35,34,33,.28)}
+
+/* controls */
+.controls{position:absolute;bottom:16px;left:16px;display:flex;align-items:center;gap:8px;z-index:4}
+.controls .cbtn{display:flex;align-items:center;gap:7px;padding:9px 14px;border-radius:999px;
+  background:var(--glass);border:1px solid var(--glass-line);box-shadow:var(--shadow-sm);
+  backdrop-filter:blur(16px);font-size:12px;font-weight:700;color:var(--ink-2)}
+.controls .cbtn svg{width:15px;height:15px}
+.controls .cbtn:hover{color:var(--coral)}
+.hint{position:absolute;bottom:18px;right:18px;z-index:4;font-size:11px;font-weight:600;
+  color:var(--muted);display:flex;align-items:center;gap:6px}
+.hint svg{width:14px;height:14px;opacity:.7}
+
+/* ---------- Roster strip ---------- */
+.roster{display:grid;grid-template-columns:repeat(6,1fr);gap:12px;flex-shrink:0}
+.tire{background:var(--glass);border:1px solid var(--glass-line);border-radius:var(--r-md);
+  box-shadow:var(--shadow-sm);backdrop-filter:blur(18px);padding:13px 13px 12px;cursor:pointer;
+  position:relative;overflow:hidden;transition:transform .15s ease,box-shadow .15s ease}
+.tire:hover{transform:translateY(-2px)}
+.tire.sel{box-shadow:0 0 0 2px var(--coral),var(--shadow-sm)}
+.tire .trow{display:flex;align-items:center;justify-content:space-between}
+.tire .pos{font-size:10.5px;font-weight:800;letter-spacing:.04em;color:var(--muted)}
+.tire .st{width:9px;height:9px;border-radius:50%}
+.tire .psi{font-size:23px;font-weight:800;letter-spacing:-.02em;margin-top:8px;
+  font-variant-numeric:tabular-nums;line-height:1}
+.tire .psi u{font-size:11px;font-weight:700;color:var(--muted);font-style:normal;margin-left:3px}
+.tire .sub2{display:flex;align-items:center;justify-content:space-between;margin-top:7px}
+.tire .sub2 span{font-size:11px;font-weight:700;color:var(--ink-2)}
+.tire .bar{height:4px;border-radius:3px;background:rgba(35,34,33,.09);margin-top:9px;overflow:hidden}
+.tire .bar i{display:block;height:100%;border-radius:3px;transition:width .6s cubic-bezier(.4,0,.2,1)}
+
+/* ---------- Rail cards ---------- */
+.gaugewrap{display:flex;align-items:center;gap:16px;margin-top:8px}
+.semi{position:relative;width:150px;height:86px;flex-shrink:0}
+.semi .val{position:absolute;left:0;right:0;bottom:2px;text-align:center}
+.semi .val b{font-size:30px;font-weight:800;letter-spacing:-.03em;font-variant-numeric:tabular-nums}
+.semi .val small{display:block;font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.06em}
+.ov-meta{flex:1;display:flex;flex-direction:column;gap:9px}
+.ov-row{display:flex;align-items:center;justify-content:space-between;font-size:12px}
+.ov-row span{color:var(--muted);font-weight:600}
+.ov-row b{font-weight:800;font-variant-numeric:tabular-nums}
+.badge{display:inline-flex;align-items:center;gap:6px;padding:5px 11px;border-radius:999px;
+  font-size:11px;font-weight:800;letter-spacing:.01em;width:fit-content}
+.badge i{width:7px;height:7px;border-radius:50%}
+
+/* selected tire detail */
+.detail-top{display:flex;align-items:flex-start;gap:14px}
+.ring{position:relative;width:118px;height:118px;flex-shrink:0}
+.ring .rc{position:absolute;inset:0;display:grid;place-content:center;text-align:center}
+.ring .rc b{font-size:29px;font-weight:800;letter-spacing:-.03em;font-variant-numeric:tabular-nums;line-height:1}
+.ring .rc small{font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.05em}
+.detail-side{flex:1;display:flex;flex-direction:column;gap:10px;padding-top:4px}
+.dpos{font-size:15px;font-weight:800}
+.dpos em{font-style:normal;font-size:11px;font-weight:700;color:var(--muted);display:block;margin-top:2px}
+.mini{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin-top:14px}
+.mini .m{background:rgba(255,255,255,.5);border:1px solid var(--glass-line);border-radius:var(--r-sm);
+  padding:11px 12px}
+.mini .m .lbl{margin-bottom:5px}
+.mini .m b{font-size:18px;font-weight:800;letter-spacing:-.02em;font-variant-numeric:tabular-nums}
+.mini .m b u{font-size:10px;font-weight:700;color:var(--muted);font-style:normal;margin-left:2px}
+.mini .m .d{font-size:11px;font-weight:700;margin-left:6px}
+
+/* alerts */
+.alert{display:flex;gap:11px;padding:12px 0;border-top:1px solid var(--taupe-line)}
+.alert:first-of-type{border-top:none}
+.alert .ai{width:34px;height:34px;border-radius:10px;display:grid;place-items:center;flex-shrink:0}
+.alert .ai svg{width:17px;height:17px}
+.alert .atxt{flex:1;min-width:0}
+.alert .atxt b{font-size:12.5px;font-weight:800;display:block}
+.alert .atxt p{font-size:11.5px;color:var(--ink-2);font-weight:600;margin-top:2px;line-height:1.35}
+.alert .atime{font-size:10.5px;font-weight:700;color:var(--muted);flex-shrink:0}
+
+.stateGood{color:var(--good)} .stateWarn{color:var(--warn)} .stateCrit{color:var(--crit)}
+.bgGood{background:rgba(107,133,127,.14)} .bgWarn{background:rgba(222,136,55,.16)} .bgCrit{background:rgba(231,112,38,.16)}
+
+@media (max-width:1120px){
+  .main{grid-template-columns:1fr;overflow:auto}
+  .rail{overflow:visible}
+  .stage{min-height:420px}
+}
+@media (max-width:720px){
+  .roster{grid-template-columns:repeat(3,1fr)}
+  .veh,.unit{display:none}
+}
+</style>
+</head>
+<body>
+<div class="app">
+  <!-- Header -->
+  <header class="top">
+    <div class="brand">
+      <div class="logo">
+        <svg viewBox="0 0 24 24" fill="none"><path d="M4 12.5l4.5 4.5L20 6.5" stroke="#fff" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </div>
+      <div>
+        <div class="wm">True<span>Track</span></div>
+        <div class="sub">Tire Pressure Monitor</div>
+      </div>
+    </div>
+    <div class="veh">
+      <div>
+        <div class="vt">Freightliner M2 106</div>
+        <div class="vs">Unit 214 · 6 sensors online</div>
+      </div>
+      <div class="chev">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M6 9l6 6 6-6" stroke="#232221" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </div>
+    </div>
+    <div class="spacer"></div>
+    <div class="pillbtns">
+      <div class="unit" id="unit">
+        <button class="on" data-u="psi">PSI</button>
+        <button data-u="bar">BAR</button>
+      </div>
+      <div class="live"><span class="dot"></span> Live TPMS · <span id="clock">--:--</span></div>
+      <button class="ghost" title="Settings">
+        <svg viewBox="0 0 24 24" fill="none"><path d="M12 15a3 3 0 100-6 3 3 0 000 6z" stroke="currentColor" stroke-width="1.8"/><path d="M19.4 15a1.6 1.6 0 00.3 1.8l.1.1a2 2 0 11-2.8 2.8l-.1-.1a1.6 1.6 0 00-1.8-.3 1.6 1.6 0 00-1 1.5V21a2 2 0 11-4 0v-.1a1.6 1.6 0 00-1-1.5 1.6 1.6 0 00-1.8.3l-.1.1a2 2 0 11-2.8-2.8l.1-.1a1.6 1.6 0 00.3-1.8 1.6 1.6 0 00-1.5-1H3a2 2 0 110-4h.1a1.6 1.6 0 001.5-1 1.6 1.6 0 00-.3-1.8l-.1-.1a2 2 0 112.8-2.8l.1.1a1.6 1.6 0 001.8.3H9a1.6 1.6 0 001-1.5V3a2 2 0 114 0v.1a1.6 1.6 0 001 1.5 1.6 1.6 0 001.8-.3l.1-.1a2 2 0 112.8 2.8l-.1.1a1.6 1.6 0 00-.3 1.8V9a1.6 1.6 0 001.5 1H21a2 2 0 110 4h-.1a1.6 1.6 0 00-1.5 1z" stroke="currentColor" stroke-width="1.6"/></svg>
+      </button>
+    </div>
+  </header>
+
+  <!-- Main -->
+  <div class="main">
+    <!-- Left: 3D stage + roster -->
+    <div class="left">
+      <div class="stage" id="stage">
+        <canvas id="scene"></canvas>
+        <div class="stage-chip">
+          <span class="sq"><svg viewBox="0 0 24 24" fill="none"><path d="M3 12h3l2-5h8l2 5h3M6 12v4M18 12v4M3 16h18" stroke="#fff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+          Unit 214 · Live pressure map
+        </div>
+        <div class="stage-legend">
+          <div class="lg"><i style="background:var(--good)"></i>Optimal</div>
+          <div class="lg"><i style="background:var(--warn)"></i>Watch</div>
+          <div class="lg"><i style="background:var(--crit)"></i>Critical</div>
+        </div>
+        <div id="tags"></div>
+        <div class="controls">
+          <button class="cbtn" id="playBtn"><svg viewBox="0 0 24 24" fill="none"><rect x="6" y="5" width="4" height="14" rx="1.2" fill="currentColor"/><rect x="14" y="5" width="4" height="14" rx="1.2" fill="currentColor"/></svg><span>Pause</span></button>
+          <button class="cbtn" id="resetBtn"><svg viewBox="0 0 24 24" fill="none"><path d="M4 4v5h5M20 20v-5h-5" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"/><path d="M19 9a7.5 7.5 0 00-13-3L4 9m1 6a7.5 7.5 0 0013 3l2-3" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"/></svg><span>Reset view</span></button>
+        </div>
+        <div class="hint"><svg viewBox="0 0 24 24" fill="none"><path d="M12 3v3M12 18v3M3 12h3M18 12h3M6 6l2 2M16 16l2 2M18 6l-2 2M8 16l-2 2" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>Drag to orbit · scroll to zoom</div>
+      </div>
+
+      <div class="roster" id="roster"></div>
+    </div>
+
+    <!-- Right rail -->
+    <div class="rail">
+      <!-- Overall health -->
+      <div class="card pad">
+        <div class="ch">
+          <span class="ci"><svg viewBox="0 0 24 24" fill="none"><path d="M12 21s-7-4.4-9.2-9.2C1 8 3 4.5 6.4 4.5c2 0 3.4 1.2 5.6 3.6 2.2-2.4 3.6-3.6 5.6-3.6 3.4 0 5.4 3.5 3.6 7.3C19 16.6 12 21 12 21z" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/></svg></span>
+          <h3>Fleet Tire Health</h3>
+          <span class="meta">Unit 214</span>
+        </div>
+        <div class="gaugewrap">
+          <div class="semi" id="semi"></div>
+          <div class="ov-meta">
+            <span class="badge" id="ovBadge"><i></i><span></span></span>
+            <div class="ov-row"><span>Avg. pressure</span><b id="ovAvg">—</b></div>
+            <div class="ov-row"><span>Hottest tire</span><b id="ovHot">—</b></div>
+            <div class="ov-row"><span>Sensors online</span><b>6 / 6</b></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Selected tire detail -->
+      <div class="card pad">
+        <div class="ch">
+          <span class="ci"><svg viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="8.2" stroke="currentColor" stroke-width="1.7"/><circle cx="12" cy="12" r="3.4" stroke="currentColor" stroke-width="1.7"/></svg></span>
+          <h3>Tire Detail</h3>
+          <span class="meta" id="dUpdated">live</span>
+        </div>
+        <div class="detail-top" style="margin-top:12px">
+          <div class="ring" id="ring"></div>
+          <div class="detail-side">
+            <div>
+              <div class="dpos" id="dPos">—</div>
+              <em id="dAxle">—</em>
+            </div>
+            <span class="badge" id="dBadge"><i></i><span></span></span>
+            <div class="ov-row"><span>Target</span><b id="dTarget">—</b></div>
+            <div class="ov-row"><span>Deviation</span><b id="dDev">—</b></div>
+          </div>
+        </div>
+        <div class="mini">
+          <div class="m"><div class="lbl">Temperature</div><b id="dTemp">—</b></div>
+          <div class="m"><div class="lbl">Tread depth</div><b id="dTread">—</b></div>
+        </div>
+      </div>
+
+      <!-- Alerts -->
+      <div class="card pad">
+        <div class="ch">
+          <span class="ci"><svg viewBox="0 0 24 24" fill="none"><path d="M12 9v4M12 17h.01M10.3 3.9L2.4 18a2 2 0 001.7 3h15.8a2 2 0 001.7-3L13.7 3.9a2 2 0 00-3.4 0z" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+          <h3>Active Alerts</h3>
+          <span class="meta" id="alertCount">—</span>
+        </div>
+        <div id="alerts" style="margin-top:6px"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script type="module">
+import * as THREE from 'three';
+import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+import { RoundedBoxGeometry } from 'three/addons/geometries/RoundedBoxGeometry.js';
+import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
+
+/* ================= Data model =================
+   6-wheel Freightliner day cab: 2 steer + 4 drive (dual).
+   Positions in truck space: x = length (front +), z = width. */
+const PAL = { good:'#6B857F', warn:'#DE8837', crit:'#E77026', ink:'#232221' };
+const TIRES = [
+  { id:'FL', pos:'Steer L',  axle:'Front axle · left',       x: 3.25, z:-1.28, target:110, psi:109, temp:62, tread:11.4, dual:false },
+  { id:'FR', pos:'Steer R',  axle:'Front axle · right',      x: 3.25, z: 1.28, target:110, psi:112, temp:64, tread:11.1, dual:false },
+  { id:'DLO',pos:'Drive LO', axle:'Rear axle · left outer',  x:-2.55, z:-1.62, target:100, psi:93,  temp:78, tread:9.2,  dual:true },
+  { id:'DLI',pos:'Drive LI', axle:'Rear axle · left inner',  x:-2.55, z:-1.06, target:100, psi:100, temp:71, tread:9.6,  dual:true },
+  { id:'DRO',pos:'Drive RO', axle:'Rear axle · right outer', x:-2.55, z: 1.62, target:100, psi:84,  temp:92, tread:8.4,  dual:true },
+  { id:'DRI',pos:'Drive RI', axle:'Rear axle · right inner', x:-2.55, z: 1.06, target:100, psi:99,  temp:70, tread:9.7,  dual:true },
+];
+const BASE = TIRES.map(t=>({psi:t.psi,temp:t.temp}));
+let selId = 'DRO', unit='psi', playing=true;
+
+const stateOf = t=>{
+  const r = t.psi/t.target;
+  if(r<0.90 || t.temp>=90) return 'crit';
+  if(r<0.955 || r>1.08 || t.temp>=84) return 'warn';
+  return 'good';
+};
+const scoreOf = t=>{
+  const dev = Math.abs(t.psi-t.target)/t.target*100;
+  const tp = Math.max(0,(t.temp-75))*1.1;
+  return Math.max(40, Math.min(100, 100 - dev*2.4 - tp));
+};
+const col = s => PAL[s];
+const fmtP = v => unit==='psi' ? Math.round(v) : (v*0.0689476).toFixed(1);
+const unitLbl = ()=> unit==='psi' ? 'psi' : 'bar';
+
+/* ================= Three.js scene ================= */
+const canvas = document.getElementById('scene');
+const renderer = new THREE.WebGLRenderer({ canvas, antialias:true, alpha:true });
+renderer.setPixelRatio(Math.min(devicePixelRatio,2));
+renderer.toneMapping = THREE.ACESFilmicToneMapping;
+renderer.toneMappingExposure = 1.02;
+renderer.shadowMap.enabled = true;
+renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+
+const scene = new THREE.Scene();
+const pmrem = new THREE.PMREMGenerator(renderer);
+scene.environment = pmrem.fromScene(new RoomEnvironment(), 0.04).texture;
+
+const camera = new THREE.PerspectiveCamera(38, 1, 0.1, 100);
+camera.position.set(8.2, 5.6, 9.4);
+const controls = new OrbitControls(camera, canvas);
+controls.enableDamping = true;
+controls.dampingFactor = 0.08;
+controls.minDistance = 8; controls.maxDistance = 22;
+controls.maxPolarAngle = Math.PI*0.49;
+controls.target.set(0.2, 0.9, 0);
+controls.enablePan = false;
+
+const hemi = new THREE.HemisphereLight(0xffffff, 0xe6d9c8, 0.85);
+scene.add(hemi);
+const sun = new THREE.DirectionalLight(0xfff4e8, 2.0);
+sun.position.set(-6, 11, 7);
+sun.castShadow = true;
+sun.shadow.mapSize.set(2048,2048);
+sun.shadow.camera.left=-10; sun.shadow.camera.right=10;
+sun.shadow.camera.top=10; sun.shadow.camera.bottom=-10;
+sun.shadow.camera.near=1; sun.shadow.camera.far=40;
+sun.shadow.bias=-0.0004; sun.shadow.radius=6;
+scene.add(sun);
+const rim = new THREE.DirectionalLight(0xE77026, 0.5);
+rim.position.set(7,4,-8); scene.add(rim);
+
+/* materials */
+const M = {
+  body:  new THREE.MeshStandardMaterial({ color:'#EFEBE4', roughness:0.32, metalness:0.15, envMapIntensity:1.1 }),
+  bodyLo:new THREE.MeshStandardMaterial({ color:'#DED6CA', roughness:0.5, metalness:0.1 }),
+  accent:new THREE.MeshStandardMaterial({ color:'#E77026', roughness:0.35, metalness:0.2 }),
+  chassis:new THREE.MeshStandardMaterial({ color:'#2B2926', roughness:0.6, metalness:0.3 }),
+  glass: new THREE.MeshStandardMaterial({ color:'#3A4A50', roughness:0.08, metalness:0.5, envMapIntensity:1.6 }),
+  chrome:new THREE.MeshStandardMaterial({ color:'#C9C5BE', roughness:0.18, metalness:0.9 }),
+  grille:new THREE.MeshStandardMaterial({ color:'#33302C', roughness:0.5, metalness:0.4 }),
+  tire:  new THREE.MeshStandardMaterial({ color:'#26241F', roughness:0.85, metalness:0 }),
+  head:  new THREE.MeshStandardMaterial({ color:'#FBF3D8', roughness:0.2, emissive:'#FBE6A0', emissiveIntensity:0.5 }),
+  tail:  new THREE.MeshStandardMaterial({ color:'#C6483A', roughness:0.3, emissive:'#E7503A', emissiveIntensity:0.4 }),
+};
+const gc = new Map();
+function box(w,h,d,r=0.06){ const k=`${w}_${h}_${d}_${r}`; if(!gc.has(k)) gc.set(k,new RoundedBoxGeometry(w,h,d,3,Math.min(r,Math.min(w,h,d)/2-0.001))); return gc.get(k); }
+function add(geo,mat,x,y,z,parent=truck){ const m=new THREE.Mesh(geo,mat); m.position.set(x,y,z); m.castShadow=true; m.receiveShadow=true; parent.add(m); return m; }
+
+const truck = new THREE.Group();
+scene.add(truck);
+
+/* ---- chassis rails ---- */
+add(box(9.4,0.34,2.7,0.08), M.chassis, -0.2, 0.62, 0);
+/* ---- box body (cargo) ---- */
+add(box(5.5,2.7,2.62,0.12), M.body, -1.9, 2.2, 0);
+add(box(5.54,0.5,2.66,0.1), M.bodyLo, -1.9, 1.05, 0);       // lower skirt
+add(box(0.08,2.2,2.64,0.02), M.accent, 0.86, 2.2, 0);        // coral seam at cab join
+add(box(5.5,0.1,2.64,0.03), M.accent, -1.9, 2.95, 0);        // coral roof line
+/* rear doors detail */
+add(box(0.06,2.3,2.5,0.02), M.bodyLo, -4.63, 2.25, 0);
+add(box(0.09,1.4,0.09,0.03), M.chrome, -4.66, 2.0, -0.5);
+add(box(0.09,1.4,0.09,0.03), M.chrome, -4.66, 2.0, 0.5);
+
+/* ---- cab ---- */
+const cab = new THREE.Group(); truck.add(cab);
+add(box(2.7,2.35,2.55,0.22), M.body, 2.65, 2.15, 0, cab);
+add(box(2.3,0.55,2.5,0.12), M.accent, 2.55, 1.15, 0, cab);   // coral lower cab band
+/* windshield + side glass */
+add(box(0.5,1.15,2.25,0.06), M.glass, 3.9, 2.45, 0, cab);
+add(box(1.4,1.0,0.04,0.03), M.glass, 2.7, 2.5, 1.28, cab);
+add(box(1.4,1.0,0.04,0.03), M.glass, 2.7, 2.5, -1.28, cab);
+/* roof fairing */
+add(box(1.7,0.5,2.2,0.2), M.body, 2.3, 3.55, 0, cab);
+/* front grille + bumper */
+add(box(0.35,1.3,2.0,0.08), M.grille, 4.18, 1.75, 0, cab);
+add(box(0.2,0.45,2.5,0.06), M.chrome, 4.3, 1.0, 0, cab);
+/* headlights */
+add(box(0.18,0.4,0.55,0.06), M.head, 4.24, 1.5, 0.85, cab);
+add(box(0.18,0.4,0.55,0.06), M.head, 4.24, 1.5, -0.85, cab);
+/* mirrors */
+add(box(0.08,0.55,0.1,0.03), M.chassis, 4.05, 2.6, 1.42, cab);
+add(box(0.12,0.5,0.2,0.05), M.body, 4.05, 2.75, 1.5, cab);
+add(box(0.08,0.55,0.1,0.03), M.chassis, 4.05, 2.6, -1.42, cab);
+add(box(0.12,0.5,0.2,0.05), M.body, 4.05, 2.75, -1.5, cab);
+/* exhaust stack */
+add(new THREE.CylinderGeometry(0.1,0.1,2.2,16), M.chrome, 1.35, 2.5, -1.34, cab);
+/* tail lights */
+add(box(0.12,0.6,0.4,0.05), M.tail, -4.68, 1.5, 0.95, truck);
+add(box(0.12,0.6,0.4,0.05), M.tail, -4.68, 1.5, -0.95, truck);
+
+/* ---- wheels ---- */
+const wheelGeo = new THREE.CylinderGeometry(0.62,0.62,0.34,26);
+const hubGeo = new THREE.CylinderGeometry(0.22,0.22,0.36,18);
+const glowGeo = new THREE.TorusGeometry(0.72,0.055,12,34);
+const wheelMap = {};
+TIRES.forEach(t=>{
+  const g = new THREE.Group();
+  g.position.set(t.x, 0.62, t.z);
+  const w = new THREE.Mesh(wheelGeo, M.tire);
+  w.rotation.x = Math.PI/2; w.castShadow=true; w.receiveShadow=true;
+  g.add(w);
+  const hub = new THREE.Mesh(hubGeo, M.chrome);
+  hub.rotation.x = Math.PI/2; hub.position.z = t.z<0 ? -0.02 : 0.02;
+  g.add(hub);
+  const glow = new THREE.Mesh(glowGeo, new THREE.MeshBasicMaterial({ color:PAL.good, transparent:true, opacity:0 }));
+  glow.rotation.x = Math.PI/2; glow.position.z = t.z<0 ? -0.19 : 0.19;
+  g.add(glow);
+  truck.add(g);
+  wheelMap[t.id] = { grp:g, glow, hub:new THREE.Vector3() };
+});
+
+/* soft ground shadow */
+const shGeo = new THREE.CircleGeometry(7.5, 48);
+const shTex = (()=>{ const c=document.createElement('canvas');c.width=c.height=256;const x=c.getContext('2d');
+  const gr=x.createRadialGradient(128,128,10,128,128,128);gr.addColorStop(0,'rgba(35,34,33,.28)');gr.addColorStop(.55,'rgba(35,34,33,.10)');gr.addColorStop(1,'rgba(35,34,33,0)');
+  x.fillStyle=gr;x.fillRect(0,0,256,256);return new THREE.CanvasTexture(c);})();
+const shadow = new THREE.Mesh(shGeo, new THREE.MeshBasicMaterial({ map:shTex, transparent:true, depthWrite:false }));
+shadow.rotation.x = -Math.PI/2; shadow.position.y = 0.02; shadow.scale.set(1.15,0.82,1);
+scene.add(shadow);
+/* faint floor to catch shadow */
+const floor = new THREE.Mesh(new THREE.CircleGeometry(16,64), new THREE.ShadowMaterial({ opacity:0.14 }));
+floor.rotation.x=-Math.PI/2; floor.position.y=0.01; floor.receiveShadow=true; scene.add(floor);
+
+/* ================= Resize ================= */
+function resize(){
+  const r = document.getElementById('stage').getBoundingClientRect();
+  renderer.setSize(r.width, r.height, false);
+  camera.aspect = r.width/r.height; camera.updateProjectionMatrix();
+}
+new ResizeObserver(resize).observe(document.getElementById('stage'));
+resize();
+
+/* ================= Tire tags (projected) ================= */
+const tagsEl = document.getElementById('tags');
+const tagMap = {};
+TIRES.forEach(t=>{
+  const el = document.createElement('div');
+  el.className = 'tag'; el.dataset.id = t.id;
+  el.innerHTML = `<div class="bub"><b></b><small></small></div>`;
+  el.addEventListener('click', ()=>select(t.id));
+  tagsEl.appendChild(el);
+  tagMap[t.id] = el;
+});
+const _v = new THREE.Vector3();
+function projectTags(){
+  const r = renderer.domElement.getBoundingClientRect();
+  const w = r.width, h = r.height;
+  TIRES.forEach(t=>{
+    const wm = wheelMap[t.id];
+    wm.grp.getWorldPosition(_v); _v.y += 1.15;
+    const p = _v.clone().project(camera);
+    const el = tagMap[t.id];
+    if(p.z>1){ el.style.display='none'; return; }
+    el.style.display='block';
+    el.style.left = (p.x*0.5+0.5)*w + 'px';
+    el.style.top  = (-p.y*0.5+0.5)*h + 'px';
+  });
+}
+
+/* ================= Renders of DOM ================= */
+function arc(cx,cy,rad,a0,a1){
+  const p0=[cx+rad*Math.cos(a0),cy+rad*Math.sin(a0)];
+  const p1=[cx+rad*Math.cos(a1),cy+rad*Math.sin(a1)];
+  const large = (a1-a0)>Math.PI?1:0;
+  return `M${p0[0]} ${p0[1]} A${rad} ${rad} 0 ${large} 1 ${p1[0]} ${p1[1]}`;
+}
+function renderSemi(){
+  const score = TIRES.reduce((a,t)=>a+scoreOf(t),0)/TIRES.length;
+  const worst = TIRES.map(stateOf).includes('crit')?'crit':TIRES.map(stateOf).includes('warn')?'warn':'good';
+  const c = col(worst);
+  const a0=Math.PI, a1=Math.PI*2;
+  const frac=score/100, aMid=a0+(a1-a0)*frac;
+  document.getElementById('semi').innerHTML =
+    `<svg width="150" height="86" viewBox="0 0 150 86">
+      <path d="${arc(75,80,62,a0,a1)}" fill="none" stroke="rgba(35,34,33,.10)" stroke-width="11" stroke-linecap="round"/>
+      <path d="${arc(75,80,62,a0,aMid)}" fill="none" stroke="${c}" stroke-width="11" stroke-linecap="round"/>
+     </svg>
+     <div class="val"><b>${Math.round(score)}</b><small>Health index</small></div>`;
+  const label = worst==='good'?'All optimal':worst==='warn'?'Needs a look':'Action needed';
+  const b=document.getElementById('ovBadge');
+  b.className='badge '+(worst==='good'?'bgGood stateGood':worst==='warn'?'bgWarn stateWarn':'bgCrit stateCrit');
+  b.innerHTML=`<i style="background:${c}"></i><span>${label}</span>`;
+  const avg = TIRES.reduce((a,t)=>a+t.psi,0)/TIRES.length;
+  document.getElementById('ovAvg').textContent = `${fmtP(avg)} ${unitLbl()}`;
+  const hot = TIRES.reduce((a,t)=>t.temp>a.temp?t:a);
+  document.getElementById('ovHot').textContent = `${hot.pos} · ${Math.round(hot.temp)}°C`;
+}
+function renderRing(){
+  const t = TIRES.find(x=>x.id===selId);
+  const s = stateOf(t), c=col(s);
+  const frac = Math.max(0,Math.min(1, t.psi/(t.target*1.12)));
+  const R=50, C=2*Math.PI*R, off=C*(1-frac);
+  document.getElementById('ring').innerHTML =
+    `<svg width="118" height="118" viewBox="0 0 118 118">
+      <circle cx="59" cy="59" r="${R}" fill="none" stroke="rgba(35,34,33,.10)" stroke-width="9"/>
+      <circle cx="59" cy="59" r="${R}" fill="none" stroke="${c}" stroke-width="9" stroke-linecap="round"
+        stroke-dasharray="${C}" stroke-dashoffset="${off}" transform="rotate(-90 59 59)"
+        style="transition:stroke-dashoffset .6s cubic-bezier(.4,0,.2,1)"/>
+     </svg>
+     <div class="rc"><b>${fmtP(t.psi)}</b><small>${unitLbl()}</small></div>`;
+  document.getElementById('dPos').textContent = t.pos;
+  document.getElementById('dAxle').textContent = t.axle;
+  const label = s==='good'?'Optimal':s==='warn'?'Watch':'Critical';
+  const b=document.getElementById('dBadge');
+  b.className='badge '+(s==='good'?'bgGood stateGood':s==='warn'?'bgWarn stateWarn':'bgCrit stateCrit');
+  b.innerHTML=`<i style="background:${c}"></i><span>${label}</span>`;
+  document.getElementById('dTarget').textContent = `${fmtP(t.target)} ${unitLbl()}`;
+  const dev = t.psi-t.target, dp=(dev/t.target*100);
+  const devStr = `${dev<0?'−':'+'}${fmtP(Math.abs(dev))} ${unitLbl()}`;
+  document.getElementById('dDev').innerHTML = `<span style="color:${dev<0?c:'var(--good)'}">${devStr} (${dp>0?'+':''}${dp.toFixed(0)}%)</span>`;
+  document.getElementById('dTemp').innerHTML = `${Math.round(t.temp)}<u>°C</u>`;
+  document.getElementById('dTread').innerHTML = `${t.tread.toFixed(1)}<u>mm</u>`;
+  document.getElementById('dUpdated').textContent = 'updated 0:0'.replace('0:0', new Date().toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'}));
+}
+function renderRoster(){
+  const el = document.getElementById('roster');
+  el.innerHTML = TIRES.map(t=>{
+    const s=stateOf(t), c=col(s);
+    const frac=Math.max(0,Math.min(1,t.psi/(t.target*1.12)));
+    return `<div class="tire ${t.id===selId?'sel':''}" data-id="${t.id}">
+      <div class="trow"><span class="pos">${t.pos}</span><span class="st" style="background:${c}"></span></div>
+      <div class="psi" style="color:${s==='good'?'var(--ink)':c}">${fmtP(t.psi)}<u>${unitLbl()}</u></div>
+      <div class="sub2"><span>${Math.round(t.temp)}°C</span><span style="color:${c}">${s==='good'?'Optimal':s==='warn'?'Watch':'Low'}</span></div>
+      <div class="bar"><i style="width:${frac*100}%;background:${c}"></i></div>
+    </div>`;
+  }).join('');
+  el.querySelectorAll('.tire').forEach(n=>n.addEventListener('click',()=>select(n.dataset.id)));
+}
+function renderAlerts(){
+  const items = TIRES.filter(t=>stateOf(t)!=='good')
+    .sort((a,b)=>({crit:0,warn:1})[stateOf(a)]-({crit:0,warn:1})[stateOf(b)]);
+  const el=document.getElementById('alerts');
+  document.getElementById('alertCount').textContent = items.length? `${items.length} open` : 'clear';
+  if(!items.length){ el.innerHTML=`<div class="alert"><div class="ai bgGood stateGood"><svg viewBox="0 0 24 24" fill="none"><path d="M20 6L9 17l-5-5" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></div><div class="atxt"><b>All tires nominal</b><p>Every sensor is within its target band.</p></div></div>`; return; }
+  el.innerHTML = items.map(t=>{
+    const s=stateOf(t), c=col(s);
+    const dev=(t.psi-t.target)/t.target*100;
+    const msg = t.temp>=90 ? `Low pressure and running hot at ${Math.round(t.temp)}°C.`
+             : s==='crit' ? `${Math.abs(dev).toFixed(0)}% under target — inspect before dispatch.`
+             : `Drifting ${Math.abs(dev).toFixed(0)}% under target. Top up soon.`;
+    return `<div class="alert" data-id="${t.id}" style="cursor:pointer">
+      <div class="ai ${s==='crit'?'bgCrit stateCrit':'bgWarn stateWarn'}">
+        <svg viewBox="0 0 24 24" fill="none"><path d="M12 9v4M12 17h.01M10.3 3.9L2.4 18a2 2 0 001.7 3h15.8a2 2 0 001.7-3L13.7 3.9a2 2 0 00-3.4 0z" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+      <div class="atxt"><b>${t.pos} · ${fmtP(t.psi)} ${unitLbl()}</b><p>${msg}</p></div>
+      <div class="atime">${s==='crit'?'now':'2m'}</div>
+    </div>`;
+  }).join('');
+  el.querySelectorAll('.alert[data-id]').forEach(n=>n.addEventListener('click',()=>select(n.dataset.id)));
+}
+function renderTags(){
+  TIRES.forEach(t=>{
+    const s=stateOf(t), c=col(s), el=tagMap[t.id];
+    el.classList.toggle('sel', t.id===selId);
+    const bub=el.querySelector('.bub');
+    bub.style.borderColor=c; bub.style.color=(s==='good'?'var(--ink)':c);
+    bub.querySelector('b').textContent=fmtP(t.psi);
+    bub.querySelector('small').textContent=unitLbl();
+  });
+}
+function renderWheels(){
+  TIRES.forEach(t=>{
+    const s=stateOf(t), c=col(s);
+    const g=wheelMap[t.id].glow;
+    const sel=t.id===selId;
+    g.material.color.set(c);
+    g.material.opacity = sel?1 : (s==='good'?0:0.85);
+  });
+}
+function renderAll(){ renderSemi(); renderRing(); renderRoster(); renderAlerts(); renderTags(); renderWheels(); }
+
+function select(id){ selId=id; renderAll(); }
+
+/* ================= Interactions ================= */
+// unit toggle
+document.getElementById('unit').addEventListener('click',e=>{
+  const b=e.target.closest('button'); if(!b) return;
+  unit=b.dataset.u;
+  [...e.currentTarget.children].forEach(c=>c.classList.toggle('on',c===b));
+  renderAll();
+});
+// play / reset
+const playBtn=document.getElementById('playBtn');
+playBtn.addEventListener('click',()=>{
+  playing=!playing;
+  playBtn.querySelector('span').textContent=playing?'Pause':'Resume';
+  playBtn.querySelector('svg').innerHTML = playing
+    ? '<rect x="6" y="5" width="4" height="14" rx="1.2" fill="currentColor"/><rect x="14" y="5" width="4" height="14" rx="1.2" fill="currentColor"/>'
+    : '<path d="M7 5l12 7-12 7V5z" fill="currentColor"/>';
+});
+document.getElementById('resetBtn').addEventListener('click',()=>{
+  camera.position.set(8.2,5.6,9.4); controls.target.set(0.2,0.9,0); controls.update();
+});
+// raycast pick wheels
+const ray=new THREE.Raycaster(), mouse=new THREE.Vector2();
+canvas.addEventListener('pointerdown',e=>{
+  const r=canvas.getBoundingClientRect();
+  mouse.x=((e.clientX-r.left)/r.width)*2-1; mouse.y=-((e.clientY-r.top)/r.height)*2+1;
+  ray.setFromCamera(mouse,camera);
+  for(const t of TIRES){
+    const hit=ray.intersectObject(wheelMap[t.id].grp,true);
+    if(hit.length){ select(t.id); break; }
+  }
+});
+// clock
+const clk=document.getElementById('clock');
+setInterval(()=>{ clk.textContent=new Date().toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'}); },1000);
+clk.textContent=new Date().toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'});
+
+/* ================= Live sim ================= */
+let acc=0;
+function step(){
+  TIRES.forEach((t,i)=>{
+    // random walk toward base, with a slow leak on the critical tire
+    const b=BASE[i];
+    t.psi += (b.psi-t.psi)*0.04 + (Math.random()-0.5)*0.5;
+    if(t.id==='DRO'){ t.psi -= 0.12; if(t.psi<70){ t.psi=70; } }   // creeping leak
+    t.temp += (b.temp-t.temp)*0.05 + (Math.random()-0.5)*0.6;
+    t.temp = Math.max(45,Math.min(105,t.temp));
+  });
+  renderAll();
+}
+
+/* ================= Loop ================= */
+let last=performance.now();
+function loop(now){
+  const dt=(now-last)/1000; last=now;
+  controls.update();
+  if(playing){ acc+=dt; if(acc>1.1){ acc=0; step(); } }
+  projectTags();
+  renderer.render(scene,camera);
+  requestAnimationFrame(loop);
+}
+renderAll();
+requestAnimationFrame(loop);
+</script>
+</body>
+</html>

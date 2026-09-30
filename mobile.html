@@ -1,0 +1,1483 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, maximum-scale=1">
+<title>Dispatch Pro — Driver App</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<script>
+  // Applied synchronously, before first paint, so there's no flash of the
+  // wrong theme on load — same technique as login.html. Reads/writes the
+  // SAME 'dp-theme' localStorage key so a choice made in either file
+  // carries over to the other.
+  (function () {
+    try {
+      var saved = localStorage.getItem('dp-theme');
+      var theme = saved || (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+      document.documentElement.setAttribute('data-theme', theme);
+    } catch (e) {}
+  })();
+</script>
+<script src="https://cdn.tailwindcss.com"></script>
+<script>
+  tailwind.config = {
+    theme: {
+      extend: {
+        colors: {
+          primary: '#2D88FF',
+          'primary-dark': '#1667CA'
+        },
+        fontFamily: {
+          sans: ['Inter', 'system-ui', 'sans-serif']
+        }
+      }
+    }
+  };
+</script>
+<style>
+  /* ==================== Light/dark theme ====================
+     Same mechanism as login.html: [data-theme] on <html>, set
+     synchronously in a blocking <head> script (see below) so there's no
+     flash of the wrong theme, persisted to the SAME 'dp-theme'
+     localStorage key so a choice made here or in login.html carries over
+     to the other. The brand-blue splash gradient/logo stay identical in
+     both themes (unthemed brand color, matching login.html's own hero
+     panel) — only the login card and its form controls actually theme. */
+  :root {
+    --mobile-bg: #E7E9EC;
+    --mobile-app-bg: #fff;
+    --mobile-card-bg: #fff;
+    --mobile-card-heading: #000;
+    --mobile-input-bg: #fff;
+    --mobile-input-border: #d8d8dd;
+    --mobile-input-text: #1e1e1e;
+    --mobile-input-placeholder: #616376;
+    --mobile-checkbox-text: #342828;
+    --mobile-divider-text: #7b838c;
+    --mobile-divider-line: #d8d8dd;
+  }
+  [data-theme="dark"] {
+    /* Navy surfaces matching login.html's own dark palette. */
+    --mobile-bg: #05070d;
+    --mobile-app-bg: #0b1220;
+    --mobile-card-bg: #121b2e;
+    --mobile-card-heading: #f3f5f9;
+    --mobile-input-bg: #0f1830;
+    --mobile-input-border: #263248;
+    --mobile-input-text: #e7ebf3;
+    --mobile-input-placeholder: #6b7590;
+    --mobile-checkbox-text: #d7dce6;
+    --mobile-divider-text: #7c879b;
+    --mobile-divider-line: #263248;
+  }
+
+  html, body {
+    margin: 0;
+    min-height: 100%;
+    overscroll-behavior: none;
+  }
+  body {
+    font-family: 'Inter', system-ui, sans-serif;
+    /* Neutral backdrop around the phone frame below. */
+    background: var(--mobile-bg);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100dvh;
+    transition: background-color .3s ease;
+  }
+
+  /* Mobile device frame: fixed to the flow's own 402x874 design dimension
+     (per the user's earlier direct request), scaling down proportionally
+     via aspect-ratio on a real phone narrower than 402px. Rounded corners
+     matching a real phone screen — kept at the user's direct request
+     after the iPhone bezel/buttons/dynamic island/status-bar overlay
+     (node 1:18976) were removed; those wrapped this exact rounded rect
+     in ~20 lines of hand-built device chrome the user decided against. */
+  #app {
+    width: 100%;
+    max-width: 402px;
+    aspect-ratio: 402 / 874;
+    margin: 0 auto;
+    position: relative;
+    overflow: hidden;
+    background: var(--mobile-app-bg);
+    transition: background-color .3s ease;
+    border-radius: 50px;
+    box-shadow: 0 0 0 1px rgba(16, 24, 40, 0.06), 0 24px 48px -12px rgba(16, 24, 40, 0.18);
+  }
+
+  /* Each Figma screen lives in its own .mobile-screen section.
+     Only the one with .active is shown — swap via showScreen('name'). */
+  .mobile-screen {
+    display: none;
+    width: 100%;
+    height: 100%;
+    position: relative;
+  }
+  .mobile-screen.active {
+    display: flex;
+  }
+
+  /* ==================== Boot animation ====================
+     Ported from login.html's own panel-left boot reveal (.dp-lockup and
+     friends) — same icon-merge -> wordmark-reveal technique, traced from
+     the same reference recording. Geometry below is recalculated for
+     THIS file's own logo export (assets/splash-screen/logo.svg, viewBox
+     0 0 254 48) instead of login.html's asset (168.6 x 31.4747) — the
+     underlying ratios are the same logo, just exported at a different
+     scale. Crops carry the same brightness(0) invert(1) treatment as
+     login.html's boot screen — flattened to solid white, at the user's
+     direct request, to match the reference recording. No badges/feature-
+     row here — that content belongs to login.html's panel only, not this
+     splash. */
+  :root {
+    --dp-logo-w: 254;
+    --dp-logo-h: 48;
+    --dp-icon-w: 51;
+    --dp-text-x: 59.9;
+    --dp-icon-seam: calc(100% * var(--dp-icon-w) / var(--dp-logo-w) / 2);
+    --dp-icon-feather: calc(100% * var(--dp-icon-w) / var(--dp-logo-w) * 0.06);
+  }
+
+  .dp-lockup {
+    position: relative;
+    aspect-ratio: var(--dp-logo-w) / var(--dp-logo-h);
+  }
+
+  .dp-icon-window {
+    position: absolute;
+    top: 50%;
+    left: var(--dp-icon-seam);
+    width: calc(100% * var(--dp-icon-w) / var(--dp-logo-w));
+    height: 700%;
+    overflow: hidden;
+    pointer-events: none;
+    transform: translate(-50%, -50%);
+    transition: opacity .4s cubic-bezier(.16,1,.3,1), transform .5s cubic-bezier(.16,1,.3,1);
+  }
+
+  .dp-icon-crop {
+    position: absolute;
+    top: 50%;
+    left: 0;
+    width: calc(100% * var(--dp-logo-w) / var(--dp-icon-w));
+    max-width: none; /* overrides Tailwind preflight's img{max-width:100%} — this crop must render larger than its clipping window */
+    height: auto;
+    aspect-ratio: var(--dp-logo-w) / var(--dp-logo-h);
+    display: block;
+    filter: brightness(0) invert(1) blur(3px);
+    opacity: 0;
+    pointer-events: none;
+    will-change: transform, opacity, filter;
+    transition: opacity 1s cubic-bezier(.16,1,.3,1), transform 1s cubic-bezier(.16,1,.3,1), filter 1s cubic-bezier(.16,1,.3,1);
+  }
+
+  .dp-icon-crop-top {
+    -webkit-mask-image: linear-gradient(to right, #000 0%, #000 calc(var(--dp-icon-seam) - var(--dp-icon-feather)), transparent calc(var(--dp-icon-seam) + var(--dp-icon-feather)));
+    mask-image: linear-gradient(to right, #000 0%, #000 calc(var(--dp-icon-seam) - var(--dp-icon-feather)), transparent calc(var(--dp-icon-seam) + var(--dp-icon-feather)));
+    transform: translateY(calc(-50% - 320px)) scale(.86);
+  }
+  .dp-icon-crop-bottom {
+    -webkit-mask-image: linear-gradient(to right, transparent calc(var(--dp-icon-seam) - var(--dp-icon-feather)), #000 calc(var(--dp-icon-seam) + var(--dp-icon-feather)), #000 100%);
+    mask-image: linear-gradient(to right, transparent calc(var(--dp-icon-seam) - var(--dp-icon-feather)), #000 calc(var(--dp-icon-seam) + var(--dp-icon-feather)), #000 100%);
+    transform: translateY(calc(-50% + 320px)) scale(.86);
+  }
+
+  #app.brand-in .dp-icon-crop-top,
+  #app.brand-in .dp-icon-crop-bottom {
+    opacity: 1;
+    transform: translateY(-50%) scale(1);
+    filter: brightness(0) invert(1) blur(0px);
+    transition-delay: .15s;
+  }
+
+  /* Swaps the soft travel-time feather for a hard cut once the halves are
+     landed at the exact same spot — avoids a translucent-overlap seam
+     tint (see login.html's identical rule for the full why). */
+  #app.brand-in.icon-landed .dp-icon-crop-top {
+    -webkit-mask-image: linear-gradient(to right, #000 0%, #000 var(--dp-icon-seam), transparent var(--dp-icon-seam));
+    mask-image: linear-gradient(to right, #000 0%, #000 var(--dp-icon-seam), transparent var(--dp-icon-seam));
+  }
+  #app.brand-in.icon-landed .dp-icon-crop-bottom {
+    -webkit-mask-image: linear-gradient(to right, transparent var(--dp-icon-seam), #000 var(--dp-icon-seam), #000 100%);
+    mask-image: linear-gradient(to right, transparent var(--dp-icon-seam), #000 var(--dp-icon-seam), #000 100%);
+  }
+
+  #app.brand-in.icon-pulse .dp-icon-window {
+    transform: translate(-50%, -50%) scale(.8);
+  }
+
+  .dp-full-lockup {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 100%;
+    height: auto;
+    display: block;
+    filter: brightness(0) invert(1);
+    opacity: 0;
+    pointer-events: none;
+    transform: translate(-50%, -50%) scale(.77);
+    transition: opacity .8s cubic-bezier(.16,1,.3,1), transform .8s cubic-bezier(.16,1,.3,1);
+  }
+
+  .dp-text-window {
+    position: absolute;
+    top: 0;
+    left: calc(100% * var(--dp-text-x) / var(--dp-logo-w));
+    width: calc(100% * (var(--dp-logo-w) - var(--dp-text-x)) / var(--dp-logo-w));
+    height: 100%;
+    overflow: hidden;
+    pointer-events: none;
+    opacity: 0;
+    transform: translateX(-10px);
+    transition: opacity .8s cubic-bezier(.16,1,.3,1), transform .8s cubic-bezier(.16,1,.3,1);
+  }
+
+  #app.brand-in .dp-text-window {
+    opacity: 1;
+    transform: translateX(0);
+    transition-delay: 2.15s;
+  }
+
+  .dp-text-crop {
+    position: absolute;
+    top: 50%;
+    left: calc(-100% * var(--dp-text-x) / (var(--dp-logo-w) - var(--dp-text-x)));
+    width: calc(100% * var(--dp-logo-w) / (var(--dp-logo-w) - var(--dp-text-x)));
+    max-width: none; /* overrides Tailwind preflight's img{max-width:100%} */
+    height: auto;
+    aspect-ratio: var(--dp-logo-w) / var(--dp-logo-h);
+    display: block;
+    filter: brightness(0) invert(1);
+    transform: translateY(-50%);
+    pointer-events: none;
+  }
+
+  /* Bright vertical flare through the merge seam right as the two icon
+     halves land — same traced beat as login.html's .dp-flash. */
+  .dp-flash {
+    position: absolute;
+    top: 50%;
+    left: var(--dp-icon-seam);
+    width: 3px;
+    height: 190%;
+    background: linear-gradient(to bottom,
+      rgba(255,255,255,0) 0%,
+      rgba(255,255,255,.85) 42%,
+      #fff 50%,
+      rgba(255,255,255,.85) 58%,
+      rgba(255,255,255,0) 100%);
+    filter: blur(1.5px);
+    opacity: 0;
+    pointer-events: none;
+    mix-blend-mode: screen;
+    transform: translate(-50%, -50%) scaleY(.35);
+    transition: opacity .2s cubic-bezier(.16,1,.3,1), transform .4s cubic-bezier(.16,1,.3,1);
+  }
+
+  #app.brand-in .dp-flash {
+    opacity: 1;
+    transform: translate(-50%, -50%) scaleY(1);
+    transition-delay: .85s;
+  }
+  #app.brand-in.flash-out .dp-flash {
+    opacity: 0;
+    transition: opacity .35s cubic-bezier(.16,1,.3,1);
+    transition-delay: 0s;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .dp-full-lockup { transition: none !important; opacity: 1 !important; transform: translate(-50%, -50%) !important; }
+    .dp-icon-window, .dp-text-window, .dp-flash { transition: none !important; opacity: 0 !important; }
+    .login-card { transition: none !important; transform: translateY(0) !important; }
+  }
+
+  /* ==================== Login card pull-up (node 241:415) ====================
+     Sits over the splash gradient/logo as a bottom sheet, at the user's
+     direct request: starts off-screen below the frame and slides up to
+     rest shortly after the boot animation begins (see playBootAnimation's
+     own 'card-in' timeout), overlapping the icon-merge/wordmark reveal
+     instead of waiting for it to finish. Position/size traced from the
+     Figma node's own canvas coordinates (card: left:19 top:155 w:416
+     h:764) minus the same 19/13 bezel offset the splash gradient already
+     strips (see that section's own comment) — top 142/906 = 15.67% from
+     content top, flush with content bottom (142+764 = 906, no gap). Only
+     the top corners keep the Figma-specified 57px radius (shared with
+     the splash gradient's own corner radius); the bottom sits flush
+     against the device edge, which reads as a real anchored sheet rather
+     than a floating card with rounded corners exposing the gradient
+     behind it. */
+  .login-card {
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 15.67%;
+    bottom: 0;
+    background: var(--mobile-card-bg);
+    border-radius: 57px 57px 0 0;
+    box-shadow: 0 -2px 7px 0 rgba(0, 0, 0, 0.03);
+    z-index: 2;
+    transform: translateY(105%);
+    transition: transform .8s cubic-bezier(.16,1,.3,1), background-color .3s ease;
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  #app.card-in .login-card {
+    transform: translateY(0);
+  }
+
+  /* Sized/rounded to match login.html's established form-control system
+     (its .field input / .btn-verify — 35px height, 6px radius — is the
+     project's standing convention for compact controls) at the user's
+     direct request, replacing this card's original 45px/10px which just
+     copied the raw Figma pixels instead of the project's own tokens.
+     Border color (#d8d8dd) stays this file's own, Figma-specified token
+     rather than login.html's #ececee — a deliberate difference between
+     the two files' systems, not an oversight — but the INTERACTIVE
+     logic (blue backlight on hover/focus) is ported over too, since
+     that's as much a part of "the design system" as the raw numbers. */
+  .login-input {
+    height: 35px;
+    border: 1px solid var(--mobile-input-border);
+    border-radius: 6px;
+    padding: 0 15px;
+    font-size: 12px;
+    font-family: inherit;
+    color: var(--mobile-input-text);
+    background: var(--mobile-input-bg);
+    outline: none;
+    transition: border-color .2s ease, box-shadow .2s ease, background-color .3s ease, color .3s ease;
+  }
+  .login-input::placeholder {
+    color: var(--mobile-input-placeholder);
+  }
+  .login-input:hover {
+    border-color: var(--primary, #2D88FF);
+    box-shadow: 0 0 0 3px rgba(45, 136, 255, 0.12);
+  }
+  .login-input:focus {
+    border-color: var(--primary, #2D88FF);
+    box-shadow: 0 0 0 4px rgba(45, 136, 255, 0.16), 0 0 18px rgba(45, 136, 255, 0.2);
+  }
+
+  /* Remaining themed pieces of the card — pulled out of raw Tailwind
+     color utilities (text-[#...], bg-[#...]) into real classes so they
+     can key off the CSS vars above instead of being hardcoded to the
+     light-only Figma values. */
+  .login-title { color: var(--mobile-card-heading); transition: color .3s ease; }
+  .login-checkbox { border-color: var(--mobile-input-border); background: var(--mobile-input-bg); transition: background-color .3s ease, border-color .3s ease; }
+  .login-checkbox-label { color: var(--mobile-checkbox-text); transition: color .3s ease; }
+  .login-divider-text { color: var(--mobile-divider-text); transition: color .3s ease; }
+  .login-divider-line { background: var(--mobile-divider-line); transition: background-color .3s ease; }
+  .login-btn-outline {
+    background: var(--mobile-input-bg);
+    border-color: var(--mobile-input-border);
+    transition: background-color .3s ease, border-color .3s ease;
+  }
+
+  /* ==================== Header logo + theme toggle ====================
+     Persistent (not part of the boot animation) — sit in the sliver of
+     blue strip that stays visible above the login card at any scroll/
+     card state, at the user's direct request (their annotation circled
+     this exact top-left/top-right area). Brand logo stays white/unthemed
+     like the gradient it sits on; only the toggle itself needs to work
+     in both themes, which it does by design (frosted glass over blue,
+     independent of [data-theme]). */
+  .header-logo {
+    position: absolute;
+    left: 50%;
+    top: 6%;
+    transform: translateX(-50%);
+    height: 4.2%;
+    width: auto;
+    z-index: 3;
+    filter: brightness(0) invert(1);
+    pointer-events: none;
+  }
+
+  .theme-toggle {
+    position: absolute;
+    right: 9.4%;
+    top: 4%;
+    width: 3.6%;
+    aspect-ratio: 1;
+    min-width: 28px;
+    min-height: 28px;
+    border-radius: 50%;
+    border: 1px solid rgba(255, 255, 255, 0.28);
+    background: rgba(255, 255, 255, 0.16);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    color: #fff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    z-index: 3;
+    padding: 0;
+    transition: background-color .15s ease, transform .15s ease;
+  }
+  .theme-toggle:hover { background: rgba(255, 255, 255, 0.26); }
+  .theme-toggle:active { transform: scale(0.92); }
+  .theme-toggle:focus-visible { outline: 2px solid #fff; outline-offset: 2px; }
+
+  /* Sun/moon cross-fade — same technique as login.html's .theme-icon. */
+  .theme-icon {
+    position: absolute;
+    width: 55%;
+    height: 55%;
+    transition: opacity .35s ease, transform .5s cubic-bezier(.34,1.56,.64,1);
+  }
+  .theme-icon-sun { opacity: 0; transform: rotate(-90deg) scale(0.4); }
+  .theme-icon-moon { opacity: 1; transform: rotate(0deg) scale(1); }
+  [data-theme="dark"] .theme-icon-sun { opacity: 1; transform: rotate(0deg) scale(1); }
+  [data-theme="dark"] .theme-icon-moon { opacity: 0; transform: rotate(90deg) scale(0.4); }
+
+  @media (prefers-reduced-motion: reduce) {
+    .theme-icon { transition: opacity .01ms !important; }
+  }
+
+  /* ==================== Location permission alert (node 1:19350) ====================
+     A native iOS system-alert mockup — mimics the OS's own location
+     prompt, so it overlays whatever screen is active (a direct child of
+     #app, not scoped to .mobile-screen) rather than living inside one
+     screen. Position/size traced the same way as the login card: Figma
+     canvas coords minus the 19/13 bezel offset the splash gradient
+     already strips, converted to % of content (card: left 65.38/416 =
+     15.72%, top 188/906 = 20.75%, w 284/416 = 68.27%). Internal spacing
+     (title/body/map gaps) stays in px, matching the login card's own mix
+     of %-positioned shell + px-spaced content — the ~3.4% difference
+     between Figma's 416px content width and this file's 402px frame is
+     small enough not to matter at this scale. No trigger was specified
+     in the request; wired to the Log In button as the most natural fit
+     given the copy's own "on duty change status" framing — flag to the
+     user if a different trigger was actually intended. */
+  .location-modal {
+    position: absolute;
+    inset: 0;
+    z-index: 20;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .location-modal[hidden] { display: none; }
+
+  .location-modal-scrim {
+    position: absolute;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.35);
+    opacity: 0;
+    transition: opacity .25s ease;
+  }
+  .location-modal.is-open .location-modal-scrim { opacity: 1; }
+
+  .location-modal-card {
+    position: relative;
+    width: 68.27%;
+    background: var(--mobile-card-bg);
+    border: 1px solid var(--mobile-input-border);
+    border-radius: 18px;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    transform: scale(0.92);
+    opacity: 0;
+    transition: transform .25s cubic-bezier(.16,1,.3,1), opacity .2s ease, background-color .3s ease, border-color .3s ease;
+  }
+  .location-modal.is-open .location-modal-card {
+    transform: scale(1);
+    opacity: 1;
+  }
+
+  .location-modal-title {
+    margin: 28px 20px 0;
+    font-size: 16px;
+    font-weight: 600;
+    color: var(--mobile-card-heading);
+    line-height: 19px;
+    transition: color .3s ease;
+  }
+  .location-modal-body {
+    margin: 21px 24px 0;
+    font-size: 12px;
+    font-weight: 400;
+    color: var(--mobile-card-heading);
+    line-height: 19px;
+    transition: color .3s ease;
+  }
+  .location-modal-map {
+    position: relative;
+    width: 100%;
+    aspect-ratio: 284 / 135;
+    margin-top: 53px;
+    overflow: hidden;
+  }
+  .location-modal-map-img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+  }
+  .location-modal-pin {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -50%);
+    width: 15%;
+    height: auto;
+  }
+  .location-modal-action {
+    width: 100%;
+    padding: 13.5px 0;
+    border: none;
+    border-top: 1px solid var(--mobile-divider-line);
+    background: var(--mobile-card-bg);
+    color: var(--primary, #2D88FF);
+    font-family: inherit;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: background-color .3s ease, border-color .3s ease;
+  }
+
+  /* ==================== Home screen (nodes 136:5103, 1:19409, 1:19413,
+     1:19696, 1:19635, 1:19764, 1:19709) ====================
+     Seven separate Figma nodes that are really one screen: a fixed
+     header (avatar/greeting/bell), a scrollable body (Current Trip card
+     + a 3-column grid of 20 quick-action tiles), and a fixed bottom tab
+     bar. Built as a natural-flow layout (flex header, CSS grid for the
+     tiles, a scrolling middle region) rather than replicating each of
+     the ~120 individual absolute pixel coordinates the raw Figma export
+     carries across three levels of nested frames — grid/flex is this
+     project's own established pattern for repeating card layouts (see
+     app-shell.html's section-card grid), and is far more maintainable
+     than pixel-cloning a design that is itself just a repeating grid.
+     Icons are the real exported Figma vectors (assets/home-screen/) and
+     ship already colored the project's own primary blue (#2D88FF) at
+     the source — no recoloring filter needed, and they read fine on
+     both the light and dark surface. */
+  .home-header {
+    flex: none;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 6.8% 8% 0;
+  }
+  .home-header-label {
+    margin: 0 0 6px;
+    font-size: 16px;
+    color: var(--mobile-card-heading);
+    transition: color .3s ease;
+  }
+  .home-greeting {
+    margin: 0;
+    font-size: 22px;
+    font-weight: 700;
+    color: var(--mobile-card-heading);
+    transition: color .3s ease;
+  }
+  .home-subtitle {
+    margin: 2px 0 0;
+    font-size: 12px;
+    color: var(--mobile-divider-text);
+    transition: color .3s ease;
+  }
+  .home-header-actions {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex: none;
+  }
+  .home-icon-btn {
+    width: 43px;
+    height: 43px;
+    border-radius: 50%;
+    border: 1px solid var(--mobile-input-border);
+    background: var(--mobile-input-bg);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+    cursor: pointer;
+    transition: background-color .3s ease, border-color .3s ease;
+  }
+  .home-icon-btn img { width: 24px; height: 24px; }
+  .home-avatar {
+    width: 43px;
+    height: 43px;
+    border-radius: 50%;
+    object-fit: cover;
+    display: block;
+    flex: none;
+  }
+
+  .home-scroll {
+    flex: 1;
+    min-height: 0;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    padding: 5% 8% calc(65px + 6%);
+  }
+
+  .home-section-head {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    margin: 18px 0 10px;
+  }
+  .home-section-head span:first-child {
+    font-size: 14px;
+    color: var(--mobile-card-heading);
+    transition: color .3s ease;
+  }
+  .home-section-head a {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 12px;
+    color: var(--mobile-divider-text);
+    text-decoration: none;
+    transition: color .3s ease;
+  }
+
+  .trip-card {
+    border: 1px solid var(--mobile-input-border);
+    border-radius: 16px;
+    padding: 8px;
+    background: var(--mobile-card-bg);
+    transition: background-color .3s ease, border-color .3s ease;
+  }
+  .trip-map {
+    position: relative;
+    border-radius: 9px;
+    overflow: hidden;
+    aspect-ratio: 373 / 116;
+  }
+  .trip-map-bg { width: 100%; height: 100%; object-fit: cover; display: block; }
+  .trip-route {
+    position: absolute;
+    left: 9.68%;
+    top: 20.8%;
+    width: 39.56%;
+    height: auto;
+    pointer-events: none;
+  }
+  .trip-badge {
+    position: absolute;
+    top: 6px;
+    right: 6px;
+    padding: 3px 8px;
+    border-radius: 7px;
+    background: rgba(255, 255, 255, 0.92);
+    color: var(--primary, #2D88FF);
+    font-size: 8px;
+    font-weight: 500;
+    box-shadow: 0 0 0 1px rgba(48, 95, 156, 0.12) inset;
+  }
+  .trip-stops {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 14px 4px 2px;
+  }
+  .trip-stop-num {
+    flex: none;
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    border: 1px solid var(--primary, #2D88FF);
+    color: var(--primary, #2D88FF);
+    font-size: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .trip-stop { min-width: 0; flex: none; }
+  .trip-stop p {
+    margin: 0;
+    font-size: 12px;
+    color: var(--mobile-card-heading);
+    white-space: nowrap;
+    transition: color .3s ease;
+  }
+  .trip-stop span {
+    display: block;
+    margin-top: 3px;
+    font-size: 9px;
+    color: var(--mobile-divider-text);
+    white-space: nowrap;
+    transition: color .3s ease;
+  }
+  .trip-stop-end { text-align: right; margin-left: auto; }
+  .trip-stop-line {
+    flex: 1;
+    min-width: 16px;
+    height: 1px;
+    background: var(--mobile-divider-line);
+    align-self: flex-start;
+    margin-top: 11px;
+  }
+
+  .home-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 12px;
+    margin-top: 12px;
+  }
+  .home-tile {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    aspect-ratio: 122 / 125;
+    border: 1px solid var(--mobile-input-border);
+    border-radius: 21px;
+    background: var(--mobile-card-bg);
+    padding: 8px 6px;
+    cursor: pointer;
+    transition: background-color .3s ease, border-color .3s ease, transform .15s ease;
+  }
+  .home-tile:active { transform: scale(0.96); }
+  .home-tile img { width: 34px; height: 34px; object-fit: contain; flex: none; }
+  .home-tile span {
+    font-size: 10px;
+    color: var(--mobile-divider-text);
+    text-align: center;
+    line-height: 1.3;
+    transition: color .3s ease;
+  }
+
+  .home-tabbar {
+    flex: none;
+    display: flex;
+    align-items: center;
+    justify-content: space-around;
+    padding: 12px 0;
+    background: var(--mobile-card-bg);
+    border-radius: 30px 30px 0 0;
+    box-shadow: 0 -1px 18px 0 rgba(0, 0, 0, 0.08);
+    transition: background-color .3s ease;
+  }
+  .home-tab {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    background: none;
+    border: none;
+    padding: 0;
+    cursor: pointer;
+  }
+  .home-tab img { width: 22px; height: 22px; object-fit: contain; }
+  .home-tab span { font-size: 8px; color: var(--mobile-divider-text); transition: color .3s ease; }
+  .home-tab.active span { color: var(--primary, #2D88FF); }
+  /* The active (Home) tab ships its own outline-primary icon asset in
+     the design, distinct from the other tabs' muted-gray icons — so
+     unlike the tile grid it DOES need recoloring per tab state; simplest
+     is to just swap it via CSS filter rather than shipping two assets. */
+  .home-tab img { filter: grayscale(1) opacity(0.55); }
+  [data-theme="dark"] .home-tab img { filter: grayscale(1) opacity(0.7) invert(1); }
+  .home-tab.active img { filter: none; }
+
+  /* ==================== Trip tracking screen (node 1:136213, "END – 7") ====================
+     Full-bleed map + route line + destination pin, with a floating
+     detail card over it. Unlike the splash/login canvas, this Figma
+     frame is authored borderless (430x932, no 19/13 bezel inset) so
+     positions convert straight to % with no offset subtraction. Reached
+     from the Home screen's "See More" link on the Current Trip card —
+     the two designs share the same trip data for that reason. The
+     source design's tiny "current position" marker on the progress line
+     is a ~20-layer fragment icon with no clean single asset; represented
+     here as a plain styled dot instead, matching the project's own
+     .trip-stop-num circle-badge language rather than chasing pixel
+     fidelity on a minor decorative detail. */
+  .trip-tracking-map {
+    position: absolute;
+    inset: 0;
+    overflow: hidden;
+  }
+  .trip-tracking-map img.map-bg { width: 100%; height: 100%; object-fit: cover; display: block; }
+  .trip-tracking-route {
+    position: absolute;
+    left: 34.6%;
+    top: 16.5%;
+    width: 40.5%;
+    height: auto;
+  }
+  .trip-tracking-pin {
+    position: absolute;
+    left: 72.8%;
+    top: 12.2%;
+    width: 9.3%;
+    height: auto;
+  }
+  .trip-tracking-back {
+    position: absolute;
+    left: 5.7%;
+    top: 4.6%;
+    width: 38px;
+    height: 38px;
+    border-radius: 50%;
+    border: none;
+    background: rgba(255, 255, 255, 0.92);
+    box-shadow: 0 2px 10px rgba(16, 24, 40, 0.18);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    z-index: 2;
+  }
+  .trip-tracking-back svg { width: 18px; height: 18px; color: #101828; }
+
+  .trip-tracking-card {
+    position: absolute;
+    left: 4.65%;
+    right: 4.65%;
+    bottom: 3%;
+    background: var(--mobile-card-bg);
+    border-radius: 22px;
+    box-shadow: 0 12px 32px -8px rgba(16, 24, 40, 0.35);
+    padding: 21px 23px 24px;
+    transition: background-color .3s ease;
+  }
+
+  .trip-tracking-top {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+  }
+  .trip-tracking-avatar { width: 70px; height: auto; display: block; flex: none; }
+  .trip-tracking-ids { text-align: right; }
+  .trip-tracking-ids p {
+    margin: 0;
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--mobile-card-heading);
+    transition: color .3s ease;
+  }
+  .trip-tracking-ids span {
+    display: block;
+    margin-top: 5px;
+    font-size: 12px;
+    color: var(--mobile-divider-text);
+    transition: color .3s ease;
+  }
+  .trip-tracking-unit { margin-top: 6px; }
+  .trip-tracking-unit p { margin: 0; font-size: 12px; font-weight: 600; color: var(--mobile-card-heading); transition: color .3s ease; }
+  .trip-tracking-unit span { display: block; margin-top: 2px; font-size: 12px; color: var(--mobile-divider-text); transition: color .3s ease; }
+
+  .trip-tracking-distance {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-top: 15px;
+  }
+  .trip-tracking-distance img { width: 20px; height: 20px; }
+  .trip-tracking-distance span { font-size: 12px; font-weight: 600; color: var(--mobile-card-heading); transition: color .3s ease; }
+
+  .trip-tracking-stops {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+    margin-top: 12px;
+  }
+  .trip-tracking-stop { display: flex; gap: 12px; }
+  .trip-tracking-stop-rail {
+    flex: none;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    width: 24px;
+  }
+  .trip-tracking-stop-rail .trip-stop-num { width: 24px; height: 24px; }
+  .trip-tracking-stop-rail-line {
+    width: 1px;
+    flex: 1;
+    margin: 4px 0;
+    background: var(--mobile-divider-line);
+    position: relative;
+  }
+  /* Progress fill — the shorter, blue overlay segment on the rail,
+     traced from the source's own shorter second line (Line 6921)
+     sitting over the full gray one (Line 6779). */
+  .trip-tracking-stop-rail-line::after {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 51%;
+    background: var(--primary, #2D88FF);
+  }
+  .trip-tracking-stop-rail-dot {
+    position: absolute;
+    left: 50%;
+    top: 51%;
+    width: 9px;
+    height: 9px;
+    border-radius: 50%;
+    background: var(--primary, #2D88FF);
+    box-shadow: 0 0 0 3px var(--mobile-card-bg);
+    transform: translate(-50%, -50%);
+    transition: box-shadow .3s ease;
+  }
+  .trip-tracking-stop-body { flex: 1; min-width: 0; padding-top: 1px; }
+  .trip-tracking-stop-label {
+    margin: 0;
+    font-size: 12px;
+    color: var(--mobile-divider-text);
+    transition: color .3s ease;
+  }
+  .trip-tracking-stop-place {
+    margin: 3px 0 0;
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--mobile-card-heading);
+    transition: color .3s ease;
+  }
+  .trip-tracking-stop-time {
+    margin: 3px 0 0;
+    font-size: 11px;
+    color: var(--mobile-divider-text);
+    transition: color .3s ease;
+  }
+  .trip-tracking-stop-meta {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-top: 8px;
+  }
+  .trip-tracking-stop-badge {
+    padding: 3px 10px;
+    border-radius: 8px;
+    font-size: 10px;
+    font-weight: 600;
+  }
+  .trip-tracking-stop-badge.live { background: rgba(0, 153, 102, 0.12); color: #009966; }
+  .trip-tracking-stop-badge.drop { background: rgba(45, 136, 255, 0.12); color: var(--primary, #2D88FF); }
+  .trip-tracking-stop-extra { font-size: 11px; color: var(--mobile-divider-text); transition: color .3s ease; }
+
+  /* ==================== Notification bubble (node 1:135450 / 248:760,
+     same content group 1:136212 both times) ====================
+     A push-notification-style banner. At the user's direct request:
+     slides in on its own ~1.2s after Home becomes active (see
+     showScreen's own comment), can also be toggled by hand from the
+     bell icon, and tapping it now navigates into the trip tracking
+     screen (same trip as Home's "See More" link) rather than just
+     dismissing — see openTripFromNotifBubble. Sits near the top of the
+     frame like a real OS notification banner, rather than centered like
+     the location alert (that's a system dialog demanding a choice;
+     this is a passive banner that happens to now be actionable too). */
+  .notif-bubble {
+    position: absolute;
+    left: 3%;
+    right: 3%;
+    top: 2%;
+    z-index: 25;
+    display: flex;
+    background: var(--mobile-card-bg);
+    border-radius: 18px;
+    box-shadow: 0 12px 32px -6px rgba(16, 24, 40, 0.35), 0 0 0 1px rgba(16, 24, 40, 0.06);
+    padding: 14px 16px;
+    gap: 12px;
+    align-items: flex-start;
+    opacity: 0;
+    transform: translateY(-16px) scale(0.97);
+    transition: opacity .25s ease, transform .3s cubic-bezier(.16,1,.3,1), background-color .3s ease;
+    pointer-events: none;
+    cursor: pointer;
+  }
+  .notif-bubble.is-open {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+    pointer-events: auto;
+  }
+  .notif-bubble-icon {
+    flex: none;
+    width: 32px;
+    height: 32px;
+    border-radius: 9px;
+    background: linear-gradient(159deg, #2D88FF 4.87%, #1667CA 98.88%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .notif-bubble-icon img { width: 18px; height: auto; filter: brightness(0) invert(1); }
+  .notif-bubble-body { flex: 1; min-width: 0; }
+  .notif-bubble-top {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 8px;
+  }
+  .notif-bubble-app {
+    margin: 0;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--mobile-card-heading);
+    transition: color .3s ease;
+  }
+  .notif-bubble-load {
+    margin: 2px 0 0;
+    font-size: 12px;
+    color: var(--mobile-divider-text);
+    transition: color .3s ease;
+  }
+  .notif-bubble-driver {
+    margin: 0;
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--mobile-card-heading);
+    text-align: right;
+    transition: color .3s ease;
+  }
+  .notif-bubble-unit {
+    margin: 2px 0 0;
+    font-size: 11px;
+    color: var(--mobile-divider-text);
+    text-align: right;
+    transition: color .3s ease;
+  }
+  .notif-bubble-avatar {
+    flex: none;
+    width: 39px;
+    height: 39px;
+    border-radius: 50%;
+    object-fit: cover;
+    margin-left: 8px;
+  }
+  .notif-bubble-status {
+    margin: 10px 0 0;
+    font-size: 11px;
+    font-weight: 500;
+    color: var(--mobile-card-heading);
+    transition: color .3s ease;
+  }
+  .notif-bubble-progress {
+    position: relative;
+    height: 2px;
+    background: var(--mobile-divider-line);
+    border-radius: 2px;
+    margin-top: 10px;
+    transition: background-color .3s ease;
+  }
+  .notif-bubble-progress-fill {
+    position: absolute;
+    left: 0;
+    top: 0;
+    height: 100%;
+    width: 38%;
+    background: var(--primary, #2D88FF);
+    border-radius: 2px;
+  }
+  .notif-bubble-progress-dot {
+    position: absolute;
+    top: 50%;
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--primary, #2D88FF);
+    box-shadow: 0 0 0 2px var(--mobile-card-bg);
+    transform: translate(-50%, -50%);
+    transition: box-shadow .3s ease;
+  }
+</style>
+</head>
+<body>
+
+<div id="app">
+
+  <!-- Screen: Splash (node 1:18858, file "Driver app") -->
+  <section
+    class="mobile-screen active items-center justify-center bg-[linear-gradient(159deg,_#2D88FF_4.87%,_#1667CA_98.88%)]"
+    data-screen="splash"
+  >
+    <img class="header-logo" src="assets/splash-screen/logo.svg" alt="Dispatch Pro">
+
+    <button type="button" class="theme-toggle" id="themeToggle" aria-label="Switch to dark mode">
+      <svg class="theme-icon theme-icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <circle cx="12" cy="12" r="4" />
+        <line x1="12" y1="2" x2="12" y2="4.5" />
+        <line x1="12" y1="19.5" x2="12" y2="22" />
+        <line x1="4.22" y1="4.22" x2="5.94" y2="5.94" />
+        <line x1="18.06" y1="18.06" x2="19.78" y2="19.78" />
+        <line x1="2" y1="12" x2="4.5" y2="12" />
+        <line x1="19.5" y1="12" x2="22" y2="12" />
+        <line x1="4.22" y1="19.78" x2="5.94" y2="18.06" />
+        <line x1="18.06" y1="5.94" x2="19.78" y2="4.22" />
+      </svg>
+      <svg class="theme-icon theme-icon-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" />
+      </svg>
+    </button>
+
+    <div class="dp-lockup w-[58%] max-w-[260px] min-w-[180px]">
+      <div class="dp-icon-window">
+        <img class="dp-icon-crop dp-icon-crop-top" src="assets/splash-screen/logo.svg" alt="" aria-hidden="true">
+        <img class="dp-icon-crop dp-icon-crop-bottom" src="assets/splash-screen/logo.svg" alt="" aria-hidden="true">
+      </div>
+      <div class="dp-flash" aria-hidden="true"></div>
+      <div class="dp-text-window">
+        <img class="dp-text-crop" src="assets/splash-screen/logo.svg" alt="" aria-hidden="true">
+      </div>
+      <img class="dp-full-lockup" src="assets/splash-screen/logo.svg" alt="Dispatch Pro">
+    </div>
+
+    <!-- Login card (node 241:415, file "Driver app") — slides up over the
+         gradient/logo above, see .login-card's own CSS comment. -->
+    <div class="login-card">
+      <form class="flex flex-col items-stretch px-[9.4%]" onsubmit="showLocationModal(); return false;">
+        <h1 class="login-title mt-9 mb-0 text-center text-[14px] font-bold">Account LogIn</h1>
+
+        <input class="login-input mt-9" type="email" placeholder="Email" autocomplete="email">
+        <input class="login-input mt-2" type="password" placeholder="Password" autocomplete="current-password">
+
+        <a href="#" class="mt-6 self-end text-[12px] text-primary no-underline">Forgot Password ?</a>
+
+        <button type="submit" class="mt-6 h-[35px] rounded-[6px] bg-primary text-white text-[12px] font-medium">Log In</button>
+
+        <label class="login-checkbox-label mt-6 flex items-center justify-center gap-[9px] text-[12px] font-medium select-none">
+          <input type="checkbox" class="login-checkbox w-[14px] h-[15px] rounded-[3px] border accent-primary">
+          Keep me signed in
+        </label>
+
+        <div class="login-divider-text mt-[84px] flex items-center gap-4 text-[12px]">
+          <span class="login-divider-line flex-1 h-px"></span>
+          Or Continue With
+          <span class="login-divider-line flex-1 h-px"></span>
+        </div>
+
+        <button type="button" class="login-btn-outline mt-10 h-[35px] rounded-[6px] border text-primary text-[12px] font-medium">Track Your Shipment</button>
+      </form>
+    </div>
+  </section>
+
+  <!-- Screen: Home (nodes 136:5103, 1:19409, 1:19413, 1:19696, 1:19635,
+       1:19764, 1:19709, file "Driver app") — see the CSS block's own
+       comment for why this is built flowing/grid instead of pixel-cloned. -->
+  <section class="mobile-screen flex-col" data-screen="home">
+    <div class="home-header">
+      <div>
+        <p class="home-header-label">Home</p>
+        <h1 class="home-greeting">Hi, Micheal</h1>
+        <p class="home-subtitle">Welcome back to Dispatch Pro</p>
+      </div>
+      <div class="home-header-actions">
+        <button type="button" class="home-icon-btn" aria-label="Notifications" onclick="toggleNotifBubble()">
+          <img src="assets/home-screen/header/bell.png" alt="">
+        </button>
+        <img class="home-avatar" src="assets/home-screen/header/avatar.png" alt="Micheal">
+      </div>
+    </div>
+
+    <div class="home-scroll">
+      <div class="home-section-head">
+        <span>Current Trip</span>
+        <a href="#" onclick="showScreen('trip-tracking'); return false;">See More <svg width="6" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg></a>
+      </div>
+
+      <div class="trip-card">
+        <div class="trip-map">
+          <img class="trip-map-bg" src="assets/home-screen/map-bg.png" alt="">
+          <img class="trip-route" src="assets/home-screen/route.svg" alt="">
+          <span class="trip-badge">On Site (Stop 2)</span>
+        </div>
+        <div class="trip-stops">
+          <span class="trip-stop-num">1</span>
+          <div class="trip-stop">
+            <p>Fairfield, CA</p>
+            <span>Mar 15 08:00 - 10:00 AM</span>
+          </div>
+          <span class="trip-stop-line"></span>
+          <div class="trip-stop trip-stop-end">
+            <p>Roanoke, VA</p>
+            <span>Mar 15 08:00 - 10:00 AM</span>
+          </div>
+          <span class="trip-stop-num">99</span>
+        </div>
+      </div>
+
+      <div class="home-grid">
+        <button type="button" class="home-tile"><img src="assets/home-screen/tiles/create-load.svg" alt=""><span>Create Load</span></button>
+        <button type="button" class="home-tile"><img src="assets/home-screen/tiles/prochat.svg" alt=""><span>ProChat</span></button>
+        <button type="button" class="home-tile"><img src="assets/home-screen/tiles/credit-check.svg" alt=""><span>Credit Check</span></button>
+
+        <button type="button" class="home-tile"><img src="assets/home-screen/tiles/dashboard.svg" alt=""><span>Dashboard</span></button>
+        <button type="button" class="home-tile"><img src="assets/home-screen/tiles/claims.svg" alt=""><span>Claims</span></button>
+        <button type="button" class="home-tile"><img src="assets/home-screen/tiles/repairs.svg" alt=""><span>Repairs</span></button>
+
+        <button type="button" class="home-tile"><img src="assets/home-screen/tiles/wallet.svg" alt=""><span>Wallet</span></button>
+        <button type="button" class="home-tile"><img src="assets/home-screen/tiles/point-of-interest.svg" alt=""><span>Point of Interest</span></button>
+        <button type="button" class="home-tile"><img src="assets/home-screen/tiles/upload-receipt.svg" alt=""><span>Upload Receipt</span></button>
+
+        <button type="button" class="home-tile"><img src="assets/home-screen/tiles/fuel.svg" alt=""><span>Fuel</span></button>
+        <button type="button" class="home-tile"><img src="assets/home-screen/tiles/assets.svg" alt=""><span>Assets</span></button>
+        <button type="button" class="home-tile"><img src="assets/home-screen/tiles/images.svg" alt=""><span>Images</span></button>
+
+        <button type="button" class="home-tile"><img src="assets/home-screen/tiles/weather.svg" alt=""><span>Weather</span></button>
+        <button type="button" class="home-tile"><img src="assets/home-screen/tiles/documentation.svg" alt=""><span>Documentation</span></button>
+        <button type="button" class="home-tile"><img src="assets/home-screen/tiles/dvir.svg" alt=""><span>DVIR</span></button>
+
+        <button type="button" class="home-tile"><img src="assets/home-screen/tiles/gps.svg" alt=""><span>GPS</span></button>
+        <button type="button" class="home-tile"><img src="assets/home-screen/tiles/safety.svg" alt=""><span>Safety</span></button>
+        <button type="button" class="home-tile"><img src="assets/home-screen/tiles/freight.svg" alt=""><span>Freight</span></button>
+
+        <button type="button" class="home-tile"><img src="assets/home-screen/tiles/pay-settlements.svg" alt=""><span>Pay/Settlements</span></button>
+        <button type="button" class="home-tile"><img src="assets/home-screen/tiles/hours-of-service.svg" alt=""><span>Hours of Service</span></button>
+      </div>
+    </div>
+
+    <nav class="home-tabbar">
+      <button type="button" class="home-tab active"><img src="assets/home-screen/nav/home.png" alt=""><span>Home</span></button>
+      <button type="button" class="home-tab"><img src="assets/home-screen/nav/loads.png" alt=""><span>Loads</span></button>
+      <button type="button" class="home-tab"><img src="assets/home-screen/nav/documents.png" alt=""><span>Documents</span></button>
+      <button type="button" class="home-tab"><img src="assets/home-screen/nav/expense.png" alt=""><span>Expense</span></button>
+      <button type="button" class="home-tab"><img src="assets/home-screen/nav/fuel.png" alt=""><span>Fuel</span></button>
+      <button type="button" class="home-tab"><img src="assets/home-screen/nav/card.png" alt=""><span>Card</span></button>
+    </nav>
+  </section>
+
+  <!-- Screen: Trip Tracking (node 1:136213, "END – 7", file "Driver app")
+       — reached via Home's "See More" link; see .trip-tracking-* CSS
+       block's own comment. -->
+  <section class="mobile-screen" data-screen="trip-tracking">
+    <div class="trip-tracking-map">
+      <img class="map-bg" src="assets/trip-tracking/map-bg.png" alt="">
+      <img class="trip-tracking-route" src="assets/trip-tracking/route.svg" alt="">
+      <img class="trip-tracking-pin" src="assets/trip-tracking/pin.svg" alt="">
+    </div>
+
+    <button type="button" class="trip-tracking-back" aria-label="Back to Home" onclick="showScreen('home')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+    </button>
+
+    <div class="trip-tracking-card">
+      <div class="trip-tracking-top">
+        <img class="trip-tracking-avatar" src="assets/trip-tracking/avatar.png" alt="">
+        <div class="trip-tracking-ids">
+          <p>Arriving In 2hrs</p>
+          <span>In Transit (Stop 99)</span>
+          <div class="trip-tracking-unit">
+            <p>DTL973W6</p>
+            <span>KenworthW900I</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="trip-tracking-distance">
+        <img src="assets/trip-tracking/speedometer.svg" alt="">
+        <span>325 mi</span>
+      </div>
+
+      <div class="trip-tracking-stops">
+        <div class="trip-tracking-stop">
+          <div class="trip-tracking-stop-rail">
+            <span class="trip-stop-num">1</span>
+            <span class="trip-tracking-stop-rail-line"><span class="trip-tracking-stop-rail-dot"></span></span>
+          </div>
+          <div class="trip-tracking-stop-body">
+            <p class="trip-tracking-stop-label">Pickup</p>
+            <p class="trip-tracking-stop-place">Fairfield, CA</p>
+            <p class="trip-tracking-stop-time">Mar 15 08:00 - 10:00 AM</p>
+            <div class="trip-tracking-stop-meta">
+              <span class="trip-tracking-stop-badge live">Live</span>
+              <span class="trip-tracking-stop-extra">Actual Arrive: 04:00 PM</span>
+            </div>
+            <p class="trip-tracking-stop-extra" style="margin-top:2px;">Actual Depart: 05:00 PM</p>
+          </div>
+        </div>
+
+        <div class="trip-tracking-stop">
+          <div class="trip-tracking-stop-rail">
+            <span class="trip-stop-num">99</span>
+          </div>
+          <div class="trip-tracking-stop-body">
+            <p class="trip-tracking-stop-label">Delivery</p>
+            <p class="trip-tracking-stop-place">Roanoke, VA</p>
+            <p class="trip-tracking-stop-time">Mar 16 11:00 - 12:00 AM</p>
+            <div class="trip-tracking-stop-meta">
+              <span class="trip-tracking-stop-badge drop">Drop</span>
+              <span class="trip-tracking-stop-extra">ETA: 06:00 PM</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Notification bubble (node 1:135450 / 248:760, same content group
+       1:136212 both times, file "Driver app") — see .notif-bubble's own
+       CSS comment for the auto-show/tap-to-open-trip behavior. -->
+  <div class="notif-bubble" id="notifBubble" onclick="openTripFromNotifBubble()">
+    <div class="notif-bubble-icon">
+      <img src="assets/splash-screen/logo.svg" alt="">
+    </div>
+    <div class="notif-bubble-body">
+      <div class="notif-bubble-top">
+        <div>
+          <p class="notif-bubble-app">DispatchPro</p>
+          <p class="notif-bubble-load">Load No. 12848</p>
+        </div>
+        <img class="notif-bubble-avatar" src="assets/notification-bubble/avatar.png" alt="">
+      </div>
+      <p class="notif-bubble-driver" style="text-align:left; margin-top:8px;">Micheal Scott · Kenworth - Unit 973</p>
+      <p class="notif-bubble-status">312 miles out</p>
+      <div class="notif-bubble-progress">
+        <span class="notif-bubble-progress-fill"></span>
+        <span class="notif-bubble-progress-dot" style="left:38%;"></span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Location permission alert (node 1:19350, file "Driver app") — overlays
+       whatever screen is active; see .location-modal's own CSS comment. -->
+  <div class="location-modal" id="locationModal" hidden>
+    <div class="location-modal-scrim"></div>
+    <div class="location-modal-card" role="alertdialog" aria-modal="true" aria-labelledby="locationModalTitle">
+      <h2 class="location-modal-title" id="locationModalTitle">Allow "Dispatch Pro" to use<br>your location?</h2>
+      <p class="location-modal-body">On duty change status, it is required to get your current location information and populate the city and state information.</p>
+      <div class="location-modal-map">
+        <img class="location-modal-map-img" src="assets/location-permission/map-bg.png" alt="">
+        <img class="location-modal-pin" src="assets/location-permission/pin.svg" alt="">
+      </div>
+      <button type="button" class="location-modal-action" onclick="hideLocationModal(); showScreen('home');">Always Allow</button>
+      <button type="button" class="location-modal-action" onclick="hideLocationModal(); showScreen('home');">Don't Allow</button>
+    </div>
+  </div>
+
+</div>
+
+<script>
+  // Swap the visible screen: showScreen('splash'), showScreen('login'), etc.
+  // Auto-shows the notification bubble a beat after landing on Home (at
+  // the user's direct request — see .notif-bubble's own CSS comment for
+  // why it slides in from the top rather than the location alert's
+  // centered-dialog treatment). Guards against re-arming the timer if
+  // showScreen('home') is called again while already on Home (e.g. a
+  // stray bell tap) — only a genuine navigation INTO Home should
+  // trigger the auto-show.
+  var notifAutoShowTimer = null;
+  function showScreen(name) {
+    var wasHome = document.querySelector('.mobile-screen.active')?.dataset.screen === 'home';
+    document.querySelectorAll('.mobile-screen').forEach((el) => {
+      el.classList.toggle('active', el.dataset.screen === name);
+    });
+    if (name === 'home' && !wasHome) {
+      clearTimeout(notifAutoShowTimer);
+      notifAutoShowTimer = setTimeout(showNotifBubble, 1200);
+    }
+  }
+</script>
+<script>
+  // Location permission alert (node 1:19350) — un-hides then adds .is-open
+  // on the next frame so the CSS scale/opacity transition actually plays
+  // (going straight from [hidden] to .is-open in one step skips the
+  // transition, same reason playBootAnimation forces a reflow elsewhere
+  // in this file). hideLocationModal mirrors it in reverse, waiting out
+  // the transition before re-hiding so it doesn't just vanish mid-fade.
+  function showLocationModal() {
+    var modal = document.getElementById('locationModal');
+    modal.hidden = false;
+    requestAnimationFrame(function () {
+      modal.classList.add('is-open');
+    });
+  }
+  function hideLocationModal() {
+    var modal = document.getElementById('locationModal');
+    modal.classList.remove('is-open');
+    setTimeout(function () { modal.hidden = true; }, 250);
+  }
+</script>
+<script>
+  // Notification bubble (node 1:135450 / 248:760, same content both
+  // times) — slides in from the top automatically a beat after landing
+  // on Home (see showScreen's own comment), and can still be toggled by
+  // hand from the bell icon. At the user's direct request, tapping the
+  // bubble now navigates into the trip tracking screen (the same one
+  // Home's "See More" link opens — it's the same trip) instead of just
+  // dismissing.
+  function showNotifBubble() {
+    document.getElementById('notifBubble').classList.add('is-open');
+  }
+  function hideNotifBubble() {
+    document.getElementById('notifBubble').classList.remove('is-open');
+  }
+  function toggleNotifBubble() {
+    document.getElementById('notifBubble').classList.toggle('is-open');
+  }
+  function openTripFromNotifBubble() {
+    hideNotifBubble();
+    showScreen('trip-tracking');
+  }
+</script>
+<script>
+  // Light/dark theme toggle — same mechanism as login.html (data-theme
+  // already set by the blocking script in <head>; this just handles the
+  // button and remembers future choices to the shared 'dp-theme' key).
+  (function () {
+    var root = document.documentElement;
+    var toggle = document.getElementById('themeToggle');
+
+    function sync() {
+      var isDark = root.getAttribute('data-theme') === 'dark';
+      toggle.setAttribute('aria-label', isDark ? 'Switch to light mode' : 'Switch to dark mode');
+    }
+
+    toggle.addEventListener('click', function () {
+      var next = root.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
+      root.setAttribute('data-theme', next);
+      try { localStorage.setItem('dp-theme', next); } catch (e) {}
+      sync();
+    });
+
+    sync();
+  })();
+</script>
+<script>
+  // Boot animation trigger — same timing chain as login.html's panel-left
+  // reveal (icon merges and holds, THEN the wordmark text fades in beside
+  // it). Plain setTimeout + class toggles, not keyframe animation-delays:
+  // the login.html version confirmed keyframe delay chains don't reliably
+  // fire on a document the browser hasn't started compositing yet, while
+  // this mechanism does. Runs once on load, scoped to #app since this
+  // file (unlike login.html) has no separate .brand-block wrapper.
+  // Exposed as window.playBootAnimation (not a plain IIFE) so it can be
+  // replayed on demand — e.g. re-entering the splash screen later.
+  function playBootAnimation() {
+    var app = document.getElementById('app');
+    app.classList.remove('brand-in', 'flash-out', 'icon-pulse', 'icon-landed', 'card-in');
+    void app.offsetWidth; // force reflow so the removed classes actually reset before re-adding
+    setTimeout(function () { app.classList.add('brand-in'); }, 30);
+    // .dp-flash can only transition TOWARD one target per class toggle,
+    // so a second, later class is what pulls it back down once it's had
+    // time to ignite.
+    setTimeout(function () { app.classList.add('flash-out'); }, 1050);
+    // Icon zoom-out-then-back pulse, right as the two halves land (crop
+    // transition-delay .15s + 1s duration = 1.15s).
+    setTimeout(function () { app.classList.add('icon-pulse'); }, 1150);
+    setTimeout(function () { app.classList.remove('icon-pulse'); }, 1650);
+    // Swaps the icon's seam from its soft travel-time feather to a hard
+    // cut now that the halves are sitting at the exact same landed spot.
+    setTimeout(function () { app.classList.add('icon-landed'); }, 1150);
+    // Login card starts its pull-up once the boot animation has fully
+    // played out (wordmark text finishes fading in at ~2.95s from the
+    // 30ms brand-in add above), plus a further 2s hold at the user's
+    // direct request. See .login-card's own CSS comment for the slide
+    // mechanics.
+    setTimeout(function () { app.classList.add('card-in'); }, 5000);
+  }
+  playBootAnimation();
+</script>
+
+</body>
+</html>

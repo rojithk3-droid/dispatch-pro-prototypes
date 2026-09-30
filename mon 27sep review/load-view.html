@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Dispatch Pro — Load view</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  /* Opens the finalised load view (the Command Center inside login.html)
+     exactly as designed. login.html is never edited: it loads in the frame
+     below and only gets `command-center-active` on its body — the same
+     class the app sets itself after a successful sign-in. */
+  :root{ --blue:#0F6FFF; --text:#101828; --muted:#6A7282; --border:#E5E7EB; --surface:#FFFFFF; --blue-bg:#EFF6FF; }
+  html, body{ margin:0; height:100%; }
+  body{ display:flex; flex-direction:column; font-family:'Inter', system-ui, sans-serif; background:var(--surface); }
+  .bar{ flex:0 0 auto; display:flex; align-items:center; gap:12px; height:44px; padding:0 16px; border-bottom:1px solid var(--border); background:var(--surface); font-size:13px; color:var(--muted); }
+  .bar a{ display:inline-flex; align-items:center; gap:6px; height:28px; padding:0 10px; border:1px solid var(--border); border-radius:5px; color:var(--text); text-decoration:none; font-weight:500; }
+  .bar a:hover{ border-color:var(--blue); color:var(--blue); background:var(--blue-bg); }
+  .bar b{ color:var(--text); font-weight:600; }
+  .bar .grow{ flex:1 1 auto; }
+  iframe{ flex:1 1 auto; width:100%; border:0; }
+  .loading{ position:absolute; inset:44px 0 0; display:flex; align-items:center; justify-content:center; font-size:13px; color:var(--muted); background:var(--surface); }
+  .loading[hidden]{ display:none; }
+</style>
+</head>
+<body>
+  <div class="bar">
+    <a href="index.html">&larr; Review desk</a>
+    <span class="grow"><b>Load view</b> &middot; Command Center &middot; finalised design</span>
+    <a href="../login.html">Open with sign-in</a>
+  </div>
+  <div class="loading" id="loading">Opening load view&hellip;</div>
+  <iframe id="frame" title="Load view" src="../login.html"></iframe>
+  <script>
+    (function(){
+      var f = document.getElementById('frame');
+      f.addEventListener('load', function(){
+        try{ f.contentDocument.body.classList.add('command-center-active'); }catch(e){}
+        document.getElementById('loading').hidden = true;
+      });
+    })();
+  </script>
+</body>
+</html>

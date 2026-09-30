@@ -1,0 +1,2445 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Dispatch Pro — Create Agent Pay Profile</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --blue:            #0F6FFF;
+    --blue-dark:       #1667CA;
+    --blue-bg:         #EFF6FF;
+    --blue-border:     #DBEAFE;
+    --red:             #E7000B;
+    --text-dark:       #101828;
+    --text-heading:    #1E2939;
+    --text-body:       #364153;
+    --text-muted:      #6A7282;
+    --text-faint:      #99A1AF;
+    --border:          #E5E7EB;
+    --border-soft:     #F3F4F6;
+    --page-bg:         #F9FAFB;
+    --sidebar-bg:      #FFFFFF;
+
+    --navy-deep:       #101B33;
+    --card-navy:       #16274A;
+    --blue-pill:       #2E7DF7;
+    --icon-muted-dark: #66739A;
+    --hairline-dark:   rgba(255,255,255,0.08);
+
+    --surface:         #FFFFFF;
+    --segmented-track: #F3F4F6;
+    --input-border:    #D1D5DC;
+    --icon-default:    #4A5468;
+  }
+  /* Dark theme palette calibrated to login.html's own — same file that
+     the button dimensions above and the dropdown hover color were ported
+     from. login.html's dark tokens (its 2FA/OTP step included) are
+     --bg:#0b1220 --surface:#121b2e --border:#263248 --heading/--text-
+     strong:#f3f5f9 --text-color:#a6b0c3 --text-faint:#7c879b — mapped
+     onto this file's own (more granular, 2-tier heading / +muted-tier)
+     token names below rather than flattening our scale to match theirs. */
+  [data-theme="dark"]{
+    --page-bg:         #0B1220;
+    --surface:         #121B2E;
+    --segmented-track: #17202F;
+    --border:          #263248;
+    --border-soft:     #1C2537;
+    --input-border:    #303C54;
+    --text-dark:       #F3F5F9;
+    --text-heading:    #E9EDF4;
+    --text-body:       #A6B0C3;
+    --text-muted:      #8B96AC;
+    --text-faint:      #7C879B;
+    --blue-bg:         #16233A;
+    --icon-default:    #AEB6C7;
+  }
+  *{ box-sizing:border-box; }
+  [hidden]{ display:none !important; }
+  html,body{ margin:0; padding:0; height:100%; }
+  body{
+    font-family:'Inter',system-ui,-apple-system,Segoe UI,sans-serif;
+    background:var(--page-bg);
+    display:flex;
+    flex-direction:column;
+    /* 125vh, not 100vh: body itself has zoom:0.8 below, so its own box
+       gets rendered (painted) at 80% scale — a plain 100vh would only
+       ever visually reach 80% of the true viewport height, leaving a
+       blank gap below the sidebar/footer. Dividing by the zoom factor
+       (100/0.8=125) compensates, same fix as the dropdown-panel's
+       position math above. */
+    height:125vh;
+    overflow:hidden;
+    color:var(--text-body);
+    /* Whole-page 80% default zoom, per direct request. `zoom` (not
+       `transform:scale`) so position:fixed content — the modal, toasts,
+       and the custom .dropdown-panel's viewport-relative positioning —
+       keeps behaving correctly instead of getting trapped in a
+       transformed containing block. */
+    zoom:0.8;
+  }
+
+  /* ---------------- TOP BAR ---------------- */
+  .topbar{
+    height:64px;
+    flex:0 0 64px;
+    background:var(--surface);
+    border-bottom:1px solid var(--border);
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    padding:0 20px;
+    gap:20px;
+    z-index:10;
+  }
+  .topbar-left{ display:flex; align-items:center; gap:22px; min-width:0; flex:1 1 auto; }
+  .company-block{ flex:0 0 auto; line-height:1.25; }
+  .company-title{ font-size:15px; font-weight:700; color:var(--text-dark); }
+  .company-sub{ font-size:11.5px; font-weight:500; color:var(--text-faint); margin-top:1px; }
+
+  .search-box{
+    background:var(--surface);
+    border:1px solid var(--border);
+    border-radius:6px;
+    height:35px;
+    width:280px;
+    display:flex;
+    align-items:center;
+    padding:0 12px;
+    gap:8px;
+    flex:0 1 280px;
+  }
+  .search-box svg{ color:var(--text-faint); flex:0 0 auto; }
+  .search-box input{
+    border:none; outline:none; font-family:inherit; font-size:13px;
+    color:var(--text-body); flex:1; min-width:0; background:transparent;
+  }
+  .search-box input::placeholder{ color:var(--text-faint); }
+
+  .topbar-right{ display:flex; align-items:center; gap:16px; flex:0 0 auto; }
+
+  .surcharge-card{
+    background:var(--card-navy);
+    border-radius:8px;
+    padding:6px 12px;
+    display:flex;
+    align-items:center;
+    gap:10px;
+    flex:0 0 auto;
+  }
+  .surcharge-label{ font-size:9.5px; font-weight:700; letter-spacing:0.5px; color:#8FA3C7; text-transform:uppercase; }
+  .surcharge-date{ font-size:9.5px; color:#5E729C; margin-top:1px; }
+  .surcharge-value{ font-size:16px; font-weight:800; color:#fff; }
+
+  .icon-actions{ display:flex; align-items:center; gap:6px; flex:0 0 auto; }
+  .icon-btn{
+    position:relative;
+    width:34px; height:34px;
+    border-radius:7px;
+    display:flex; align-items:center; justify-content:center;
+    color:var(--icon-default);
+    background:none; border:none; cursor:pointer;
+  }
+  .icon-btn:hover{ background:var(--border-soft); }
+  .icon-btn .dot{
+    position:absolute; top:6px; right:7px;
+    width:6px; height:6px; border-radius:50%;
+    background:var(--red); border:1.5px solid var(--surface);
+  }
+  .icon-popover{
+    position:absolute; top:calc(100% + 8px); right:0;
+    width:220px;
+    background:var(--surface);
+    border:1px solid var(--border);
+    border-radius:8px;
+    box-shadow:0 8px 20px rgba(0,0,0,0.12);
+    padding:10px 12px;
+    font-size:12px; font-weight:400; line-height:1.4;
+    color:var(--text-body);
+    text-align:left;
+    white-space:normal;
+    cursor:default;
+    z-index:50;
+  }
+
+  .user-chip{ display:flex; align-items:center; gap:8px; cursor:pointer; flex:0 0 auto; }
+  .user-name{ font-size:13.5px; font-weight:600; color:var(--text-heading); }
+  .user-chip .chevron{ color:var(--text-faint); }
+  .avatar{
+    width:32px; height:32px; border-radius:50%;
+    background:var(--card-navy);
+    color:#fff;
+    font-size:12px; font-weight:700;
+    display:flex; align-items:center; justify-content:center;
+    flex:0 0 auto;
+  }
+
+  /* ---------------- BREADCRUMB ---------------- */
+  .breadcrumb-bar{
+    flex:0 0 auto;
+    background:var(--surface);
+    border-bottom:1px solid var(--border);
+    padding:11px 24px;
+    font-size:12.5px;
+  }
+  .breadcrumb-bar span{ color:var(--text-faint); }
+  .breadcrumb-bar span.current{ color:var(--text-dark); font-weight:600; }
+
+  /* ---------------- APP BODY ---------------- */
+  .app-body{ flex:1 1 auto; display:flex; min-height:0; }
+
+  /* ---------------- SIDEBAR ---------------- */
+  .sidebar{
+    width:56px;
+    flex:0 0 56px;
+    background:var(--navy-deep);
+    border-right:1px solid var(--border);
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    padding:12px 0;
+    gap:6px;
+    overflow-y:auto;
+  }
+  .sidebar::-webkit-scrollbar{ width:0; }
+  .side-logo{
+    width:32px; height:32px;
+    background:var(--blue-pill);
+    border-radius:8px;
+    display:flex; align-items:center; justify-content:center;
+    color:#fff; font-weight:800; font-size:11px; letter-spacing:0.2px;
+    flex:0 0 auto;
+    margin-bottom:6px;
+  }
+  .side-icon{
+    position:relative;
+    width:38px; height:34px;
+    border-radius:7px;
+    display:flex; align-items:center; justify-content:center;
+    color:var(--icon-muted-dark);
+    background:none; border:none; cursor:pointer;
+    flex:0 0 auto;
+  }
+  .side-icon svg{ stroke-width:1.8; }
+  .side-icon:hover{ color:#C4CEE4; background:rgba(255,255,255,0.06); }
+  .side-icon.active{ color:#fff; background:rgba(255,255,255,0.08); }
+  .side-icon.active::before{
+    content:'';
+    position:absolute; left:-12px; top:50%; transform:translateY(-50%);
+    width:3px; height:20px; border-radius:0 3px 3px 0;
+    background:var(--blue-pill);
+  }
+  .sidebar-spacer{ flex:1 1 auto; }
+  .side-icon-bottom{
+    width:34px; height:34px;
+    border-radius:7px;
+    display:flex; align-items:center; justify-content:center;
+    color:var(--icon-muted-dark);
+    background:none; border:none; cursor:pointer;
+  }
+  .side-icon-bottom:hover{ color:#C4CEE4; }
+
+  /* ---------------- CONTENT ---------------- */
+  .content{ flex:1 1 auto; display:flex; flex-direction:column; min-height:0; }
+
+  /* Fixed page-header band: sits under the breadcrumb, does not scroll with
+     the form below it (matches the app's Load-entry-style page pattern). */
+  .page-header-band{
+    flex:0 0 auto;
+    background:var(--surface);
+    border-bottom:1px solid var(--border);
+  }
+  .page-head{
+    padding:20px 20px;
+    display:flex; align-items:flex-start; justify-content:space-between; gap:20px;
+  }
+
+  .content-scroll{ flex:1 1 auto; overflow-y:auto; }
+  .content-inner{ max-width:1600px; margin:0 auto; padding:24px 40px 60px; }
+  .page-title{ font-size:22px; font-weight:600; color:var(--text-dark); margin:0 0 6px; }
+  .page-subtitle{ font-size:13px; font-weight:400; color:var(--text-muted); margin:0; }
+
+  .segmented{
+    display:flex;
+    background:var(--segmented-track);
+    border-radius:8px;
+    padding:3px;
+    gap:2px;
+    flex:0 0 auto;
+  }
+  .segmented button{
+    font-family:inherit;
+    font-size:12.5px;
+    font-weight:600;
+    color:var(--text-muted);
+    background:none;
+    border:none;
+    padding:7px 14px;
+    border-radius:6px;
+    cursor:pointer;
+  }
+  .segmented button.active{
+    background:var(--surface);
+    color:var(--text-dark);
+    box-shadow:0 1px 2px rgba(0,0,0,0.06);
+  }
+
+  /* Smaller variant for the per-step Custom/Existing Profile toggle in each
+     card's header — the page-level Weekly/Biweekly/Monthly .segmented
+     (page-head/setup) keeps its own larger size, this one only. */
+  .card-head .segmented{ padding:2px; gap:2px; }
+  .card-head .segmented button{ font-size:11px; font-weight:400; padding:5px 10px; }
+
+  /* ---------------- STEPPER ---------------- */
+  .stepper{
+    display:flex;
+    align-items:flex-start;
+    margin-bottom:26px;
+  }
+  .step{
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    gap:8px;
+    flex:0 0 auto;
+    width:50px;
+  }
+  .step:first-child{ margin-left:-10px; }
+  .step:last-child{ margin-right:-10px; }
+  .step-circle{
+    width:30px; height:30px;
+    border-radius:50%;
+    border:2px solid var(--border);
+    display:flex; align-items:center; justify-content:center;
+    font-size:12.5px; font-weight:700;
+    color:var(--text-faint);
+    background:var(--surface);
+  }
+  .step.active .step-circle{ border-color:var(--blue); color:var(--blue); }
+  .step-label{ font-size:12px; font-weight:500; color:var(--text-faint); white-space:nowrap; }
+  .step.active .step-label{ color:var(--blue); font-weight:600; }
+  .step-line{
+    flex:1 1 auto;
+    height:2px;
+    background:var(--border);
+    margin-top:15px;
+  }
+
+  /* ---------------- INFO BANNER ---------------- */
+  .info-banner{
+    display:flex;
+    gap:11px;
+    align-items:flex-start;
+    background:var(--blue-bg);
+    border-left:3px solid var(--blue);
+    border-radius:8px;
+    padding:14px 16px;
+    margin-bottom:22px;
+  }
+  .info-icon{
+    width:18px; height:18px;
+    border-radius:50%;
+    background:var(--blue);
+    color:#fff;
+    font-size:11px;
+    font-weight:700;
+    display:flex; align-items:center; justify-content:center;
+    flex:0 0 auto;
+    margin-top:1px;
+  }
+  .info-banner p{ margin:0; font-size:13px; line-height:1.55; color:var(--blue-dark); }
+
+  /* ---------------- CARD ---------------- */
+  .card{
+    background:var(--surface);
+    border:1px solid var(--border);
+    border-radius:12px;
+    padding:22px;
+  }
+  .card-head{ display:flex; align-items:center; justify-content:space-between; margin-bottom:20px; }
+  .card-title{ font-size:15.5px; font-weight:700; color:var(--text-dark); margin:0; }
+
+  .field-label{
+    font-size:11px;
+    font-weight:600;
+    letter-spacing:0.4px;
+    color:var(--text-faint);
+    text-transform:uppercase;
+    display:block;
+    margin-bottom:8px;
+  }
+  .text-input{
+    width:100%;
+    height:35px;
+    border:1px solid var(--input-border);
+    border-radius:6px;
+    padding:0 12px;
+    font-family:inherit;
+    font-size:13.5px;
+    color:var(--text-body);
+    background:var(--surface);
+    outline:none;
+  }
+  .text-input::placeholder{ color:var(--text-faint); }
+  .text-input:hover{ border-color:var(--blue); }
+  .text-input:focus{ border-color:var(--blue); }
+
+  .pay-table{ width:100%; border-collapse:collapse; margin-top:22px; }
+  .pay-table th{
+    text-align:left;
+    font-size:10.5px;
+    font-weight:700;
+    letter-spacing:0.4px;
+    color:var(--text-faint);
+    /* Sentence case, not all-caps: only the first letter renders
+       capitalized (works off the rendered text itself, so every table's
+       header — including the dynamically-built profile-preview ones —
+       gets this for free without editing each th's markup). */
+    text-transform:lowercase;
+    padding:0 0 10px;
+    border-bottom:1px solid var(--border);
+  }
+  .pay-table th::first-letter{ text-transform:uppercase; }
+  .pay-table td{ padding:14px 0; border-bottom:1px solid var(--border-soft); vertical-align:top; }
+  .pay-table th:not(:first-child), .pay-table td:not(:first-child){ padding-left:16px; }
+
+  .select-input{
+    width:100%;
+    height:35px;
+    border:1px solid var(--input-border);
+    border-radius:6px;
+    padding:0 30px 0 12px;
+    font-family:inherit;
+    font-size:13px;
+    color:var(--text-body);
+    background:var(--surface) url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="10" height="6" viewBox="0 0 10 6" fill="none"><path d="M1 1L5 5L9 1" stroke="%236A7282" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>') no-repeat right 10px center;
+    appearance:none;
+    -webkit-appearance:none;
+    outline:none;
+  }
+  [data-theme="dark"] .select-input{
+    background-image:url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="10" height="6" viewBox="0 0 10 6" fill="none"><path d="M1 1L5 5L9 1" stroke="%238A93A8" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>');
+  }
+  .rate-input-wrap{ position:relative; }
+  .rate-input-wrap .prefix{
+    position:absolute; left:12px; top:50%; transform:translateY(-50%);
+    font-size:13px; color:var(--text-muted);
+  }
+  .rate-input-wrap .suffix-group{
+    position:absolute; right:0; top:0; bottom:0;
+    display:none; align-items:center; gap:8px;
+    padding-right:12px;
+  }
+  .rate-input-wrap .suffix-divider{ width:1px; align-self:stretch; margin:8px 0; background:var(--input-border); }
+  .rate-input-wrap .suffix-text{ font-size:13px; color:var(--text-muted); }
+  .rate-input-wrap.percent .prefix{ display:none; }
+  .rate-input-wrap.percent .suffix-group{ display:flex; }
+  .rate-input{
+    width:100%; height:35px;
+    border:1px solid var(--input-border);
+    border-radius:6px;
+    padding:0 12px 0 24px;
+    font-family:inherit;
+    font-size:13px;
+    color:var(--text-body);
+    background:var(--surface);
+    outline:none;
+  }
+  .rate-input-wrap.percent .rate-input{ padding:0 40px 0 12px; }
+  .rate-input:hover, .select-input:hover{ border-color:var(--blue); }
+  .rate-input:focus, .select-input:focus{ border-color:var(--blue); }
+  .field-invalid.select-input, .field-invalid.text-input, .field-invalid.rate-input,
+  .multiselect-trigger.field-invalid, .dropdown-trigger.field-invalid{ border-color:var(--red) !important; }
+
+  /* ---------------- CUSTOM DROPDOWN (every <select class="select-input"> is
+     progressively enhanced into this at runtime — see enhanceSelect() — so
+     its open option list is our own styled panel instead of the browser's
+     native, unstyled popup). The underlying <select> stays in the DOM
+     (invisible) as the real source of value/validation/events. --------------- */
+  .dropdown{ position:relative; }
+  .dropdown-native{
+    position:absolute; opacity:0; width:1px; height:1px;
+    overflow:hidden; pointer-events:none;
+  }
+  .dropdown-trigger{
+    width:100%; height:35px;
+    display:flex; align-items:center; justify-content:space-between; gap:8px;
+    border:1px solid var(--input-border);
+    border-radius:6px;
+    background:var(--surface);
+    padding:0 12px;
+    font-family:inherit;
+    font-size:13px;
+    outline:none;
+    color:var(--text-body);
+    cursor:pointer;
+  }
+  .dropdown-trigger:hover{ border-color:var(--blue); }
+  .dropdown-trigger:focus{ border-color:var(--blue); }
+  .dropdown-trigger:disabled{ cursor:not-allowed; opacity:.6; }
+  .dropdown-value{ overflow:hidden; text-overflow:ellipsis; white-space:nowrap; text-align:left; }
+  .dropdown-value.placeholder{ color:var(--text-faint); }
+  .dropdown-trigger .chevron{ color:var(--text-faint); flex:0 0 auto; transition:transform .15s ease; }
+  .dropdown.open .dropdown-trigger .chevron{ transform:rotate(180deg); }
+  .dropdown-panel{
+    /* Fixed (viewport-relative, positioned via JS from the trigger's
+       getBoundingClientRect) rather than absolute — so it isn't clipped by
+       an ancestor with overflow:hidden/auto, like .modal or .content-scroll. */
+    position:fixed; z-index:1000;
+    max-height:260px; overflow-y:auto;
+    background:var(--surface);
+    border:1px solid var(--border);
+    border-radius:8px;
+    box-shadow:0 8px 24px rgba(0,0,0,0.14);
+    padding:6px;
+  }
+  .dropdown-item{
+    display:flex; align-items:center; justify-content:space-between; gap:10px;
+    width:100%;
+    padding:8px 10px;
+    border-radius:6px;
+    border:none; background:none;
+    font-family:inherit; font-size:13px; color:var(--text-body); text-align:left;
+    cursor:pointer;
+  }
+  /* Light-blue hover, this file's own design system — the same
+     --blue-bg tint used for the info banner / focus rings, not a neutral
+     gray (superseded the earlier login.html-neutral-hover experiment).
+     Text also switches to --blue on hover. */
+  .dropdown-item:hover{ background:var(--blue-bg); color:var(--blue); }
+  .dropdown-item.active{ color:var(--blue-dark); font-weight:600; }
+  .dropdown-item .check{ color:var(--blue); flex:0 0 auto; visibility:hidden; }
+  .dropdown-item.active .check{ visibility:visible; }
+
+  /* ---------------- MULTI-SELECT DROPDOWN (e.g. Pay Accessorials' "Pay") --------------- */
+  .multiselect{ position:relative; }
+  .multiselect-trigger{
+    width:100%; height:35px;
+    display:flex; align-items:center; justify-content:space-between; gap:8px;
+    border:1px solid var(--input-border);
+    border-radius:6px;
+    background:var(--surface);
+    padding:0 12px;
+    font-family:inherit;
+    font-size:13px;
+    color:var(--text-body);
+    cursor:pointer;
+  }
+  .multiselect-trigger:hover{ border-color:var(--blue); }
+  .multiselect-value{ overflow:hidden; text-overflow:ellipsis; white-space:nowrap; text-align:left; }
+  .multiselect-value.placeholder{ color:var(--text-faint); }
+  .multiselect-trigger .chevron{ color:var(--text-faint); flex:0 0 auto; transition:transform .15s ease; }
+  .multiselect.open .multiselect-trigger .chevron{ transform:rotate(180deg); }
+  .multiselect-panel{
+    position:absolute; z-index:60; top:calc(100% + 4px); left:0;
+    width:max(300px, 100%);
+    background:var(--surface);
+    border:1px solid var(--border);
+    border-radius:8px;
+    box-shadow:0 8px 24px rgba(0,0,0,0.14);
+    padding:12px;
+  }
+  .multiselect-header{ display:flex; align-items:center; justify-content:space-between; margin-bottom:8px; }
+  .multiselect-header .label{ font-size:13px; font-weight:600; color:var(--text-heading); }
+  .multiselect-header .select-all{
+    font-size:12.5px; font-weight:400; color:var(--blue);
+    background:none; border:none; padding:0; cursor:pointer; font-family:inherit;
+  }
+  .multiselect-list{
+    max-height:360px; overflow-y:auto; display:flex; flex-direction:column; gap:11px;
+    padding:4px 10px 4px 2px;
+    scrollbar-width:thin; scrollbar-color:var(--input-border) transparent;
+  }
+  .multiselect-list::-webkit-scrollbar{ width:6px; }
+  .multiselect-list::-webkit-scrollbar-track{ background:transparent; }
+  .multiselect-list::-webkit-scrollbar-thumb{ background:var(--input-border); border-radius:999px; }
+  .multiselect-list::-webkit-scrollbar-thumb:hover{ background:var(--text-faint); }
+  .multiselect-item{ display:flex; align-items:center; gap:10px; font-size:13px; color:var(--text-body); cursor:pointer; }
+  .multiselect-footer{
+    display:flex; gap:8px; justify-content:flex-end;
+    margin-top:12px; padding-top:12px; border-top:1px solid var(--border);
+  }
+
+  /* Dimensions/hover ported from login.html's 2FA-flow ".btn-secondary" —
+     the project's own "neutral secondary button" convention (39px/6px,
+     14px/500, hover = border darkens only, no color-mix or text-color
+     shift) — rather than this file's earlier one-off 35px/13px/600 button. */
+  .btn-outline{
+    display:inline-flex; align-items:center; justify-content:center;
+    height:39px; padding:0 20px;
+    border-radius:6px;
+    border:1px solid var(--input-border);
+    background:var(--surface);
+    color:var(--text-heading);
+    font-family:inherit; font-size:14px; font-weight:500;
+    cursor:pointer;
+    white-space:nowrap;
+    transition:border-color .15s ease;
+  }
+  .btn-outline:hover{ border-color:var(--text-muted); }
+
+  .row-checkbox{
+    appearance:none;
+    -webkit-appearance:none;
+    width:18px; height:18px;
+    margin-top:8px;
+    border:1.5px solid var(--input-border);
+    border-radius:5px;
+    background:var(--surface);
+    /* Flex centering instead of position:absolute + left/top math: the
+       ::after tick is a normal flex item here, so the browser's own flex
+       centering places it exactly in the middle every time — no percentage
+       or pixel offset to compute or re-derive if the tick or box ever
+       resizes, and nothing for the page's zoom:0.8 to throw off. */
+    display:flex; align-items:center; justify-content:center;
+    flex:0 0 auto;
+    cursor:pointer;
+    outline:none;
+    transition:background .12s ease, border-color .12s ease;
+  }
+  .row-checkbox:hover{ border-color:var(--blue); }
+  .row-checkbox:checked{ background:var(--blue); border-color:var(--blue); }
+  .row-checkbox:checked::after{
+    content:'';
+    /* A real checkmark icon (Feather-style polyline, not the old CSS
+       border-corner trick) — the border-corner shape only draws two sides
+       of a rotated box, so its visible "ink" sits toward the bottom-right
+       of its own bounding box even when that box is mathematically
+       centered, which is why it kept LOOKING off-center no matter how
+       precisely the box itself was centered. A symmetric icon doesn't have
+       that problem. */
+    width:11px; height:11px;
+    background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='3.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='20 6 9 17 4 12'/%3E%3C/svg%3E");
+    background-size:contain;
+    background-repeat:no-repeat;
+  }
+  .row-checkbox:focus-visible{ box-shadow:0 0 0 3px var(--blue-bg); }
+  .cell-readonly{ font-size:13px; color:var(--text-body); }
+  .cell-readonly.placeholder{ color:var(--text-faint); }
+
+  .row-actions{ display:flex; align-items:center; gap:8px; }
+  /* Edit/Remove are icon buttons, each its own permanently-visible square
+     box (not just a hover-only highlight — a plain transparent button was
+     too easy to miss) — same tint per action (blue/red) as the old text
+     links, just the box itself stays a neutral, always-visible outline. */
+  .icon-action-btn{
+    width:28px; height:28px;
+    flex:0 0 auto;
+    display:flex; align-items:center; justify-content:center;
+    border-radius:6px;
+    border:1px solid var(--input-border);
+    background:var(--surface);
+    cursor:pointer;
+  }
+  .icon-action-btn:hover{ background:var(--border-soft); }
+  .icon-action-btn svg{ width:15px; height:15px; flex:0 0 auto; display:block; }
+  .icon-action-btn.edit{ color:var(--blue); }
+  .icon-action-btn.remove{ color:var(--red); }
+
+  .add-line-btn{
+    display:flex;
+    align-items:center;
+    gap:6px;
+    margin-top:16px;
+    padding-top:16px;
+    background:none;
+    border:none;
+    font-family:inherit;
+    font-size:13px;
+    font-weight:400;
+    color:var(--blue);
+    cursor:pointer;
+    width:100%;
+    text-align:left;
+  }
+
+  /* ---------------- SECTION PROFILE ACTIONS ---------------- */
+  .link-danger{
+    font-size:12.5px; font-weight:400; color:var(--red);
+    background:none; border:none; padding:0; cursor:pointer; font-family:inherit;
+  }
+  .link-danger:hover{ text-decoration:underline; }
+
+  .gl-cell{ display:flex; flex-direction:column; gap:3px; }
+  .gl-link{
+    font-size:11.5px; font-weight:400; color:var(--blue);
+    background:none; border:none; padding:0; cursor:pointer; font-family:inherit; text-align:left;
+  }
+  .gl-link:hover{ text-decoration:underline; }
+
+  /* A fixed, non-removable line (e.g. Pay Details' Fuel Surcharge row) */
+  .fixed-row-label{ display:flex; align-items:center; gap:10px; font-size:13px; color:var(--text-body); }
+  .fixed-row-label .change-type{
+    font-size:11.5px; font-weight:400; color:var(--blue);
+    background:none; border:none; padding:0; cursor:pointer; font-family:inherit;
+  }
+  .fixed-row-label .change-type:hover{ text-decoration:underline; }
+
+  /* ---------------- MODAL ---------------- */
+  .modal-overlay{
+    position:fixed; inset:0; z-index:200;
+    background:rgba(16,24,40,0.45);
+    display:flex; align-items:center; justify-content:center;
+    padding:20px;
+  }
+  .modal{
+    width:100%; max-width:400px;
+    background:var(--surface);
+    border:1px solid var(--border);
+    border-radius:12px;
+    box-shadow:0 18px 44px rgba(0,0,0,0.22);
+    overflow:hidden;
+  }
+  .modal-head{
+    display:flex; align-items:center; justify-content:space-between;
+    padding:16px 18px; border-bottom:1px solid var(--border);
+  }
+  .modal-title{ margin:0; font-size:14.5px; font-weight:700; color:var(--text-dark); }
+  .modal-close{
+    width:26px; height:26px; border-radius:6px;
+    display:flex; align-items:center; justify-content:center;
+    background:none; border:none; cursor:pointer; color:var(--text-faint);
+  }
+  .modal-close:hover{ background:var(--border-soft); color:var(--text-body); }
+  .modal-body{ padding:18px; }
+  .modal-readout{ margin-bottom:14px; }
+  .modal-readout .label{
+    display:block; font-size:11px; font-weight:600; letter-spacing:0.4px;
+    text-transform:uppercase; color:var(--text-faint); margin-bottom:3px;
+  }
+  .modal-readout .value{ font-size:13px; color:var(--text-body); }
+  .modal-foot{
+    display:flex; justify-content:flex-end; gap:8px;
+    padding:14px 18px; border-top:1px solid var(--border);
+  }
+
+  /* ---------------- TOASTS ---------------- */
+  .toast-stack{
+    position:fixed; top:74px; right:20px; z-index:300;
+    display:flex; flex-direction:column; gap:8px;
+    pointer-events:none;
+  }
+  .toast{
+    display:flex; align-items:flex-start; gap:10px;
+    min-width:270px; max-width:340px;
+    padding:11px 14px;
+    border-radius:8px;
+    border:1px solid transparent;
+    box-shadow:0 8px 22px rgba(0,0,0,0.16);
+    font-size:12.5px; line-height:1.45;
+  }
+  .toast .toast-title{ font-weight:700; display:block; margin-bottom:1px; }
+  .toast.success{ background:#ECFDF5; border-color:#D0FAE5; color:#04785D; }
+  .toast.error{ background:#FEF2F2; border-color:#FFE2E2; color:#B0202A; }
+  [data-theme="dark"] .toast.success{ background:#0E2A22; border-color:#1C4638; color:#6EE7B7; }
+  [data-theme="dark"] .toast.error{ background:#2C1416; border-color:#4A1F24; color:#FCA5A5; }
+  .toast svg{ flex:0 0 auto; margin-top:1px; }
+
+  /* ---------------- ENTRY FLOW (profile picker → setup → wizard) ---------------- */
+  .page-title-row{ display:flex; align-items:center; gap:10px; }
+  .context-chip{
+    display:inline-flex; align-items:center;
+    height:22px; padding:0 10px;
+    border-radius:999px;
+    background:var(--blue-bg);
+    color:var(--blue-dark);
+    font-size:11.5px; font-weight:600;
+    white-space:nowrap;
+  }
+  .required{ color:var(--red); }
+
+  .landing-filter{ max-width:300px; margin-bottom:18px; }
+
+  .empty-state{
+    display:flex; flex-direction:column; align-items:center; gap:10px;
+    padding:38px 24px 34px;
+    color:var(--text-faint);
+    text-align:center;
+  }
+  .empty-state p{ margin:0; font-size:13px; line-height:1.55; max-width:420px; }
+
+  .field-error{ margin:8px 0 0; font-size:12px; font-weight:500; color:var(--red); }
+
+  .footer-actions{ display:flex; align-items:center; gap:10px; }
+
+  .settings-field-row{ display:flex; align-items:flex-start; gap:16px; margin-bottom:16px; }
+  .settings-field-row .field-group{ width:220px; flex:0 0 auto; }
+  .settings-field-row .row-actions{ padding-bottom:9px; }
+
+  .profile-divider{ height:1px; background:var(--border); margin:20px 0; border:none; }
+  .profile-section-title{ font-size:14px; font-weight:600; color:var(--text-heading); margin:0 0 12px; }
+
+  .existing-profile-hint{
+    margin:10px 0 0;
+    font-size:12px;
+    line-height:1.5;
+    color:var(--text-muted);
+  }
+
+  /* ---------------- PRIMARY BUTTON ----------------
+     Dimensions ported from login.html's 2FA-flow ".btn-verify"/".btn-continue"
+     (39px height, 6px radius, 500 weight, background-only hover) instead of
+     this file's earlier one-off 8px radius/600 weight. */
+  .btn-primary{
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    height:39px;
+    padding:0 20px;
+    background:var(--blue);
+    color:#fff;
+    font-family:inherit;
+    font-size:14px;
+    font-weight:500;
+    border:none;
+    border-radius:6px;
+    cursor:pointer;
+    white-space:nowrap;
+    transition:background .15s ease;
+  }
+  .btn-primary:hover{ background:var(--blue-dark); }
+  .btn-primary:disabled{ opacity:0.65; cursor:default; }
+
+  .step-save-row{ display:flex; align-items:center; justify-content:flex-end; gap:14px; margin-top:16px; }
+
+  /* ---------------- WIZARD FOOTER ---------------- */
+  .wizard-footer{
+    flex:0 0 auto;
+    background:var(--surface);
+    border-top:1px solid var(--border);
+    padding:14px 32px;
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+  }
+  .footer-step-label{ font-size:13px; font-weight:600; color:var(--text-muted); }
+</style>
+<script>
+  // Applied synchronously, before body paints, so a saved dark-mode
+  // preference doesn't flash light-then-dark on load.
+  (function(){
+    try{
+      var saved = localStorage.getItem('dp-theme');
+      if(saved === 'dark') document.documentElement.setAttribute('data-theme', 'dark');
+    }catch(e){}
+  })();
+</script>
+</head>
+<body>
+
+  <!-- TOP BAR -->
+  <div class="topbar">
+    <div class="topbar-left">
+      <div class="company-block">
+        <div class="company-title">Dawson Truck Lines</div>
+        <div class="company-sub">Carrier &middot; MC 884210</div>
+      </div>
+      <div class="search-box">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>
+        <input type="text" placeholder="Search loads, drivers, customers, trailers...">
+      </div>
+    </div>
+    <div class="topbar-right">
+      <div class="surcharge-card">
+        <div>
+          <div class="surcharge-label">Diesel FSC</div>
+          <div class="surcharge-date">07/27/26</div>
+        </div>
+        <div class="surcharge-value">$0.68</div>
+      </div>
+      <div class="surcharge-card">
+        <div>
+          <div class="surcharge-label">Gas FSC</div>
+          <div class="surcharge-date">07/27/26</div>
+        </div>
+        <div class="surcharge-value">0.30%</div>
+      </div>
+      <div class="icon-actions">
+        <button class="icon-btn" id="btnAdd" data-popover="Quick create: new load, customer, or agent">
+          <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></svg>
+        </button>
+        <button class="icon-btn" id="btnHelp" data-popover="Need help? Contact support at support@dispatchpro.com">
+          <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M9.5 9.3a2.5 2.5 0 0 1 4.9.7c0 1.7-2.4 2-2.4 3.5"/><path d="M12 17.2v.1"/></svg>
+        </button>
+        <button class="icon-btn" id="btnMail" data-popover="No new messages">
+          <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 7l9 6 9-6"/></svg>
+          <div class="dot"></div>
+        </button>
+        <button class="icon-btn" id="btnBell" data-popover="No new notifications">
+          <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.7 21a2 2 0 0 1-3.4 0"/></svg>
+        </button>
+      </div>
+      <div class="user-chip">
+        <div class="avatar">CS</div>
+        <div class="user-name">Christian Snead</div>
+        <svg class="chevron" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg>
+      </div>
+    </div>
+  </div>
+
+  <!-- BREADCRUMB -->
+  <div class="breadcrumb-bar">
+    <span>Personnel</span> <span>/</span> <span>Agents</span> <span>/</span> <span class="current">New Pay Profile</span>
+  </div>
+
+  <div class="app-body">
+    <!-- SIDEBAR -->
+    <nav class="sidebar">
+      <div class="side-logo">DP</div>
+      <button class="side-icon active" title="Dashboard">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg>
+      </button>
+      <button class="side-icon" title="Dispatch">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M2 17h11V6H2v11Z"/><path d="M13 10h4l4 4v3h-8v-7Z"/><circle cx="6.5" cy="19" r="1.6"/><circle cx="17.5" cy="19" r="1.6"/></svg>
+      </button>
+      <button class="side-icon" title="Personnel">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M18 20v-1.6a4 4 0 0 0-4-4h-4a4 4 0 0 0-4 4V20"/><circle cx="12" cy="7.5" r="3.5"/></svg>
+      </button>
+      <button class="side-icon" title="Rates">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M20.6 12.3 12.7 20a2 2 0 0 1-2.8 0l-6-6a2 2 0 0 1 0-2.8L11.7 3.5 20.6 4l.6 8.9-.6-.6Z"/><circle cx="15.5" cy="8.5" r="1.4"/></svg>
+      </button>
+      <button class="side-icon" title="Accounting">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v20"/><path d="M17 6H9.5a3 3 0 0 0 0 6H14a3 3 0 0 1 0 6H6.5"/></svg>
+      </button>
+      <button class="side-icon" title="Archive">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="5" rx="1.2"/><rect x="4.5" y="9" width="15" height="11" rx="1.2"/><path d="M10 13.5h4"/></svg>
+      </button>
+      <button class="side-icon" title="Compliance">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l7 3v5c0 5-3 8-7 10-4-2-7-5-7-10V6l7-3Z"/></svg>
+      </button>
+      <button class="side-icon" title="Reports">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20V10"/><path d="M12 20V4"/><path d="M20 20v-7"/></svg>
+      </button>
+      <button class="side-icon" title="Documents">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M7 3h7l4 4v14H7Z"/><path d="M14 3v4h4"/><path d="M9.5 12.5h5M9.5 16h5"/></svg>
+      </button>
+      <div class="sidebar-spacer"></div>
+      <button class="side-icon-bottom" id="themeToggleBtn" type="button" title="Switch to dark mode" aria-label="Toggle dark mode" aria-pressed="false">
+        <svg class="theme-icon-sun" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4.2"/><path d="M12 2.5v2.2M12 19.3v2.2M4.2 4.2l1.6 1.6M18.2 18.2l1.6 1.6M2.5 12h2.2M19.3 12h2.2M4.2 19.8l1.6-1.6M18.2 5.8l1.6-1.6"/></svg>
+        <svg class="theme-icon-moon" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="display:none"><path d="M20.8 14.5A8.5 8.5 0 1 1 9.5 3.2a6.8 6.8 0 0 0 11.3 11.3Z"/></svg>
+      </button>
+    </nav>
+
+    <!-- CONTENT -->
+    <main class="content">
+      <div class="page-header-band">
+        <div class="page-head">
+          <div>
+            <div class="page-title-row">
+              <h1 class="page-title" id="pageTitle">Agent Pay Profiles</h1>
+              <span class="context-chip" id="profileChip" hidden></span>
+            </div>
+            <p class="page-subtitle" id="pageSubtitle">Select an existing pay profile or create a new one</p>
+          </div>
+          <div class="segmented" id="payCycleSegmented" hidden>
+            <button>Weekly</button>
+            <button>Biweekly</button>
+            <button>Monthly</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="content-scroll">
+      <div class="content-inner">
+
+        <!-- STAGE: pick an existing profile, or start a new one -->
+        <div class="stage" id="stage-landing">
+          <div class="landing-filter">
+            <label class="field-label">Pay Profile <span class="required">*</span></label>
+            <select class="select-input" id="payProfileSelect">
+              <option value="" disabled selected>Select</option>
+              <option>Northeast Regional Standard</option>
+              <option>West Coast Flat Rate</option>
+              <option>Southeast Percentage Plan</option>
+            </select>
+          </div>
+
+          <div class="card">
+            <button class="btn-outline" id="addPayProfileBtn">Add Pay Profile +</button>
+            <div class="empty-state">
+              <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M7 3h7l4 4v14H7Z"/><path d="M14 3v4h4"/><path d="M12 11v6M9 14h6"/></svg>
+              <p>No pay profile selected yet. Choose a saved profile above to review or edit it, or add a new one to start from scratch.</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- STAGE: name the new profile and choose its pay cycle -->
+        <div class="stage" id="stage-setup" hidden>
+          <div class="card" style="margin-bottom:18px;">
+            <label class="field-label">New Profile Name <span class="required">*</span></label>
+            <input type="text" class="text-input" id="newProfileName" placeholder="Enter New Profile Name" style="max-width:420px;">
+            <p class="field-error" id="newProfileNameError" hidden>Enter a profile name before choosing a pay cycle.</p>
+          </div>
+
+          <div class="card">
+            <h2 class="card-title" style="margin-bottom:16px;">Agent Pay Profile</h2>
+
+            <div class="info-banner">
+              <div class="info-icon">i</div>
+              <p>Agent pay is based on the revenue generated on assets in a specific location or various assets over different locations. Agents are compensated on the percentage of linehaul, percentage of gross revenue or a flat rate per load. Pay rates can vary based upon the type of revenue and expenses assigned to each unit. Deductions on the agent settlements are performed by flat rate or preassigned values from the equipments profile (i.e. truck rent, trailer rent, insurance, misc.).</p>
+            </div>
+
+            <label class="field-label">Pay Cycle <span class="required">*</span></label>
+            <div class="segmented" id="setupCycleSegmented">
+              <button>Weekly</button>
+              <button>Biweekly</button>
+              <button>Monthly</button>
+            </div>
+            <p class="existing-profile-hint">Choosing a pay cycle opens the five-step setup for this profile.</p>
+          </div>
+        </div>
+
+        <!-- STAGE: the five-step wizard -->
+        <div class="stage" id="stage-wizard" hidden>
+
+        <div class="stepper">
+          <div class="step active">
+            <div class="step-circle">1</div>
+            <div class="step-label">Pay Details</div>
+          </div>
+          <div class="step-line"></div>
+          <div class="step">
+            <div class="step-circle">2</div>
+            <div class="step-label">Pay Accessorials</div>
+          </div>
+          <div class="step-line"></div>
+          <div class="step">
+            <div class="step-circle">3</div>
+            <div class="step-label">Additional Comp</div>
+          </div>
+          <div class="step-line"></div>
+          <div class="step">
+            <div class="step-circle">4</div>
+            <div class="step-label">Deductions</div>
+          </div>
+          <div class="step-line"></div>
+          <div class="step">
+            <div class="step-circle">5</div>
+            <div class="step-label">Company Settings</div>
+          </div>
+        </div>
+
+        <div class="step-panel" id="step-panel-1">
+        <div class="info-banner">
+          <div class="info-icon">i</div>
+          <p>Agent pay is based on the revenue generated on assets in a specific location or various assets over different locations. Agents are compensated on the percentage of linehaul, percentage of gross revenue or a flat rate per load. Pay rates can vary based upon the type of revenue and expenses assigned to each unit. Deductions on the agent settlements are performed by flat rate or preassigned values from the equipments profile. (i.e. truck rent, trailer rent, insurance, misc.).</p>
+        </div>
+
+        <div class="card">
+          <div class="card-head">
+            <h2 class="card-title">Base Commission Type</h2>
+            <div class="segmented">
+              <button class="active">Custom</button>
+              <button>Existing Profile</button>
+            </div>
+          </div>
+
+          <div class="custom-profile-section">
+            <table class="pay-table" id="payDetailsTable">
+              <thead>
+                <tr>
+                  <th style="width:30%">Commission Type</th>
+                  <th style="width:20%">Pay Rate</th>
+                  <th style="width:32%">GL Account</th>
+                  <th style="width:18%">Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr class="fixed-row">
+                  <td>
+                    <div class="fixed-row-label">
+                      Fuel Surcharge
+                      <button type="button" class="change-type" hidden>Change Type</button>
+                    </div>
+                  </td>
+                  <td>
+                    <select class="select-input rate-type-select">
+                      <option value="" selected disabled>Select</option>
+                      <option value="cpm">Cent Per Mile</option>
+                      <option value="pct-linehaul">Percentage of Linehaul</option>
+                      <option value="pct-gross">Percentage of Gross</option>
+                      <option value="fsc-profile">Fuel Surcharge Profile</option>
+                    </select>
+                    <div class="rate-input-wrap" hidden>
+                      <span class="prefix">$</span>
+                      <input type="text" class="rate-input">
+                      <div class="suffix-group"><div class="suffix-divider"></div><span class="suffix-text">%</span></div>
+                    </div>
+                    <select class="select-input fsc-profile-select" hidden>
+                      <option value="" selected disabled>Select Profile</option>
+                      <option>National Base — DOE Weekly Average</option>
+                      <option>Northeast Regional Surcharge</option>
+                      <option>West Coast Regional Surcharge</option>
+                    </select>
+                    <p class="field-error" hidden></p>
+                  </td>
+                  <td>
+                    <div class="gl-cell">
+                      <span class="cell-readonly gl-value">200001 - Linehaul Revenue</span>
+                      <button type="button" class="gl-link">Edit GL Code</button>
+                    </div>
+                  </td>
+                  <td>
+                    <div class="row-actions">
+                      <button type="button" class="icon-action-btn edit" aria-label="Edit" title="Edit">
+                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 20h9"></path><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"></path></svg>
+                      </button>
+                      <button type="button" class="icon-action-btn remove" aria-label="Remove" title="Remove">
+                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"></path><path d="M10 11v6"></path><path d="M14 11v6"></path><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"></path></svg>
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+
+            <button class="add-line-btn" id="addPayDetailBtn">Add Pay +</button>
+          </div>
+
+          <div class="existing-profile-section" hidden>
+            <label class="field-label">Select Existing Profile</label>
+            <select class="select-input existing-profile-select" id="payDetailsProfileSelect">
+              <option value="" selected disabled>Select</option>
+              <option>Northeast Regional Standard — Flat Rate Per Load, $25.00</option>
+              <option>West Coast Flat Rate — Flat Rate Per Load, $32.00</option>
+              <option>Southeast Percentage Plan — Percentage of Linehaul, 28%</option>
+            </select>
+            <p class="existing-profile-hint">The selected profile's pay lines will be copied into this agent's profile. You can adjust them in the next steps.</p>
+            <div id="payDetailsProfilePreview" hidden></div>
+          </div>
+        </div>
+        <div class="step-save-row">
+          <button class="link-danger">Remove Pay Profile</button>
+          <button class="btn-primary btn-save-profile">Save Pay Period Profile</button>
+        </div>
+        </div>
+
+        <div class="step-panel" id="step-panel-2" hidden>
+          <div class="card">
+            <div class="card-head">
+              <h2 class="card-title">Pay Accessorials</h2>
+              <div class="segmented">
+                <button class="active">Custom</button>
+                <button>Existing Profile</button>
+              </div>
+            </div>
+
+            <div class="custom-profile-section">
+              <table class="pay-table" id="accessorialsTable">
+                <thead>
+                  <tr>
+                    <th style="width:4%"></th>
+                    <th style="width:20%">Type</th>
+                    <th style="width:22%">Pay</th>
+                    <th style="width:16%">Default Rate</th>
+                    <th style="width:28%">GL Account</th>
+                    <th style="width:10%">Actions</th>
+                  </tr>
+                </thead>
+                <tbody></tbody>
+              </table>
+
+              <button class="add-line-btn" id="addAccessorialBtn">Add Accessorial +</button>
+            </div>
+
+            <div class="existing-profile-section" hidden>
+              <label class="field-label">Select Accessorial Profile</label>
+              <select class="select-input" id="accessorialProfileSelect">
+                <option value="" disabled selected>Select</option>
+                <option>Flatbed - Northeast</option>
+                <option>Van - Southwest</option>
+                <option>Reefer</option>
+              </select>
+              <div id="accessorialProfilePreview" hidden></div>
+            </div>
+          </div>
+          <div class="step-save-row">
+            <button class="link-danger">Remove Accessorial Profile</button>
+            <button class="btn-primary btn-save-profile">Save Accessorials Profile</button>
+          </div>
+        </div>
+
+        <div class="step-panel" id="step-panel-3" hidden>
+          <div class="card">
+            <div class="card-head">
+              <h2 class="card-title">Additional Compensation</h2>
+              <div class="segmented">
+                <button class="active">Custom</button>
+                <button>Existing Profile</button>
+              </div>
+            </div>
+
+            <div class="custom-profile-section">
+            <table class="pay-table" id="addlCompTable">
+              <thead>
+                <tr>
+                  <th style="width:28%">Type</th>
+                  <th style="width:18%">Pay Rate</th>
+                  <th style="width:18%">Interval</th>
+                  <th style="width:26%">GL Account</th>
+                  <th style="width:10%">Actions</th>
+                </tr>
+              </thead>
+              <tbody></tbody>
+            </table>
+
+            <button class="add-line-btn" id="addAddlCompBtn">Add Pay +</button>
+            </div>
+
+            <div class="existing-profile-section" hidden>
+              <label class="field-label">Select Existing Profile</label>
+              <select class="select-input">
+                <option value="" disabled selected>Select</option>
+                <option>Regional Bonus Standard</option>
+                <option>Owner-Operator Incentive Plan</option>
+                <option>Safety &amp; Performance Plan</option>
+              </select>
+              <p class="existing-profile-hint">The selected profile's pay lines will be copied into this agent's profile. You can adjust them in the next steps.</p>
+            </div>
+          </div>
+          <div class="step-save-row">
+            <button class="link-danger">Remove Pay Profile</button>
+            <button class="btn-primary btn-save-profile">Save Add. Comp Profile</button>
+          </div>
+        </div>
+
+        <div class="step-panel" id="step-panel-4" hidden>
+          <div class="card">
+            <div class="card-head">
+              <h2 class="card-title">Deductions / Reimbursements</h2>
+              <div class="segmented">
+                <button class="active">Custom</button>
+                <button>Existing Profile</button>
+              </div>
+            </div>
+
+            <div class="custom-profile-section">
+            <table class="pay-table" id="deductionsTable">
+              <thead>
+                <tr>
+                  <th style="width:14%">Category</th>
+                  <th style="width:18%">Type</th>
+                  <th style="width:13%">Amount</th>
+                  <th style="width:10%">Quantity</th>
+                  <th style="width:14%">Interval</th>
+                  <th style="width:21%">GL Account</th>
+                  <th style="width:10%">Actions</th>
+                </tr>
+              </thead>
+              <tbody></tbody>
+            </table>
+
+            <button class="add-line-btn" id="addDeductionBtn">Add Pay +</button>
+            </div>
+
+            <div class="existing-profile-section" hidden>
+              <label class="field-label">Select Existing Profile</label>
+              <select class="select-input">
+                <option value="" disabled selected>Select</option>
+                <option>Standard Equipment Deductions</option>
+                <option>Owner-Operator Lease Plan</option>
+                <option>Regional Expense Plan</option>
+              </select>
+              <p class="existing-profile-hint">The selected profile's pay lines will be copied into this agent's profile. You can adjust them in the next steps.</p>
+            </div>
+          </div>
+          <div class="step-save-row">
+            <button class="link-danger">Remove Pay Profile</button>
+            <button class="btn-primary btn-save-profile">Save Expenses Deductions Profile</button>
+          </div>
+        </div>
+
+        <div class="step-panel" id="step-panel-5" hidden>
+          <div class="card">
+            <div class="card-head">
+              <h2 class="card-title">Company Settings</h2>
+              <div class="segmented">
+                <button class="active">Custom</button>
+                <button>Existing Profile</button>
+              </div>
+            </div>
+
+            <div class="custom-profile-section">
+            <div id="companyMinimumRows"></div>
+            <button class="add-line-btn" id="addCompanyMinimumBtn">Add Pay +</button>
+
+            <div class="settings-field-row" style="margin-top:24px;">
+              <div class="field-group">
+                <label class="field-label">Pay Loads on Hold</label>
+                <select class="select-input">
+                  <option value="" disabled selected>Select</option>
+                  <option>Yes</option>
+                  <option>No</option>
+                </select>
+              </div>
+            </div>
+            </div>
+
+            <div class="existing-profile-section" hidden>
+              <label class="field-label">Select Existing Profile</label>
+              <select class="select-input">
+                <option value="" disabled selected>Select</option>
+                <option>Standard Company Minimum Plan</option>
+                <option>Northeast Regional Minimum</option>
+                <option>Flat Minimum Plan</option>
+              </select>
+              <p class="existing-profile-hint">The selected profile's settings will be copied into this agent's profile. You can adjust them before finishing.</p>
+            </div>
+          </div>
+          <div class="step-save-row">
+            <button class="link-danger">Remove Pay Profile</button>
+            <button class="btn-primary btn-save-profile">Save Company Settings Profile</button>
+          </div>
+        </div>
+
+        </div>
+
+      </div>
+      </div>
+
+      <div class="wizard-footer" id="wizardFooter" hidden>
+        <div class="footer-step-label" id="footerStepLabel">Step 1 of 5</div>
+        <div class="footer-actions">
+          <button class="btn-outline" id="backBtn">Back</button>
+          <button class="btn-primary" id="continueBtn">Continue</button>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <div class="toast-stack" id="toastStack"></div>
+
+  <div class="modal-overlay" id="glModal" hidden>
+    <div class="modal" role="dialog" aria-modal="true" aria-labelledby="glModalTitle">
+      <div class="modal-head">
+        <h3 class="modal-title" id="glModalTitle">Edit Line Item</h3>
+        <button type="button" class="modal-close" id="glModalClose" aria-label="Close">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M18 6 6 18M6 6l12 12"/></svg>
+        </button>
+      </div>
+      <div class="modal-body">
+        <div class="modal-readout">
+          <span class="label">Name</span>
+          <span class="value" id="glModalName">—</span>
+        </div>
+        <div class="modal-readout">
+          <span class="label">Type</span>
+          <span class="value" id="glModalType">Pay</span>
+        </div>
+        <label class="field-label">GL Account <span class="required">*</span></label>
+        <select class="select-input" id="glModalSelect"></select>
+        <p class="field-error" id="glModalError" hidden>This value is required.</p>
+      </div>
+      <div class="modal-foot">
+        <button type="button" class="btn-outline" id="glModalCancel">Cancel</button>
+        <button type="button" class="btn-primary" id="glModalSave">Save</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    /* Toasts — the app confirms saves and reports limits this way. */
+    window.dpToast = (function(){
+      var stack = document.getElementById('toastStack');
+      var ICONS = {
+        success: '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>',
+        error: '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7.5v5M12 16.2v.1"/></svg>'
+      };
+      return function(kind, title, message){
+        var el = document.createElement('div');
+        el.className = 'toast ' + kind;
+        el.innerHTML = ICONS[kind] + '<div><span class="toast-title">' + title + '</span>' + message + '</div>';
+        stack.appendChild(el);
+        setTimeout(function(){ el.remove(); }, 3200);
+      };
+    })();
+
+    /* Dark mode toggle (bottom of the sidebar icon rail) */
+    (function(){
+      const root = document.documentElement;
+      const btn = document.getElementById('themeToggleBtn');
+      const sunIcon = btn.querySelector('.theme-icon-sun');
+      const moonIcon = btn.querySelector('.theme-icon-moon');
+      function applyTheme(theme){
+        if(theme === 'dark') root.setAttribute('data-theme', 'dark');
+        else root.removeAttribute('data-theme');
+        sunIcon.style.display = theme === 'dark' ? 'none' : 'block';
+        moonIcon.style.display = theme === 'dark' ? 'block' : 'none';
+        btn.setAttribute('aria-pressed', theme === 'dark' ? 'true' : 'false');
+        btn.title = theme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode';
+      }
+      applyTheme(root.getAttribute('data-theme') === 'dark' ? 'dark' : 'light');
+      btn.addEventListener('click', ()=>{
+        const next = root.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
+        applyTheme(next);
+        try{ localStorage.setItem('dp-theme', next); }catch(e){}
+      });
+    })();
+  </script>
+
+  <script>
+    /* Segmented controls (Weekly/Biweekly/Monthly, Custom/Existing Profile):
+       clicking a button selects it and deselects its siblings. */
+    document.querySelectorAll('.segmented').forEach(function(seg){
+      var buttons = seg.querySelectorAll('button');
+      buttons.forEach(function(btn){
+        btn.addEventListener('click', function(){
+          buttons.forEach(function(b){ b.classList.remove('active'); });
+          btn.classList.add('active');
+          seg.dispatchEvent(new CustomEvent('segchange', { detail: { button: btn } }));
+        });
+      });
+    });
+
+    /* Custom / Existing Profile toggles (one per card that has both): swap
+       the custom builder for the existing-profile picker (and back) instead
+       of just changing style. Several cards on the page have this pair. */
+    (function(){
+      document.querySelectorAll('.card-head .segmented').forEach(function(toggle){
+        var card = toggle.closest('.card');
+        var customSection = card.querySelector('.custom-profile-section');
+        var existingSection = card.querySelector('.existing-profile-section');
+        if(!customSection || !existingSection) return;
+        toggle.addEventListener('segchange', function(e){
+          var isExisting = e.detail.button.textContent.trim() === 'Existing Profile';
+          customSection.hidden = isExisting;
+          existingSection.hidden = !isExisting;
+        });
+      });
+    })();
+
+    /* Sidebar nav rail: single-select highlighting, mirrors a real left nav. */
+    (function(){
+      var navIcons = document.querySelectorAll('.sidebar .side-icon');
+      navIcons.forEach(function(icon){
+        icon.addEventListener('click', function(){
+          navIcons.forEach(function(i){ i.classList.remove('active'); });
+          icon.classList.add('active');
+        });
+      });
+    })();
+
+    /* Topbar icon buttons: each shows a small popover on click; opening the
+       mail popover also clears its unread dot. Only one popover open at a time. */
+    (function(){
+      function closeAllPopovers(){
+        document.querySelectorAll('.icon-popover').forEach(function(p){ p.remove(); });
+      }
+      document.querySelectorAll('.icon-btn[data-popover]').forEach(function(btn){
+        btn.addEventListener('click', function(e){
+          e.stopPropagation();
+          var alreadyOpen = btn.querySelector('.icon-popover');
+          closeAllPopovers();
+          if(alreadyOpen) return;
+          var pop = document.createElement('div');
+          pop.className = 'icon-popover';
+          pop.textContent = btn.dataset.popover;
+          btn.appendChild(pop);
+          var dot = btn.querySelector('.dot');
+          if(dot) dot.remove();
+        });
+      });
+      document.addEventListener('click', closeAllPopovers);
+    })();
+
+    /* Progressively enhances every <select class="select-input"> into our
+       own styled combobox (trigger + floating panel), replacing the
+       browser's native option list — same visual language as the
+       Accessorials "Pay" multiselect. The original <select> stays in the
+       DOM (visually hidden, value/events untouched) so every bit of
+       existing code that reads `.value`, listens for `change`, or calls
+       `.focus()`/`dpValidate.showError()` on a select keeps working as-is.
+       Defined ahead of dpValidate/the pay-line tables since row setup calls
+       into it synchronously. */
+    window.dpEnhanceSelect = (function(){
+      var openWrap = null;
+
+      function closeOpen(){
+        if(!openWrap) return;
+        openWrap.classList.remove('open');
+        openWrap.querySelector('.dropdown-panel').hidden = true;
+        openWrap = null;
+      }
+      document.addEventListener('click', function(e){
+        if(openWrap && !openWrap.contains(e.target)) closeOpen();
+      });
+      document.addEventListener('keydown', function(e){
+        if(e.key === 'Escape') closeOpen();
+      });
+      // A fixed-position panel doesn't move with its trigger, so just close
+      // it on scroll/resize rather than trying to track/reposition it live.
+      document.addEventListener('scroll', function(){ closeOpen(); }, true);
+      window.addEventListener('resize', closeOpen);
+
+      return function enhanceSelect(select){
+        if(!select || select.dataset.enhanced) return;
+        select.dataset.enhanced = '1';
+
+        var wrap = document.createElement('div');
+        wrap.className = 'dropdown';
+        select.parentNode.insertBefore(wrap, select);
+        wrap.appendChild(select);
+        select.classList.add('dropdown-native');
+        select.tabIndex = -1;
+
+        var trigger = document.createElement('button');
+        trigger.type = 'button';
+        trigger.className = 'dropdown-trigger';
+        trigger.innerHTML =
+          '<span class="dropdown-value placeholder">Select</span>' +
+          '<svg class="chevron" width="10" height="6" viewBox="0 0 10 6" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M1 1l4 4 4-4"/></svg>';
+        wrap.appendChild(trigger);
+
+        var panel = document.createElement('div');
+        panel.className = 'dropdown-panel';
+        panel.hidden = true;
+        wrap.appendChild(panel);
+
+        var valueEl = trigger.querySelector('.dropdown-value');
+        select._dropdownTrigger = trigger;
+        select._dropdownWrap = wrap;
+
+        function renderItems(){
+          panel.innerHTML = '';
+          Array.prototype.forEach.call(select.options, function(opt){
+            if(opt.disabled && opt.value === '') return;
+            var item = document.createElement('button');
+            item.type = 'button';
+            item.className = 'dropdown-item' + (opt.selected ? ' active' : '');
+            item.innerHTML =
+              '<span>' + opt.textContent + '</span>' +
+              '<svg class="check" width="12" height="9" viewBox="0 0 12 9" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M1 4.5L4.2 7.5L11 1"/></svg>';
+            item.addEventListener('click', function(){
+              select.value = opt.value;
+              closeOpen();
+              select.dispatchEvent(new Event('change', { bubbles: true }));
+              sync();
+            });
+            panel.appendChild(item);
+          });
+        }
+
+        function sync(){
+          var opt = select.options[select.selectedIndex];
+          var hasValue = !!(opt && !(opt.disabled && opt.value === ''));
+          valueEl.textContent = opt ? opt.textContent : 'Select';
+          valueEl.classList.toggle('placeholder', !hasValue);
+          trigger.classList.toggle('field-invalid', select.classList.contains('field-invalid'));
+          trigger.disabled = select.disabled;
+          wrap.hidden = select.hidden;
+        }
+        select._dropdownSync = sync;
+
+        // Positions the (fixed) panel against the trigger's live viewport
+        // rect, flipping above when there's more room there — e.g. inside
+        // the GL modal, or a row near the bottom of the scroll area.
+        function positionPanel(){
+          // getBoundingClientRect()/window.innerHeight are true screen
+          // pixels, but the panel itself lives inside the page's own
+          // zoom:0.8 (see body{}) and so re-scales whatever px values we
+          // assign it — dividing by the ambient zoom here cancels that
+          // out so the panel still lands exactly under the trigger.
+          var zoom = parseFloat(getComputedStyle(document.body).zoom) || 1;
+          var rect = trigger.getBoundingClientRect();
+          var trueWidth = Math.max(rect.width, 200);
+          panel.style.width = (trueWidth / zoom) + 'px';
+          panel.style.left = (rect.left / zoom) + 'px';
+          var trueHeight = panel.offsetHeight * zoom;
+          var spaceBelow = window.innerHeight - rect.bottom;
+          if(spaceBelow < trueHeight + 8 && rect.top > trueHeight + 8){
+            panel.style.top = ((rect.top - trueHeight - 4) / zoom) + 'px';
+          } else {
+            panel.style.top = ((rect.bottom + 4) / zoom) + 'px';
+          }
+        }
+
+        trigger.addEventListener('click', function(){
+          if(trigger.disabled) return;
+          if(wrap.classList.contains('open')){
+            closeOpen();
+            return;
+          }
+          closeOpen();
+          renderItems();
+          panel.hidden = false;
+          panel.style.visibility = 'hidden';
+          positionPanel();
+          panel.style.visibility = '';
+          wrap.classList.add('open');
+          openWrap = wrap;
+        });
+
+        // Mirror any external change to the select (validation's
+        // showError/clearError toggling .field-invalid, .hidden being
+        // toggled to swap which control a cell shows, etc.) onto the
+        // visible trigger/wrapper.
+        new MutationObserver(sync).observe(select, {
+          attributes: true, attributeFilter: ['class', 'disabled', 'hidden']
+        });
+
+        renderItems();
+        sync();
+      };
+    })();
+
+    /* Shared field-error plumbing, reused by the live percent-rate check and
+       the required-field check that runs on "Save X Profile" (mirrors the
+       two validation messages the real app shows). Defined ahead of the
+       pay-line tables below since row setup calls into it synchronously. */
+    window.dpValidate = (function(){
+      function errorFor(el){
+        var cell = el.closest('td') || el.closest('.field-group');
+        if(!cell) return null;
+        var err = cell.querySelector('.field-error');
+        if(!err){
+          err = document.createElement('p');
+          err.className = 'field-error';
+          err.hidden = true;
+          cell.appendChild(err);
+        }
+        return err;
+      }
+      function showError(el, message){
+        var err = errorFor(el);
+        if(!err) return;
+        err.textContent = message;
+        err.hidden = false;
+        el.classList.add('field-invalid');
+      }
+      function clearError(el){
+        var err = errorFor(el);
+        if(err) err.hidden = true;
+        el.classList.remove('field-invalid');
+      }
+      return { errorFor: errorFor, showError: showError, clearError: clearError };
+    })();
+
+    /* Pay-line tables (one per step): Edit focuses the row for quick editing,
+       Remove deletes the row, each "+ Add" button appends a fresh row using
+       that table's own column template, and any `.pay-type-select` switches
+       its row's rate field between a "$" prefix and a "%" suffix. */
+    (function(){
+      // Real accessorial names from Figma's "Select accessorial" checklist panel.
+      var ACCESSORIAL_TYPES = [
+        'Additional Stops','Advance Notification Charge','After-Hours Delivery',
+        'Border Crossing Fee','Cargo Disposal Fee','Crane Service','Credit Card Fee',
+        'Customer Quick Pay Fee','Detention','Diversion Miles','Driver Assist',
+        'Driver Count','Drop & Hook Fee','Drop Trailer Fee','Dry Van Trailer Pool',
+        'Dunnage','Dunnage Disposal','Empty Trailer Move','Hazmat','Stop Pay','Tarp Pay'
+      ];
+
+      function buildPayMultiselectHtml(preselected){
+        var items = ACCESSORIAL_TYPES.map(function(name){
+          var checked = preselected.indexOf(name) !== -1 ? ' checked' : '';
+          return '<label class="multiselect-item">' +
+            '<input type="checkbox" class="row-checkbox" data-label="' + name + '"' + checked + '>' +
+            '<span>' + name + '</span></label>';
+        }).join('');
+        return (
+          '<div class="multiselect">' +
+            '<button type="button" class="multiselect-trigger">' +
+              '<span class="multiselect-value placeholder">Select</span>' +
+              '<svg class="chevron" width="10" height="6" viewBox="0 0 10 6" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M1 1l4 4 4-4"/></svg>' +
+            '</button>' +
+            '<div class="multiselect-panel" hidden>' +
+              '<div class="multiselect-header">' +
+                '<span class="label">Select accessorial</span>' +
+                '<button type="button" class="select-all">Select All</button>' +
+              '</div>' +
+              '<div class="multiselect-list">' + items + '</div>' +
+              '<div class="multiselect-footer">' +
+                '<button type="button" class="btn-outline btn-cancel">Cancel</button>' +
+                '<button type="button" class="btn-primary btn-select-confirm">Select</button>' +
+              '</div>' +
+            '</div>' +
+          '</div>'
+        );
+      }
+
+      function initMultiselect(root){
+        if(!root) return;
+        var trigger = root.querySelector('.multiselect-trigger');
+        var panel = root.querySelector('.multiselect-panel');
+        var valueEl = root.querySelector('.multiselect-value');
+        var checkboxes = Array.prototype.slice.call(root.querySelectorAll('.multiselect-item input[type="checkbox"]'));
+        var selectAllBtn = root.querySelector('.select-all');
+        var cancelBtn = root.querySelector('.btn-cancel');
+        var confirmBtn = root.querySelector('.btn-select-confirm');
+        var snapshot = [];
+
+        function applyValue(){
+          var chosen = checkboxes.filter(function(cb){ return cb.checked; })
+            .map(function(cb){ return cb.dataset.label; });
+          if(chosen.length === 0){
+            valueEl.textContent = 'Select';
+            valueEl.classList.add('placeholder');
+          } else {
+            valueEl.textContent = chosen.join(', ');
+            valueEl.classList.remove('placeholder');
+            window.dpValidate.clearError(trigger);
+          }
+        }
+        function open(){
+          snapshot = checkboxes.map(function(cb){ return cb.checked; });
+          panel.hidden = false;
+          root.classList.add('open');
+        }
+        function close(){
+          panel.hidden = true;
+          root.classList.remove('open');
+        }
+
+        trigger.addEventListener('click', function(e){
+          e.stopPropagation();
+          if(panel.hidden) open(); else close();
+        });
+        selectAllBtn.addEventListener('click', function(e){
+          e.stopPropagation();
+          var allChecked = checkboxes.every(function(cb){ return cb.checked; });
+          checkboxes.forEach(function(cb){ cb.checked = !allChecked; });
+        });
+        cancelBtn.addEventListener('click', function(){
+          checkboxes.forEach(function(cb, i){ cb.checked = snapshot[i]; });
+          close();
+        });
+        confirmBtn.addEventListener('click', function(){
+          applyValue();
+          close();
+        });
+        applyValue();
+      }
+
+      document.addEventListener('click', function(e){
+        document.querySelectorAll('.multiselect.open').forEach(function(ms){
+          if(!ms.contains(e.target)){
+            ms.querySelector('.multiselect-panel').hidden = true;
+            ms.classList.remove('open');
+          }
+        });
+      });
+
+      // GL codes as listed in the app's own Edit Line Item picker.
+      var GL_ACCOUNTS = [
+        '100000 - Truck Account x2551',
+        '200000 - Transportation Income',
+        '200001 - Linehaul Revenue',
+        '190001 - BB&T Account xxx0001',
+        '200002 - Fuel Surcharge',
+        '200003 - Fuel Discount',
+        '300000 - Truck Expenses',
+        '1400 - Rent',
+        '1201 - Payroll Expense Driver Pay'
+      ];
+
+      function glCellHtml(code){
+        var hasCode = !!code;
+        return '<td><div class="gl-cell">' +
+          '<span class="cell-readonly gl-value' + (hasCode ? '' : ' placeholder') + '">' +
+            (hasCode ? code : '—') + '</span>' +
+          '<button type="button" class="gl-link">' + (hasCode ? 'Edit GL Code' : 'Set GL Code') + '</button>' +
+        '</div></td>';
+      }
+
+      function updateRateMode(select){
+        var row = select.closest('tr') || select.closest('.settings-field-row');
+        if(!row) return;
+        var wrap = row.querySelector('.rate-input-wrap');
+        if(!wrap) return;
+        wrap.classList.toggle('percent', select.value.indexOf('Percentage') === 0);
+      }
+
+      // Builds one Pay Accessorials <tr>'s inner HTML — shared by the "Add
+      // Accessorial +" row factory and the existing-profile preset preview.
+      function accessorialRowHtml(opts){
+        opts = opts || {};
+        var type = opts.type || '';
+        var typeOptions = ['Flat', 'Percentage'].map(function(t){
+          return '<option' + (t === type ? ' selected' : '') + '>' + t + '</option>';
+        }).join('');
+        return (
+          '<td><input type="checkbox" class="row-checkbox" checked></td>' +
+          '<td><select class="select-input pay-type-select">' +
+            (type ? '' : '<option value="" selected disabled>Select</option>') +
+            typeOptions +
+          '</select></td>' +
+          '<td class="pay-multiselect-cell"' + (opts.pay ? ' data-preselect="' + opts.pay + '"' : '') + '></td>' +
+          '<td><div class="rate-input-wrap"><span class="prefix">$</span>' +
+            '<input type="text" class="rate-input" value="' + (opts.rate != null ? opts.rate : '0.00') + '">' +
+            '<div class="suffix-group"><div class="suffix-divider"></div><span class="suffix-text">%</span></div></div></td>' +
+          glCellHtml(opts.gl) +
+          rowActionsHtml
+        );
+      }
+
+      var ACCESSORIAL_PROFILE_PRESETS = {
+        'Flatbed - Northeast': [
+          { type: 'Flat', pay: 'Stop Pay', rate: '25.00', gl: '200001 - Linehaul Revenue' },
+          { type: 'Percentage', pay: 'Tarp Pay', rate: '25', gl: '200002 - Fuel Surcharge' },
+          { type: 'Flat', pay: 'Hazmat', rate: '25.00', gl: '200003 - Fuel Discount' }
+        ]
+      };
+
+      var ACCESSORIAL_TABLE_HEAD =
+        '<tr><th style="width:4%"></th><th style="width:20%">Type</th>' +
+        '<th style="width:22%">Pay</th><th style="width:16%">Default Rate</th>' +
+        '<th style="width:28%">GL Account</th><th style="width:10%">Actions</th></tr>';
+
+      function renderAccessorialProfilePreview(profileName){
+        var preview = document.getElementById('accessorialProfilePreview');
+        var presets = ACCESSORIAL_PROFILE_PRESETS[profileName];
+        var html = '<hr class="profile-divider">';
+        if(presets && presets.length){
+          html += '<h3 class="profile-section-title">' + profileName + '</h3>' +
+            '<table class="pay-table" id="profilePresetTable"><thead>' + ACCESSORIAL_TABLE_HEAD + '</thead><tbody>' +
+            presets.map(function(p){ return '<tr>' + accessorialRowHtml(p) + '</tr>'; }).join('') +
+            '</tbody></table>';
+        } else {
+          html += '<p class="existing-profile-hint">No preset accessorials are configured for this profile yet.</p>';
+        }
+        html += '<hr class="profile-divider">' +
+          '<h3 class="profile-section-title">Additional Accessorial</h3>' +
+          '<table class="pay-table" id="additionalAccessorialTable"><thead>' + ACCESSORIAL_TABLE_HEAD + '</thead>' +
+          '<tbody><tr>' + accessorialRowHtml({}) + '</tr></tbody></table>' +
+          '<button class="add-line-btn" id="addAdditionalAccessorialBtn">Add Accessorial +</button>';
+        preview.innerHTML = html;
+        preview.hidden = false;
+
+        var presetTbody = preview.querySelector('#profilePresetTable tbody');
+        if(presetTbody) presetTbody.querySelectorAll('tr').forEach(wireRow);
+        wireTable(
+          preview.querySelector('#additionalAccessorialTable tbody'),
+          document.getElementById('addAdditionalAccessorialBtn'),
+          accessorialRowHtml({})
+        );
+      }
+
+      function wireRow(row){
+        row.querySelectorAll('select.select-input').forEach(window.dpEnhanceSelect);
+        var editLink = row.querySelector('.edit');
+        var removeLink = row.querySelector('.remove');
+        var payType = row.querySelector('.pay-type-select');
+        if(editLink) editLink.addEventListener('click', function(){
+          // First VISIBLE candidate, not just first in DOM order — a row
+          // like the Fuel Surcharge one can have a hidden dropdown-trigger
+          // (its rate-type-select) sitting before the field that's
+          // actually showing right now, and focus() on a hidden element
+          // silently does nothing.
+          var candidates = row.querySelectorAll('.rate-input, .dropdown-trigger, input:not([type="checkbox"])');
+          var focusable = Array.prototype.find.call(candidates, function(el){ return el.offsetParent !== null; });
+          if(focusable){ focusable.focus(); if(focusable.select) focusable.select(); }
+        });
+        if(removeLink) removeLink.addEventListener('click', function(){ row.remove(); });
+        if(payType){
+          payType.addEventListener('change', function(){ updateRateMode(payType); });
+          updateRateMode(payType);
+        }
+        // Pay Rate as a "select a method, then reveal the matching input"
+        // control (e.g. Fuel Surcharge: Cent Per Mile / Percentage of
+        // Linehaul / Percentage of Gross / Fuel Surcharge Profile). Starts
+        // as a plain dropdown; picking an option reveals the matching field.
+        // "Change Type" swaps back to the dropdown so it can be re-picked.
+        var rateTypeSelect = row.querySelector('.rate-type-select');
+        if(rateTypeSelect){
+          var rateCell = rateTypeSelect.closest('td');
+          var rateInputWrap = rateCell.querySelector('.rate-input-wrap');
+          var fscProfileSelect = rateCell.querySelector('.fsc-profile-select');
+          var changeTypeBtn = row.querySelector('.change-type');
+
+          rateTypeSelect.addEventListener('change', function(){
+            var value = rateTypeSelect.value;
+            rateTypeSelect.hidden = true;
+            if(value === 'fsc-profile'){
+              if(rateInputWrap) rateInputWrap.hidden = true;
+              if(fscProfileSelect) fscProfileSelect.hidden = false;
+            } else {
+              if(rateInputWrap){
+                rateInputWrap.classList.toggle('percent', value !== 'cpm');
+                rateInputWrap.querySelector('.rate-input').value = '';
+                rateInputWrap.hidden = false;
+              }
+              if(fscProfileSelect) fscProfileSelect.hidden = true;
+            }
+            // "Change Type" only makes sense once a method has been picked
+            // and its field is showing — it's what lets you swap it later.
+            if(changeTypeBtn) changeTypeBtn.hidden = false;
+            window.dpValidate.clearError(rateTypeSelect);
+          });
+
+          if(changeTypeBtn){
+            changeTypeBtn.addEventListener('click', function(){
+              if(rateInputWrap) rateInputWrap.hidden = true;
+              if(fscProfileSelect) fscProfileSelect.hidden = true;
+              rateTypeSelect.hidden = false;
+              changeTypeBtn.hidden = true;
+              // Sync immediately (rather than waiting on the MutationObserver's
+              // microtask) so the trigger is already visible when focused below.
+              if(rateTypeSelect._dropdownSync) rateTypeSelect._dropdownSync();
+              (rateTypeSelect._dropdownTrigger || rateTypeSelect).focus();
+            });
+          }
+        }
+        var multiselectCell = row.querySelector('.pay-multiselect-cell');
+        if(multiselectCell){
+          var preselect = multiselectCell.dataset.preselect ? [multiselectCell.dataset.preselect] : [];
+          multiselectCell.innerHTML = buildPayMultiselectHtml(preselect);
+          initMultiselect(multiselectCell.querySelector('.multiselect'));
+        }
+      }
+
+      function wireTable(tbody, addBtn, rowHtml){
+        if(!tbody) return;
+        tbody.querySelectorAll('tr').forEach(wireRow);
+        if(!addBtn) return;
+        addBtn.addEventListener('click', function(){
+          var row = document.createElement('tr');
+          row.innerHTML = rowHtml;
+          tbody.appendChild(row);
+          wireRow(row);
+          var focusable = row.querySelector('.dropdown-trigger, input:not([type="checkbox"])');
+          if(focusable) focusable.focus();
+        });
+      }
+
+      var intervalOptions =
+        '<option value="" selected disabled>Select Interval</option>' +
+        '<option>Per Load</option><option>Weekly</option><option>Monthly</option><option>One-Time</option>';
+      var deductionIntervalOptions =
+        '<option value="" selected disabled>Select</option>' +
+        '<option>Each Settlement</option><option>Each Week</option><option>One Time</option>';
+      var rowActionsHtml =
+        '<td><div class="row-actions">' +
+          '<button type="button" class="icon-action-btn edit" aria-label="Edit" title="Edit">' +
+            '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 20h9"></path><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"></path></svg>' +
+          '</button>' +
+          '<button type="button" class="icon-action-btn remove" aria-label="Remove" title="Remove">' +
+            '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"></path><path d="M10 11v6"></path><path d="M14 11v6"></path><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"></path></svg>' +
+          '</button>' +
+        '</div></td>';
+
+      // Builds one Base Commission Type <tr>'s inner HTML — shared by the
+      // "Add Pay +" row factory and the existing-profile preset preview,
+      // same pattern as accessorialRowHtml below.
+      var PAY_DETAIL_TYPE_OPTIONS = ['Flat Rate Per Load', 'Percentage of Linehaul', 'Percentage of Fuel Surcharge'];
+      function payDetailRowHtml(opts){
+        opts = opts || {};
+        var type = opts.type || '';
+        var typeOptions = PAY_DETAIL_TYPE_OPTIONS.map(function(t){
+          return '<option' + (t === type ? ' selected' : '') + '>' + t + '</option>';
+        }).join('');
+        return (
+          '<td><select class="select-input pay-type-select">' +
+            (type ? '' : '<option value="" selected disabled>Select Pay Type</option>') +
+            typeOptions +
+          '</select></td>' +
+          '<td><div class="rate-input-wrap' + (type.indexOf('Percentage') === 0 ? ' percent' : '') + '"><span class="prefix">$</span>' +
+            '<input type="text" class="rate-input" value="' + (opts.rate != null ? opts.rate : '0.00') + '">' +
+            '<div class="suffix-group"><div class="suffix-divider"></div>' +
+            '<span class="suffix-text">%</span></div></div>' +
+            '<p class="field-error" hidden></p></td>' +
+          glCellHtml(opts.gl) +
+          rowActionsHtml
+        );
+      }
+
+      // Step 1 — Base Commission Type
+      wireTable(
+        document.querySelector('#step-panel-1 .pay-table tbody'),
+        document.querySelector('#step-panel-1 .add-line-btn'),
+        payDetailRowHtml({})
+      );
+
+      var PAY_DETAILS_PROFILE_PRESETS = {
+        'Northeast Regional Standard — Flat Rate Per Load, $25.00': [
+          { type: 'Flat Rate Per Load', rate: '25.00', gl: '200001 - Linehaul Revenue' }
+        ],
+        'West Coast Flat Rate — Flat Rate Per Load, $32.00': [
+          { type: 'Flat Rate Per Load', rate: '32.00', gl: '200001 - Linehaul Revenue' }
+        ],
+        'Southeast Percentage Plan — Percentage of Linehaul, 28%': [
+          { type: 'Percentage of Linehaul', rate: '28', gl: '200001 - Linehaul Revenue' }
+        ]
+      };
+
+      var PAY_DETAILS_TABLE_HEAD =
+        '<tr><th style="width:30%">Commission Type</th><th style="width:20%">Pay Rate</th>' +
+        '<th style="width:32%">GL Account</th><th style="width:18%">Actions</th></tr>';
+
+      // Existing Profile: choosing a saved commission profile reveals its
+      // preset pay line(s) (still fully editable) plus an "Additional Pay"
+      // starter row of its own — same pattern as the accessorials preview.
+      function renderPayDetailsProfilePreview(profileName){
+        var preview = document.getElementById('payDetailsProfilePreview');
+        var presets = PAY_DETAILS_PROFILE_PRESETS[profileName];
+        var html = '<hr class="profile-divider">';
+        if(presets && presets.length){
+          html += '<h3 class="profile-section-title">' + profileName + '</h3>' +
+            '<table class="pay-table" id="payDetailsPresetTable"><thead>' + PAY_DETAILS_TABLE_HEAD + '</thead><tbody>' +
+            presets.map(function(p){ return '<tr>' + payDetailRowHtml(p) + '</tr>'; }).join('') +
+            '</tbody></table>';
+        } else {
+          html += '<p class="existing-profile-hint">No preset pay lines are configured for this profile yet.</p>';
+        }
+        html += '<hr class="profile-divider">' +
+          '<h3 class="profile-section-title">Additional Pay</h3>' +
+          '<table class="pay-table" id="additionalPayDetailTable"><thead>' + PAY_DETAILS_TABLE_HEAD + '</thead>' +
+          '<tbody><tr>' + payDetailRowHtml({}) + '</tr></tbody></table>' +
+          '<button class="add-line-btn" id="addAdditionalPayDetailBtn">Add Pay +</button>';
+        preview.innerHTML = html;
+        preview.hidden = false;
+
+        var presetTbody = preview.querySelector('#payDetailsPresetTable tbody');
+        if(presetTbody) presetTbody.querySelectorAll('tr').forEach(wireRow);
+        wireTable(
+          preview.querySelector('#additionalPayDetailTable tbody'),
+          document.getElementById('addAdditionalPayDetailBtn'),
+          payDetailRowHtml({})
+        );
+      }
+
+      var payDetailsProfileSelect = document.getElementById('payDetailsProfileSelect');
+      if(payDetailsProfileSelect){
+        payDetailsProfileSelect.addEventListener('change', function(){
+          if(payDetailsProfileSelect.value) renderPayDetailsProfilePreview(payDetailsProfileSelect.value);
+        });
+      }
+
+      // Step 2 — Pay Accessorials
+      wireTable(
+        document.querySelector('#accessorialsTable tbody'),
+        document.getElementById('addAccessorialBtn'),
+        accessorialRowHtml({})
+      );
+
+      // Existing Profile: choosing a saved accessorials profile reveals its
+      // preset rows (still fully editable) plus an "Additional Accessorial"
+      // starter row of its own.
+      var accessorialProfileSelect = document.getElementById('accessorialProfileSelect');
+      if(accessorialProfileSelect){
+        accessorialProfileSelect.addEventListener('change', function(){
+          if(accessorialProfileSelect.value) renderAccessorialProfilePreview(accessorialProfileSelect.value);
+        });
+      }
+
+      // Step 3 — Additional Compensation
+      wireTable(
+        document.querySelector('#addlCompTable tbody'),
+        document.getElementById('addAddlCompBtn'),
+        '<td><input type="text" class="text-input" placeholder="Enter Type"></td>' +
+        '<td><div class="rate-input-wrap"><span class="prefix">$</span>' +
+          '<input type="text" class="rate-input" value="0.00"></div></td>' +
+        '<td><select class="select-input">' + intervalOptions + '</select></td>' +
+        glCellHtml() +
+        rowActionsHtml
+      );
+
+      // Step 4 — Deductions / Reimbursements
+      wireTable(
+        document.querySelector('#deductionsTable tbody'),
+        document.getElementById('addDeductionBtn'),
+        '<td><select class="select-input">' +
+          '<option value="" selected disabled>Select</option>' +
+          '<option>Expense</option><option>Reimbursement</option>' +
+        '</select></td>' +
+        '<td><select class="select-input">' +
+          '<option value="" selected disabled>Select Expense</option>' +
+          '<option>Insurance</option><option>Load Board</option>' +
+          '<option>Trailer Rent</option><option>Truck Rent</option>' +
+        '</select></td>' +
+        '<td><div class="rate-input-wrap"><span class="prefix">$</span>' +
+          '<input type="text" class="rate-input" value="0.00"></div></td>' +
+        '<td><input type="text" class="text-input" value="1"></td>' +
+        '<td><select class="select-input">' + deductionIntervalOptions + '</select></td>' +
+        glCellHtml() +
+        rowActionsHtml
+      );
+
+      // Step 5 — Company Settings: "Company Minimum" is a plain field row
+      // (not a table), so it's wired separately rather than via wireTable().
+      (function(){
+        var container = document.getElementById('companyMinimumRows');
+        var addBtn = document.getElementById('addCompanyMinimumBtn');
+
+        function wireCompanyMinimumRow(row){
+          var select = row.querySelector('.company-minimum-select');
+          window.dpEnhanceSelect(select);
+          select.addEventListener('change', function(){ updateRateMode(select); });
+          updateRateMode(select);
+          var removeLink = row.querySelector('.remove');
+          if(removeLink) removeLink.addEventListener('click', function(){ row.remove(); });
+        }
+
+        addBtn.addEventListener('click', function(){
+          var row = document.createElement('div');
+          row.className = 'settings-field-row';
+          row.innerHTML =
+            '<div class="field-group">' +
+              '<label class="field-label">Company Minimum</label>' +
+              '<select class="select-input pay-type-select company-minimum-select">' +
+                '<option value="" disabled selected>Select Minimum</option>' +
+                '<option>Percentage of Load Gross</option>' +
+                '<option>Percentage of Linehaul</option>' +
+                '<option>Flat Rate Per Load</option>' +
+              '</select>' +
+            '</div>' +
+            '<div class="field-group">' +
+              '<label class="field-label">&nbsp;</label>' +
+              '<div class="rate-input-wrap"><span class="prefix">$</span>' +
+                '<input type="text" class="rate-input" value="0.00">' +
+                '<div class="suffix-group"><div class="suffix-divider"></div><span class="suffix-text">%</span></div></div>' +
+            '</div>' +
+            '<div class="row-actions">' +
+              '<button type="button" class="icon-action-btn remove" aria-label="Remove" title="Remove">' +
+                '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"></path><path d="M10 11v6"></path><path d="M14 11v6"></path><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"></path></svg>' +
+              '</button>' +
+            '</div>';
+          container.appendChild(row);
+          wireCompanyMinimumRow(row);
+          var select = row.querySelector('.company-minimum-select');
+          (select._dropdownTrigger || select).focus();
+        });
+      })();
+    })();
+
+    /* Save-profile buttons: brief confirmation since there's no backend to
+       persist to yet. */
+    (function(){
+      document.querySelectorAll('.btn-save-profile').forEach(function(btn){
+        var original = btn.textContent;
+        btn.addEventListener('click', function(){
+          var panel = btn.closest('.step-panel');
+          var section = panel && panel.querySelector('.custom-profile-section:not([hidden])');
+          if(section && !window.dpValidateSection(section)){
+            var firstInvalid = section.querySelector('.field-invalid');
+            if(firstInvalid) (firstInvalid._dropdownTrigger || firstInvalid).focus();
+            return;
+          }
+          btn.textContent = 'Please Wait...';
+          btn.disabled = true;
+          setTimeout(function(){
+            btn.textContent = original;
+            btn.disabled = false;
+            window.dpToast('success', 'Success Alert', 'Save successfully');
+          }, 700);
+        });
+      });
+      document.querySelectorAll('.link-danger').forEach(function(btn){
+        btn.addEventListener('click', function(){
+          window.dpToast('success', 'Success Alert', 'Profile removed');
+        });
+      });
+    })();
+
+    /* Percentage rates can't exceed 100 — the app validates this inline,
+       live as you type. */
+    (function(){
+      document.addEventListener('input', function(e){
+        var input = e.target;
+        if(!input.classList || !input.classList.contains('rate-input')) return;
+        var wrap = input.closest('.rate-input-wrap');
+        var isPercent = wrap && wrap.classList.contains('percent');
+        var value = parseFloat(input.value);
+        if(isPercent && !isNaN(value) && value > 100){
+          window.dpValidate.showError(input, 'This value should be lower than or equal to 100.');
+        } else {
+          window.dpValidate.clearError(input);
+        }
+      });
+    })();
+
+    /* Required fields — the app shows "This value is required." under any
+       empty Type/Pay/GL Account field when you try to save a section with a
+       blank row (e.g. a freshly-added row that was never filled in). */
+    (function(){
+      function isBlank(field){
+        if(field.tagName === 'SELECT') return !field.value;
+        if(field.classList.contains('text-input')) return !field.value.trim();
+        return false;
+      }
+      window.dpValidateSection = function(scope){
+        var valid = true;
+        scope.querySelectorAll('tr select.select-input, tr input.text-input, .settings-field-row select.select-input').forEach(function(field){
+          if(field.disabled || field.hidden) return;
+          if(isBlank(field)){ window.dpValidate.showError(field, 'This value is required.'); valid = false; }
+          else window.dpValidate.clearError(field);
+        });
+        scope.querySelectorAll('.multiselect').forEach(function(ms){
+          var trigger = ms.querySelector('.multiselect-trigger');
+          var value = ms.querySelector('.multiselect-value');
+          if(value.classList.contains('placeholder')){ window.dpValidate.showError(trigger, 'This value is required.'); valid = false; }
+          else window.dpValidate.clearError(trigger);
+        });
+        scope.querySelectorAll('.gl-cell').forEach(function(cell){
+          var link = cell.querySelector('.gl-link');
+          var value = cell.querySelector('.gl-value');
+          if(value.classList.contains('placeholder')){ window.dpValidate.showError(link, 'This value is required.'); valid = false; }
+          else window.dpValidate.clearError(link);
+        });
+        return valid;
+      };
+
+      document.addEventListener('input', function(e){
+        var el = e.target;
+        if(el.classList && el.classList.contains('text-input') && el.value.trim()) window.dpValidate.clearError(el);
+      });
+      document.addEventListener('change', function(e){
+        var el = e.target;
+        if(el.tagName === 'SELECT' && el.value) window.dpValidate.clearError(el);
+      });
+    })();
+
+    /* "Edit GL Code" / "Set GL Code" opens the Edit Line Item dialog. */
+    (function(){
+      var GL_ACCOUNTS = [
+        '100000 - Truck Account x2551',
+        '200000 - Transportation Income',
+        '200001 - Linehaul Revenue',
+        '190001 - BB&T Account xxx0001',
+        '200002 - Fuel Surcharge',
+        '200003 - Fuel Discount',
+        '300000 - Truck Expenses',
+        '1400 - Rent',
+        '1201 - Payroll Expense Driver Pay'
+      ];
+      var modal = document.getElementById('glModal');
+      var nameEl = document.getElementById('glModalName');
+      var typeEl = document.getElementById('glModalType');
+      var select = document.getElementById('glModalSelect');
+      var errorEl = document.getElementById('glModalError');
+      var activeCell = null;
+
+      select.innerHTML = '<option value="" disabled selected>Select</option>' +
+        GL_ACCOUNTS.map(function(g){ return '<option>' + g + '</option>'; }).join('');
+      window.dpEnhanceSelect(select);
+
+      function rowName(row){
+        if(!row) return 'Line item';
+        var multiselect = row.querySelector('.multiselect-value');
+        if(multiselect && !multiselect.classList.contains('placeholder')) return multiselect.textContent;
+        var fixed = row.querySelector('.fixed-row-label');
+        if(fixed) return fixed.childNodes[0].textContent.trim();
+        var select = row.querySelector('select');
+        if(select && select.value) return select.value;
+        var text = row.querySelector('.text-input');
+        if(text && text.value.trim()) return text.value.trim();
+        return 'Line item';
+      }
+
+      function close(){
+        modal.hidden = true;
+        activeCell = null;
+        errorEl.hidden = true;
+      }
+
+      document.addEventListener('click', function(e){
+        var link = e.target.closest && e.target.closest('.gl-link');
+        if(!link) return;
+        activeCell = link.closest('.gl-cell');
+        var row = link.closest('tr');
+        var current = activeCell.querySelector('.gl-value');
+        nameEl.textContent = rowName(row);
+        typeEl.textContent = 'Pay';
+        select.value = current && !current.classList.contains('placeholder') ? current.textContent : '';
+        select._dropdownSync();
+        errorEl.hidden = true;
+        modal.hidden = false;
+      });
+
+      document.getElementById('glModalCancel').addEventListener('click', close);
+      document.getElementById('glModalClose').addEventListener('click', close);
+      modal.addEventListener('click', function(e){ if(e.target === modal) close(); });
+
+      document.getElementById('glModalSave').addEventListener('click', function(){
+        if(!select.value){ errorEl.hidden = false; return; }
+        if(activeCell){
+          var value = activeCell.querySelector('.gl-value');
+          value.textContent = select.value;
+          value.classList.remove('placeholder');
+          var link = activeCell.querySelector('.gl-link');
+          link.textContent = 'Edit GL Code';
+          window.dpValidate.clearError(link);
+        }
+        close();
+        window.dpToast('success', 'Success Alert', 'Save successfully');
+      });
+    })();
+
+    /* Flow controller: three stages — pick a profile, name it and choose a pay
+       cycle, then the five-step wizard. The header, footer and stepper all
+       follow whichever stage is showing. */
+    (function(){
+      var STEP_SUBTITLES = [
+        'Step 1 of 5: Define base compensation parameters',
+        'Step 2 of 5: Configure accessorial pay types',
+        'Step 3 of 5: Configure supplemental pay and bonuses',
+        'Step 4 of 5: Configure recurring deductions and reimbursements',
+        'Step 5 of 5: Finalize company-level pay settings'
+      ];
+      var STAGE_HEADINGS = {
+        landing: ['Agent Pay Profiles', 'Select an existing pay profile or create a new one'],
+        setup:   ['Create Agent Pay Profile', 'Name the profile and choose how often it pays out']
+      };
+
+      var stages = { landing: document.getElementById('stage-landing'),
+                     setup:   document.getElementById('stage-setup'),
+                     wizard:  document.getElementById('stage-wizard') };
+      var steps = document.querySelectorAll('.stepper .step');
+      var panels = document.querySelectorAll('.step-panel');
+      var pageTitle = document.getElementById('pageTitle');
+      var subtitle = document.getElementById('pageSubtitle');
+      var profileChip = document.getElementById('profileChip');
+      var cycleSegmented = document.getElementById('payCycleSegmented');
+      var setupCycle = document.getElementById('setupCycleSegmented');
+      var footer = document.getElementById('wizardFooter');
+      var footerLabel = document.getElementById('footerStepLabel');
+      var continueBtn = document.getElementById('continueBtn');
+      var backBtn = document.getElementById('backBtn');
+      var contentScroll = document.querySelector('.content-scroll');
+      var profileSelect = document.getElementById('payProfileSelect');
+      var nameInput = document.getElementById('newProfileName');
+      var nameError = document.getElementById('newProfileNameError');
+
+      var stage = 'landing';
+      var current = 1;
+      var profileName = '';
+      var payCycle = '';
+      var isNewProfile = true;
+
+      function updateChip(){
+        var parts = [profileName, payCycle].filter(Boolean);
+        profileChip.textContent = parts.join(' · ');
+        profileChip.hidden = parts.length === 0;
+      }
+
+      function setStage(next){
+        stage = next;
+        Object.keys(stages).forEach(function(key){ stages[key].hidden = (key !== next); });
+        cycleSegmented.hidden = (next !== 'wizard');
+        footer.hidden = (next === 'landing');
+        footerLabel.hidden = (next !== 'wizard');
+        continueBtn.hidden = (next !== 'wizard');
+        if(next === 'wizard'){
+          goToStep(current);
+        } else {
+          pageTitle.textContent = STAGE_HEADINGS[next][0];
+          subtitle.textContent = STAGE_HEADINGS[next][1];
+        }
+        updateChip();
+        if(contentScroll) contentScroll.scrollTop = 0;
+      }
+
+      function goToStep(n){
+        if(n < 1 || n > 5) return;
+        current = n;
+        steps.forEach(function(step, i){ step.classList.toggle('active', i === n - 1); });
+        panels.forEach(function(panel, i){ panel.hidden = (i !== n - 1); });
+        pageTitle.textContent = isNewProfile ? 'Create Agent Pay Profile' : 'Edit Agent Pay Profile';
+        subtitle.textContent = STEP_SUBTITLES[n - 1];
+        footerLabel.textContent = 'Step ' + n + ' of 5';
+        continueBtn.textContent = n === 5 ? 'Finish' : 'Continue';
+        if(contentScroll) contentScroll.scrollTop = 0;
+      }
+
+      function selectCycle(cycle){
+        payCycle = cycle;
+        cycleSegmented.querySelectorAll('button').forEach(function(btn){
+          btn.classList.toggle('active', btn.textContent.trim() === cycle);
+        });
+        updateChip();
+      }
+
+      // Landing → wizard: an existing profile opens straight into its setup.
+      profileSelect.addEventListener('change', function(){
+        if(!profileSelect.value) return;
+        profileName = profileSelect.value;
+        isNewProfile = false;
+        current = 1;
+        selectCycle('Weekly');
+        setStage('wizard');
+      });
+
+      // Landing → setup: start a brand new profile.
+      document.getElementById('addPayProfileBtn').addEventListener('click', function(){
+        isNewProfile = true;
+        profileName = '';
+        payCycle = '';
+        current = 1;
+        nameInput.value = '';
+        nameError.hidden = true;
+        setupCycle.querySelectorAll('button').forEach(function(b){ b.classList.remove('active'); });
+        setStage('setup');
+      });
+
+      nameInput.addEventListener('input', function(){
+        if(nameInput.value.trim()) nameError.hidden = true;
+      });
+
+      // Setup → wizard: picking a pay cycle opens the five-step flow, but the
+      // profile needs a name first since both are required.
+      setupCycle.addEventListener('segchange', function(e){
+        var chosen = e.detail.button.textContent.trim();
+        if(!nameInput.value.trim()){
+          nameError.hidden = false;
+          e.detail.button.classList.remove('active');
+          nameInput.focus();
+          return;
+        }
+        profileName = nameInput.value.trim();
+        selectCycle(chosen);
+        setStage('wizard');
+      });
+
+      // Header cycle switcher stays in sync once inside the wizard.
+      cycleSegmented.addEventListener('segchange', function(e){
+        payCycle = e.detail.button.textContent.trim();
+        updateChip();
+      });
+
+      // Finish checks every step from 1 through 5, in order, and stops at the
+      // first one that still has invalid fields — jumping there and showing
+      // just that step's errors. Fix it, hit Finish again, and it reveals
+      // the next problem step, one at a time, until the whole profile is
+      // clean. Plain step-to-step Continue (steps 1-4) is untouched — it
+      // still just navigates, since some steps' starter rows are
+      // deliberately shown half-empty to demonstrate that state.
+      function firstInvalidStep(){
+        for(var i = 0; i < panels.length; i++){
+          var section = panels[i].querySelector('.custom-profile-section:not([hidden])');
+          if(section && window.dpValidateSection && !window.dpValidateSection(section)) return i + 1;
+        }
+        return null;
+      }
+
+      continueBtn.addEventListener('click', function(){
+        if(current === 5){
+          var badStep = firstInvalidStep();
+          if(badStep){
+            if(badStep !== current) goToStep(badStep);
+            var firstInvalid = panels[badStep - 1].querySelector('.field-invalid');
+            if(firstInvalid) (firstInvalid._dropdownTrigger || firstInvalid).focus();
+            return;
+          }
+        }
+        if(current < 5) goToStep(current + 1);
+      });
+
+      backBtn.addEventListener('click', function(){
+        if(stage === 'setup'){ setStage('landing'); return; }
+        if(current > 1){ goToStep(current - 1); return; }
+        setStage(isNewProfile ? 'setup' : 'landing');
+      });
+
+      setStage('landing');
+    })();
+
+    /* Catch-all: enhance any select.select-input not already covered above
+       (wireRow() handles every select inside a table row/settings row; this
+       picks up the standalone ones — Pay Profile pickers, each step's
+       "Existing Profile" select, "Pay Loads on Hold" — into the same
+       custom dropdown component). */
+    document.querySelectorAll('select.select-input').forEach(window.dpEnhanceSelect);
+  </script>
+</body>
+</html>

@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Dispatch Pro — Prototypes</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300..800&display=swap" rel="stylesheet">
+<style>
+  :root{ --blue:#0F6FFF; --blue-bg:#EFF6FF; --blue-border:#DBEAFE; --text-dark:#101828; --text-body:#364153; --muted:#6A7282;
+         --border:#E5E7EB; --page:#F9FAFB; --surface:#fff; }
+  @media (prefers-color-scheme: dark){
+    :root{ --blue-bg:#16233A; --blue-border:#2C3E60; --text-dark:#F3F5F9; --text-body:#A6B0C3; --muted:#8B96AC;
+           --border:#263248; --page:#0B1220; --surface:#121B2E; }
+  }
+  *{ box-sizing:border-box; }
+  body{ margin:0; background:var(--page); color:var(--text-body); font:14px/1.5 'Inter',system-ui,sans-serif; }
+  main{ max-width:880px; margin:0 auto; padding:48px 20px 64px; }
+  h1{ margin:0 0 4px; font-size:26px; letter-spacing:-.5px; color:var(--text-dark); }
+  .sub{ margin:0 0 28px; color:var(--muted); }
+  .hero{
+    display:flex; align-items:center; justify-content:space-between; gap:16px; padding:18px 20px; margin-bottom:28px;
+    background:var(--blue-bg); border:1px solid var(--blue-border); border-radius:12px; text-decoration:none;
+  }
+  .hero b{ display:block; color:var(--text-dark); font-size:16px; }
+  .hero span{ color:var(--muted); font-size:13px; }
+  .hero i{ font-style:normal; background:var(--blue); color:#fff; padding:8px 14px; border-radius:8px; font-weight:500; white-space:nowrap; }
+  h2{ margin:26px 0 10px; font-size:12px; letter-spacing:.6px; text-transform:uppercase; color:var(--muted); font-weight:600; }
+  ul{ list-style:none; margin:0; padding:0; display:grid; grid-template-columns:repeat(auto-fill,minmax(250px,1fr)); gap:8px; }
+  li a{ display:block; padding:10px 14px; background:var(--surface); border:1px solid var(--border); border-radius:8px; color:var(--text-dark); text-decoration:none; font-weight:500; }
+  li a:hover{ border-color:var(--blue); color:var(--blue); background:var(--blue-bg); }
+  li a small{ display:block; color:var(--muted); font-weight:400; font-size:12px; }
+</style>
+</head>
+<body>
+<main>
+  <h1>Dispatch Pro — Prototypes</h1>
+  <p class="sub">Static, no-build HTML prototypes. Everything runs in the browser.</p>
+
+  <a class="hero" href="build-asset.html">
+    <div><b>Build Asset</b><span>Asset type, axles, tires, weight &amp; pressure &mdash; with a live 3D Kenworth T2000 and trailer.</span></div>
+    <i>Open &rarr;</i>
+  </a>
+
+  <h2>Fleet &amp; equipment</h2>
+  <ul>
+    <li><a href="tire-pressure-monitor.html">Tire pressure monitor<small>TPMS dashboard</small></a></li>
+    <li><a href="tire-pressure-monitor-truetrack.html">Tire pressure monitor (TrueTrack)<small>earlier build</small></a></li>
+    <li><a href="searchbar-equipments-truck.html">Equipment search<small>truck picker</small></a></li>
+  </ul>
+
+  <h2>Dashboards</h2>
+  <ul>
+    <li><a href="dashboard-home.html">Dashboard home</a></li>
+    <li><a href="dashboard-home-original.html">Dashboard home (original)</a></li>
+    <li><a href="dashboard-editorial.html">Dashboard editorial</a></li>
+    <li><a href="dashboard-shadcn.html">Dashboard shadcn</a></li>
+    <li><a href="dashboard-reform.html">Dashboard reform</a></li>
+    <li><a href="dashboard-3d.html">3D terminal dashboard</a></li>
+  </ul>
+
+  <h2>Workflows</h2>
+  <ul>
+    <li><a href="agent-pay-profile.html">Agent pay profile<small>6-step wizard</small></a></li>
+    <li><a href="customer-hot-list.html">Customer hot list</a></li>
+    <li><a href="time-off-tracker.html">Time off tracker</a></li>
+    <li><a href="chat-inbox.html">Chat inbox</a></li>
+    <li><a href="searchbar-shadcn.html">Search bar flow (shadcn)</a></li>
+    <li><a href="searchbar-flow.html">Search bar flow</a></li>
+  </ul>
+
+  <h2>Scheduling</h2>
+  <ul>
+    <li><a href="dp-schedule-planner.html">Schedule planner (Morgen)</a></li>
+    <li><a href="schedule-planner-editorial.html">Schedule planner (editorial)</a></li>
+    <li><a href="schedule-planner.html">Schedule planner</a></li>
+  </ul>
+
+  <h2>Shell, login &amp; 3D</h2>
+  <ul>
+    <li><a href="login.html">Login</a></li>
+    <li><a href="app-shell.html">App shell</a></li>
+    <li><a href="blank-page.html">Blank page (shell)</a></li>
+    <li><a href="mobile.html">Mobile</a></li>
+    <li><a href="geofence-3d.html">Geofence 3D</a></li>
+    <li><a href="nyc-3d.html">NYC 3D<small>some avatars omitted</small></a></li>
+  </ul>
+</main>
+</body>
+</html>

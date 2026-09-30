@@ -1,0 +1,1907 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Dispatch Pro — App Shell</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --navy:            #1B3A66;
+    --navy-deep:       #14294B;
+    --card-navy:       #14274A;
+    --sidebar-navy:    #EEEFF1;
+    --icon-default:    #5A6472;
+    --icon-hover:      #1B3A66;
+    --active-bg:       rgba(46,125,247,0.12);
+    --sidebar-hairline: rgba(0,0,0,0.08);
+    --hairline:        rgba(255,255,255,0.16);
+    --text-white:      #FFFFFF;
+    --text-muted:      #93A6C9;
+    --text-faint:      #6C81A8;
+    --blue-pill:       #2E7DF7;
+    --blue-pill-dark:  #1F63D6;
+    --orange:          #F5891E;
+    --green:           #33C481;
+    --red:             #F1544B;
+    --avatar-grad-a:   #3E8BFF;
+    --avatar-grad-b:   #1E56C9;
+    --content-bg:      #FFFFFF;
+  }
+
+  *{ box-sizing:border-box; }
+  html,body{ margin:0; padding:0; height:100%; }
+  body{
+    font-family:'Inter',system-ui,-apple-system,Segoe UI,sans-serif;
+    background:var(--content-bg);
+    display:flex;
+    flex-direction:column;
+    height:100vh;
+    overflow:hidden;
+  }
+
+  /* ---------------- TOP BAR ---------------- */
+  .topbar{
+    height:64px;
+    flex:0 0 64px;
+    background:var(--navy);
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    padding:0 20px 0 16px;
+    gap:20px;
+    z-index:10;
+  }
+
+  .brand-group{
+    display:flex;
+    align-items:center;
+    gap:14px;
+    flex:0 0 auto;
+  }
+
+  .logo-box{
+    background:#FFFFFF;
+    border-radius:6px;
+    padding:6px 10px;
+    display:flex;
+    align-items:center;
+    gap:6px;
+  }
+  .logo-box .word-dispatch{
+    font-weight:800;
+    font-size:15px;
+    color:var(--navy);
+    letter-spacing:-0.2px;
+  }
+  .logo-box .word-pro{
+    background:var(--blue-pill);
+    color:#fff;
+    font-weight:800;
+    font-size:11px;
+    letter-spacing:0.5px;
+    padding:3px 7px;
+    border-radius:4px;
+  }
+
+  .brand-divider{
+    width:1px;
+    height:22px;
+    background:var(--hairline);
+  }
+
+  .company-name{
+    color:#fff;
+    font-weight:700;
+    font-size:15px;
+    white-space:nowrap;
+  }
+
+  .right-group{
+    display:flex;
+    align-items:center;
+    gap:18px;
+    flex:1 1 auto;
+    justify-content:flex-end;
+    min-width:0;
+  }
+
+  /* search */
+  .search-box{
+    background:#fff;
+    border-radius:7px;
+    height:36px;
+    width:260px;
+    display:flex;
+    align-items:center;
+    padding:0 12px;
+    gap:8px;
+    flex:0 1 260px;
+  }
+  .search-box input{
+    border:none;
+    outline:none;
+    font-family:inherit;
+    font-size:13px;
+    color:#3A4258;
+    flex:1;
+    min-width:0;
+    background:transparent;
+  }
+  .search-box input::placeholder{ color:#9AA3B5; }
+  .search-box svg{ color:#9AA3B5; flex:0 0 auto; }
+
+  /* surcharge cards */
+  .surcharge-card{
+    background:var(--card-navy);
+    border-radius:8px;
+    padding:6px 12px;
+    min-width:118px;
+    flex:0 0 auto;
+  }
+  .surcharge-label{
+    font-size:9.5px;
+    font-weight:700;
+    letter-spacing:0.5px;
+    color:var(--text-muted);
+    text-transform:uppercase;
+  }
+  .surcharge-value-row{
+    display:flex;
+    align-items:baseline;
+    gap:6px;
+    margin-top:1px;
+  }
+  .surcharge-value{
+    font-size:17px;
+    font-weight:800;
+    color:#fff;
+  }
+  .surcharge-delta{
+    display:flex;
+    align-items:center;
+    gap:2px;
+    font-size:11px;
+    font-weight:700;
+  }
+  .surcharge-delta.up{ color:var(--green); }
+  .surcharge-delta.down{ color:var(--red); }
+  .surcharge-updated{
+    font-size:9.5px;
+    color:var(--text-faint);
+    margin-top:1px;
+  }
+
+  /* icon actions */
+  .icon-actions{
+    display:flex;
+    align-items:center;
+    gap:16px;
+    flex:0 0 auto;
+  }
+  .icon-action{
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    gap:3px;
+    color:#fff;
+    cursor:pointer;
+    background:none;
+    border:none;
+    font-family:inherit;
+  }
+  .icon-action span{
+    font-size:10.5px;
+    font-weight:600;
+    color:#DCE4F2;
+    white-space:nowrap;
+  }
+  .icon-action.add-action{
+    flex-direction:row;
+    gap:5px;
+  }
+  .icon-action.add-action span{
+    font-size:12px;
+    font-weight:700;
+    color:#fff;
+  }
+  .icon-action svg{ display:block; }
+
+  /* avatar */
+  .user-chip{
+    display:flex;
+    align-items:center;
+    gap:8px;
+    flex:0 0 auto;
+    cursor:pointer;
+  }
+  .avatar{
+    width:32px;
+    height:32px;
+    border-radius:50%;
+    background:linear-gradient(135deg,var(--avatar-grad-a),var(--avatar-grad-b));
+    color:#fff;
+    font-size:12px;
+    font-weight:700;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+  }
+  .user-name{
+    color:#fff;
+    font-size:13px;
+    font-weight:700;
+    white-space:nowrap;
+  }
+  .user-chip svg{ color:#B9C6DE; }
+
+  /* ---------------- APP BODY ---------------- */
+  .app-body{
+    flex:1 1 auto;
+    display:flex;
+    min-height:0;
+  }
+
+  /* ---------------- SIDEBAR ---------------- */
+  .sidebar{
+    width:56px;
+    flex:0 0 56px;
+    background:var(--sidebar-navy);
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    padding:10px 0;
+    gap:4px;
+    overflow-y:auto;
+  }
+  .sidebar::-webkit-scrollbar{ width:0; }
+
+  .side-icon{
+    width:38px;
+    height:34px;
+    border-radius:7px;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    color:var(--icon-default);
+    background:none;
+    border:none;
+    cursor:pointer;
+    flex:0 0 auto;
+  }
+  .side-icon svg{ stroke-width:2; }
+  .side-icon:hover{ color:var(--icon-hover); background:rgba(27,58,102,0.06); }
+  .side-icon.active{
+    background:var(--active-bg);
+    color:var(--blue-pill);
+  }
+  .sidebar-spacer{ flex:1 1 auto; }
+  .sidebar-bottom{
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    gap:4px;
+    padding-top:8px;
+    border-top:1px solid var(--sidebar-hairline);
+    width:100%;
+  }
+
+  /* ---------------- CONTENT ---------------- */
+  .content{
+    flex:1 1 auto;
+    background:var(--content-bg);
+    overflow-y:auto;
+  }
+
+  /* ---------------- CUSTOMER VIEW PAGE ---------------- */
+  :root{
+    --cvp-text-dark:      #101828;
+    --cvp-text-heading:   #1E2939;
+    --cvp-text-body:      #364153;
+    --cvp-text-muted:     #99A1AF;
+    --cvp-text-muted-2:   #9CA3AF;
+    --cvp-text-faint:     #6A7282;
+    --cvp-border:         #F3F4F6;
+    --cvp-border-soft:    #F9FAFB;
+    --cvp-blue:           #2D88FF;
+    --cvp-blue-soft-bg:   #EFF6FF;
+    --cvp-blue-soft-bdr:  #DBEAFE;
+    --cvp-green-bg:       #ECFDF5;
+    --cvp-green-bdr:      #D0FAE5;
+    --cvp-green-text:     #009966;
+    --cvp-green-dot:      #00D492;
+    --cvp-amber-text:     #FE9A00;
+    --cvp-red-text:       #FB2C36;
+    --cvp-icon-green-bg:  rgba(16,185,129,0.09);
+    --cvp-icon-blue-bg:   rgba(45,136,255,0.09);
+    --cvp-icon-amber-bg:  rgba(245,158,11,0.09);
+    --cvp-icon-red-bg:    rgba(239,68,68,0.09);
+    --cvp-icon-indigo-bg: rgba(99,102,241,0.09);
+  }
+
+  .cvp-layout{ display:flex; align-items:flex-start; gap:16px; padding:24px; }
+  .cvp-stats-col{ flex:1 1 auto; min-width:0; display:flex; flex-direction:column; gap:16px; }
+
+  /* stat cards */
+  .cvp-stats-row1{ display:grid; grid-template-columns:repeat(4,1fr); gap:16px; }
+  .cvp-stats-row2{ display:grid; grid-template-columns:repeat(3,1fr); gap:16px; }
+  .cvp-stat-card{
+    background:#fff; border:1px solid var(--cvp-border); border-radius:12px;
+    padding:16px; display:flex; flex-direction:column; gap:4px;
+  }
+  .cvp-stat-top{ display:flex; align-items:center; justify-content:space-between; height:30px; padding-bottom:2px; }
+  .cvp-stat-label{ font-size:11px; font-weight:500; letter-spacing:.275px; text-transform:uppercase; color:var(--cvp-text-muted); }
+  .cvp-stat-icon{ width:28px; height:28px; border-radius:8px; display:flex; align-items:center; justify-content:center; flex:0 0 auto; }
+  .cvp-stat-icon img{ width:14px; height:14px; }
+  .cvp-stat-value{ font-size:22px; font-weight:600; color:var(--cvp-text-dark); line-height:1.5; }
+  .cvp-stat-caption{ font-size:12px; font-weight:300; color:var(--cvp-text-muted); }
+
+  /* credit utilization card */
+  .cvp-credit-card{ background:#fff; border:1px solid var(--cvp-border); border-radius:12px; padding:16px; }
+  .cvp-credit-head{ display:flex; align-items:center; justify-content:space-between; }
+  .cvp-credit-title{ font-size:13px; font-weight:600; color:var(--cvp-text-heading); }
+  .cvp-badge-green{
+    display:inline-flex; align-items:center; background:var(--cvp-green-bg); border:1px solid var(--cvp-green-bdr);
+    color:var(--cvp-green-text); font-size:11px; font-weight:500; padding:2px 8px; border-radius:999px; line-height:1.5;
+  }
+  .cvp-progress-row{ display:flex; align-items:center; gap:8px; padding-top:12px; }
+  .cvp-progress-track{ flex:1; height:6px; background:var(--cvp-border); border-radius:999px; overflow:hidden; }
+  .cvp-progress-fill{ height:6px; background:var(--cvp-blue); border-radius:999px; }
+  .cvp-progress-pct{ font-size:11px; color:var(--cvp-text-muted); width:32px; text-align:right; flex:0 0 auto; }
+  .cvp-progress-labels{ display:flex; justify-content:space-between; padding-top:8px; font-size:11px; color:var(--cvp-text-muted); }
+
+  /* profile card */
+  .cvp-profile-card{
+    background:#fff; border:1px solid var(--cvp-border); border-radius:12px;
+    overflow:hidden; width:348px; flex:0 0 348px;
+  }
+  .cvp-pc-header{ display:flex; gap:12px; align-items:flex-end; padding:20px 20px 16px; border-bottom:1px solid var(--cvp-border); }
+  .cvp-pc-avatar-wrap{ position:relative; flex:0 0 auto; }
+  .cvp-pc-avatar{
+    width:64px; height:64px; border-radius:16px; border:3px solid #fff;
+    box-shadow:0 4px 12px rgba(45,136,255,.18);
+    background:linear-gradient(135deg, rgba(45,136,255,.2), rgba(99,102,241,.2));
+    display:flex; align-items:center; justify-content:center; overflow:hidden;
+  }
+  .cvp-pc-avatar img{ width:58px; height:58px; }
+  .cvp-pc-online-dot{ position:absolute; right:-2px; bottom:-2px; width:16px; height:16px; border-radius:50%; background:var(--cvp-green-dot); border:2px solid #fff; }
+  .cvp-pc-name-block{ flex:1 1 auto; min-width:0; padding-bottom:2px; }
+  .cvp-pc-name-row{ display:flex; align-items:center; gap:8px; }
+  .cvp-pc-name{ font-size:16px; font-weight:600; color:var(--cvp-text-dark); }
+  .cvp-pc-status-pill{
+    display:inline-flex; align-items:center; gap:4px; background:var(--cvp-green-bg); border:1px solid var(--cvp-green-bdr);
+    border-radius:999px; padding:2px 6px; font-size:10px; font-weight:600; color:var(--cvp-green-text); flex:0 0 auto;
+  }
+  .cvp-pc-status-dot{ width:6px; height:6px; border-radius:50%; background:var(--cvp-green-dot); }
+  .cvp-pc-subtitle{ font-size:12px; font-weight:300; color:var(--cvp-text-muted); padding-top:2px; }
+  .cvp-pc-edit-btn{
+    flex:0 0 auto; width:28px; height:28px; border:1px solid #E5E7EB; border-radius:8px;
+    display:flex; align-items:center; justify-content:center; background:#fff; cursor:pointer;
+    transition:border-color .15s ease;
+  }
+  .cvp-pc-edit-btn:hover{ border-color:var(--cvp-blue); }
+  .cvp-pc-edit-btn img{ width:14px; height:14px; }
+
+  .cvp-pc-actions{ display:flex; gap:8px; align-items:center; padding:16px 20px; border-bottom:1px solid var(--cvp-border); }
+  .cvp-pc-action-btn{
+    width:32px; height:32px; border:1px solid #E5EAF2; border-radius:8px; background:#fff;
+    display:flex; align-items:center; justify-content:center; cursor:pointer;
+    transition:background .15s ease, border-color .15s ease;
+  }
+  .cvp-pc-action-btn:hover{ background:#F8FAFC; border-color:var(--cvp-blue); }
+  .cvp-pc-action-btn img{ width:14px; height:14px; }
+
+  .cvp-pc-tabs-outer{ padding:12px 20px; border-bottom:1px solid var(--cvp-border); }
+  .cvp-pc-tabs{ display:flex; gap:4px; background:var(--cvp-border); border-radius:12px; padding:4px; }
+  .cvp-pc-tab{ flex:1; text-align:center; padding:6px 0; border-radius:8px; font-size:12px; font-weight:500; color:var(--cvp-text-muted-2); cursor:pointer; background:none; border:none; font-family:inherit; }
+  .cvp-pc-tab.active{ background:#fff; color:var(--cvp-blue); box-shadow:0 1px 1.5px rgba(0,0,0,.08); }
+
+  .cvp-pc-fields{ padding:8px 12px 16px; border-bottom:1px solid var(--cvp-border); }
+  .cvp-pc-field{ display:flex; gap:10px; padding:8px; border-radius:8px; transition:background .15s ease; }
+  .cvp-pc-field:hover{ background:var(--cvp-border-soft); }
+  .cvp-pc-field-icon{ width:14px; height:14px; margin-top:2px; flex:0 0 auto; }
+  .cvp-pc-field-icon img{ width:100%; height:100%; }
+  .cvp-pc-field-label{ font-size:10px; font-weight:500; color:var(--cvp-text-muted); }
+  .cvp-pc-field-value{ font-size:12px; font-weight:400; color:var(--cvp-text-body); }
+
+  .cvp-pc-rating-section{ padding:16px 20px; border-bottom:1px solid var(--cvp-border); }
+  .cvp-pc-rating-head{ display:flex; align-items:center; justify-content:space-between; }
+  .cvp-pc-rating-label{ font-size:11px; font-weight:500; letter-spacing:.275px; text-transform:uppercase; color:var(--cvp-text-muted); }
+  .cvp-pc-rating-right{ display:flex; align-items:center; gap:8px; }
+  .cvp-pc-stars{ display:flex; gap:2px; }
+  .cvp-pc-stars img{ width:14px; height:14px; }
+  .cvp-pc-rating-num{ font-size:11px; font-weight:500; color:var(--cvp-text-faint); }
+  .cvp-pc-change-link{ font-size:10px; font-weight:500; color:var(--cvp-blue); cursor:pointer; background:none; border:none; font-family:inherit; }
+
+  .cvp-pc-quickfacts{ display:grid; grid-template-columns:1fr 1fr; gap:8px 16px; padding-top:12px; }
+  .cvp-pc-qf-label{ font-size:10px; letter-spacing:.25px; text-transform:uppercase; color:var(--cvp-text-muted); }
+  .cvp-pc-qf-value{ font-size:12px; font-weight:500; color:var(--cvp-text-body); margin-top:2px; }
+
+  .cvp-pc-preferred{ padding:16px 20px; border-bottom:1px solid var(--cvp-border); }
+  .cvp-pc-preferred-label{ font-size:11px; letter-spacing:.275px; text-transform:uppercase; color:var(--cvp-text-muted); margin-bottom:8px; }
+  .cvp-pc-preferred-box{ display:flex; align-items:center; gap:8px; background:var(--cvp-blue-soft-bg); border:1px solid var(--cvp-blue-soft-bdr); border-radius:8px; padding:10px; }
+  .cvp-pc-preferred-box img{ width:14px; height:14px; }
+  .cvp-pc-preferred-box span{ font-size:12px; font-weight:500; color:var(--cvp-blue); }
+
+  .cvp-pc-list-section{ padding:16px 20px; border-bottom:1px solid var(--cvp-border); }
+  .cvp-pc-list-section:last-child{ border-bottom:none; }
+  .cvp-pc-list-title{ font-size:11px; letter-spacing:.275px; text-transform:uppercase; color:var(--cvp-text-muted); margin-bottom:4px; }
+  .cvp-pc-row{ display:flex; align-items:center; justify-content:space-between; padding:8px; margin:0 -8px; border-bottom:1px solid var(--cvp-border-soft); border-radius:4px; }
+  .cvp-pc-row:last-child{ border-bottom:none; }
+  .cvp-pc-row:hover{ background:var(--cvp-border-soft); }
+  .cvp-pc-row-label{ font-size:11px; color:var(--cvp-text-muted); }
+  .cvp-pc-row-value{ font-size:12px; font-weight:500; color:var(--cvp-text-body); }
+  .cvp-pc-row-value.warn{ color:var(--cvp-amber-text); }
+  .cvp-pc-row-value.danger{ color:var(--cvp-red-text); }
+  .cvp-pc-credit-score-row{ display:flex; align-items:center; justify-content:space-between; padding-top:4px; }
+
+  @media (max-width:900px){
+    .cvp-layout{ flex-direction:column; }
+    .cvp-profile-card{ width:100%; flex:1 1 auto; }
+    .cvp-stats-row1{ grid-template-columns:repeat(2,1fr); }
+    .cvp-stats-row2{ grid-template-columns:1fr; }
+  }
+
+  /* sub-navigation tab bar */
+  .cvp-subnav{
+    display:flex; background:#fff; border-bottom:1px solid var(--cvp-border);
+    overflow-x:auto;
+  }
+  .cvp-subnav-tab{
+    padding:12px 16px; font-size:13px; font-weight:500; color:var(--cvp-text-faint);
+    border:none; border-bottom:2px solid transparent; margin-bottom:-1px;
+    background:none; cursor:pointer; font-family:inherit; white-space:nowrap;
+    transition:color .15s ease, border-color .15s ease;
+  }
+  .cvp-subnav-tab:hover{ color:var(--cvp-blue); }
+  .cvp-subnav-tab.active{ color:var(--cvp-blue); border-bottom-color:var(--cvp-blue); }
+
+  /* collapsible detail section cards */
+  .cvp-detail-grid{ display:grid; grid-template-columns:repeat(3,1fr); gap:16px; width:100%; }
+  .cvp-detail-col{ display:flex; flex-direction:column; gap:16px; }
+  .cvp-section-card{ background:#fff; border:1px solid var(--cvp-border); border-radius:12px; overflow:hidden; }
+  .cvp-section-head{
+    display:flex; align-items:center; justify-content:space-between; width:100%;
+    padding:14px 20px; border:none; border-bottom:1px solid var(--cvp-border);
+    background:none; cursor:pointer; font-family:inherit; text-align:left;
+  }
+  .cvp-section-head-left{ display:flex; align-items:center; gap:10px; }
+  .cvp-section-head-left img{ width:16px; height:16px; }
+  .cvp-section-title{ font-size:14px; font-weight:600; color:var(--cvp-text-dark); }
+  .cvp-section-chevron{ width:16px; height:16px; transition:transform .2s ease; flex:0 0 auto; }
+  .cvp-section-card.collapsed .cvp-section-chevron{ transform:rotate(180deg); }
+  .cvp-section-card.collapsed .cvp-section-body{ display:none; }
+  .cvp-section-card.collapsed .cvp-section-head{ border-bottom:none; }
+  .cvp-section-body{ padding:4px 20px 8px; }
+
+  .cvp-info-row{
+    display:flex; align-items:center; justify-content:space-between; gap:16px;
+    padding:10px 12px; margin:0 -12px; border-bottom:1px solid var(--cvp-border-soft); border-radius:4px;
+  }
+  .cvp-info-row:last-child{ border-bottom:none; }
+  .cvp-info-row:hover{ background:var(--cvp-border-soft); }
+  .cvp-info-row-label{ font-size:12px; font-weight:500; color:var(--cvp-text-muted); flex:0 0 auto; }
+  .cvp-info-row-value{ font-size:14px; font-weight:400; color:var(--cvp-text-heading); text-align:right; }
+  .cvp-info-row-value.warn{ color:var(--cvp-amber-text); font-weight:500; }
+  .cvp-info-row-value.danger{ color:var(--cvp-red-text); font-weight:500; }
+
+  /* FMCSA threshold bars */
+  .cvp-threshold{ display:flex; flex-direction:column; gap:6px; padding:8px 12px; }
+  .cvp-threshold-top{ display:flex; align-items:center; justify-content:space-between; }
+  .cvp-threshold-label{ font-size:11px; font-weight:500; color:var(--cvp-text-faint); }
+  .cvp-threshold-pct{ font-size:12px; font-weight:600; }
+  .cvp-threshold-pct.red{ color:#EF4444; }
+  .cvp-threshold-pct.amber{ color:#F59E0B; }
+  .cvp-threshold-pct.green{ color:#10B981; }
+  .cvp-threshold-track{ height:6px; background:var(--cvp-border); border-radius:999px; overflow:hidden; }
+  .cvp-threshold-fill{ height:6px; border-radius:999px; }
+  .cvp-threshold-fill.red{ background:#EF4444; }
+  .cvp-threshold-fill.amber{ background:#F59E0B; }
+  .cvp-threshold-fill.green{ background:#10B981; }
+
+  @media (max-width:1500px){
+    .cvp-detail-grid{ grid-template-columns:1fr 1fr; }
+  }
+  @media (max-width:1000px){
+    .cvp-detail-grid{ grid-template-columns:1fr; }
+  }
+
+  /* ---------------- FULL-WIDTH ACCOUNT SECTIONS ---------------- */
+  .cvp-fullwidth-section{ margin:0 24px 24px; }
+
+  /* "loose" section: bare header (icon+title / add-link) sitting on page bg, cards below */
+  .cvp-loose-header{ display:flex; align-items:center; justify-content:space-between; }
+  .cvp-loose-header-left{ display:flex; align-items:center; gap:8px; }
+  .cvp-loose-header-left img{ width:16px; height:16px; }
+  .cvp-loose-title{ font-size:14px; font-weight:600; color:var(--cvp-text-dark); }
+  .cvp-loose-add{
+    display:flex; align-items:center; gap:6px; background:none; border:none; cursor:pointer;
+    font-family:inherit; color:var(--cvp-blue); font-size:12px; font-weight:500;
+    padding:4px 6px; border-radius:6px; transition:background .15s ease;
+  }
+  .cvp-loose-add:hover{ background:var(--cvp-blue-soft-bg); }
+  .cvp-loose-add img{ width:14px; height:14px; }
+  .cvp-loose-grid{ display:grid; gap:16px; padding-top:12px; }
+  .cvp-loose-grid.cols-5{ grid-template-columns:repeat(5,1fr); }
+  .cvp-loose-grid.cols-3{ grid-template-columns:repeat(3,1fr); }
+
+  .cvp-badge-red{
+    display:inline-flex; align-items:center; background:#FEF2F2; border:1px solid #FFE2E2;
+    color:var(--cvp-red-text); font-size:11px; font-weight:500; padding:2px 8px; border-radius:999px; line-height:1.5;
+  }
+
+  /* insurance policy cards */
+  .cvp-policy-card{ background:#fff; border:1px solid var(--cvp-border); border-radius:12px; padding:16px; display:flex; flex-direction:column; gap:12px; }
+  .cvp-policy-top{ display:flex; align-items:flex-start; justify-content:space-between; gap:8px; }
+  .cvp-policy-name{ font-size:13px; font-weight:600; color:var(--cvp-text-dark); }
+  .cvp-policy-issuer{ font-size:11px; font-weight:400; color:var(--cvp-text-faint); }
+  .cvp-policy-body{ border-top:1px solid var(--cvp-border-soft); padding-top:12px; display:flex; flex-direction:column; gap:8px; }
+  .cvp-policy-row{ display:flex; align-items:center; justify-content:space-between; gap:8px; }
+  .cvp-policy-row-label{ font-size:10px; letter-spacing:.25px; text-transform:uppercase; color:var(--cvp-text-muted); }
+  .cvp-policy-row-value{ font-size:11px; font-weight:500; color:var(--cvp-text-body); }
+  .cvp-policy-row-value.strong{ font-size:11px; font-weight:600; color:var(--cvp-text-heading); }
+  .cvp-policy-row-value.danger{ color:var(--cvp-red-text); }
+  .cvp-policy-view{
+    display:flex; align-items:center; gap:2px; color:var(--cvp-blue); font-size:11px; font-weight:500;
+    background:none; border:none; cursor:pointer; font-family:inherit;
+  }
+  .cvp-policy-view img{ width:12px; height:12px; }
+
+  /* bond cards */
+  .cvp-bond-card{ background:#fff; border:1px solid var(--cvp-border); border-radius:12px; padding:20px; display:flex; flex-direction:column; gap:16px; }
+  .cvp-bond-top{ display:flex; align-items:flex-start; justify-content:space-between; gap:8px; }
+  .cvp-bond-label{ font-size:11px; font-weight:500; letter-spacing:.275px; text-transform:uppercase; color:var(--cvp-text-muted); }
+  .cvp-bond-issuer{ font-size:14px; font-weight:600; color:var(--cvp-text-dark); margin-top:4px; }
+  .cvp-bond-mid{ display:flex; align-items:flex-end; justify-content:space-between; gap:12px; border-top:1px solid var(--cvp-border-soft); border-bottom:1px solid var(--cvp-border-soft); padding:12px 0; }
+  .cvp-bond-amount-label{ font-size:11px; font-weight:500; color:var(--cvp-text-muted); }
+  .cvp-bond-amount{ font-size:22px; font-weight:600; color:var(--cvp-text-dark); margin:2px 0; }
+  .cvp-bond-amount-words{ font-size:11px; font-weight:300; color:var(--cvp-text-muted); }
+  .cvp-bond-expiry-wrap{ text-align:right; flex:0 0 auto; }
+  .cvp-bond-expiry-label{ font-size:11px; font-weight:500; color:var(--cvp-text-muted); }
+  .cvp-bond-expiry{ font-size:14px; font-weight:600; color:var(--cvp-text-heading); margin-top:2px; }
+  .cvp-bond-expiry.danger{ color:var(--cvp-red-text); }
+  .cvp-bond-grid{ display:grid; grid-template-columns:1fr 1fr; gap:16px; }
+  .cvp-bond-field-label{ font-size:10px; letter-spacing:.25px; text-transform:uppercase; color:var(--cvp-text-muted); }
+  .cvp-bond-field-value{ font-size:12px; font-weight:500; color:var(--cvp-text-body); margin-top:2px; }
+  .cvp-bond-field-value.link{ color:var(--cvp-blue); font-weight:400; word-break:break-all; }
+
+  /* representatives card */
+  .cvp-rep-grid{ display:grid; grid-template-columns:repeat(4,1fr); gap:12px; }
+  .cvp-rep-card{ border:1px solid var(--cvp-border); border-radius:8px; padding:12px; display:flex; gap:12px; align-items:flex-start; }
+  .cvp-rep-avatar{
+    width:36px; height:36px; border-radius:50%; background:linear-gradient(135deg,#2D88FF,#1A75F0);
+    color:#fff; font-size:13px; font-weight:600; display:flex; align-items:center; justify-content:center; flex:0 0 auto;
+  }
+  .cvp-rep-info{ flex:1 1 auto; min-width:0; }
+  .cvp-rep-name{ font-size:14px; font-weight:600; color:var(--cvp-text-heading); }
+  .cvp-rep-dept{ font-size:12px; font-weight:300; color:var(--cvp-text-muted); }
+  .cvp-rep-contact{ display:flex; gap:12px; align-items:center; padding-top:6px; flex-wrap:wrap; }
+  .cvp-rep-contact-item{ display:flex; align-items:center; gap:4px; font-size:11px; font-weight:400; color:var(--cvp-text-faint); white-space:nowrap; }
+  .cvp-rep-contact-item img{ width:12px; height:12px; flex:0 0 auto; }
+  .cvp-rep-actions{ display:flex; gap:6px; flex:0 0 auto; }
+  .cvp-rep-action-btn{
+    width:28px; height:28px; border-radius:50%; background:#F9FAFB; border:none;
+    display:flex; align-items:center; justify-content:center; cursor:pointer; transition:background .15s ease;
+  }
+  .cvp-rep-action-btn:hover{ background:var(--cvp-blue-soft-bg); }
+  .cvp-rep-action-btn img{ width:14px; height:14px; }
+
+  @media (max-width:1400px){
+    .cvp-loose-grid.cols-5{ grid-template-columns:repeat(3,1fr); }
+    .cvp-loose-grid.cols-3{ grid-template-columns:repeat(2,1fr); }
+    .cvp-rep-grid{ grid-template-columns:repeat(2,1fr); }
+  }
+  @media (max-width:800px){
+    .cvp-loose-grid.cols-5, .cvp-loose-grid.cols-3, .cvp-rep-grid{ grid-template-columns:1fr; }
+  }
+
+  /* ---------------- BILLING TAB ---------------- */
+  .cvp-billing-grid{ display:grid; grid-template-columns:repeat(2,1fr); gap:16px; width:100%; }
+  .cvp-billing-card{ background:#fff; border:1px solid var(--cvp-border); border-radius:12px; padding:20px; display:flex; flex-direction:column; gap:8px; }
+  .cvp-billing-top{ display:flex; align-items:flex-start; justify-content:space-between; gap:8px; }
+  .cvp-billing-label{ font-size:14px; font-weight:600; color:var(--cvp-text-dark); }
+  .cvp-billing-icon{
+    width:40px; height:40px; border-radius:10px; flex:0 0 auto;
+    background:var(--cvp-icon-blue-bg); display:flex; align-items:center; justify-content:center;
+  }
+  .cvp-billing-icon img{ width:22px; height:22px; }
+  .cvp-billing-value{ font-size:22px; font-weight:600; color:var(--cvp-blue); }
+  .cvp-billing-bottom{ display:flex; align-items:center; justify-content:space-between; }
+  .cvp-billing-period{ font-size:12px; font-weight:300; color:var(--cvp-text-muted); }
+  .cvp-billing-trend{ display:flex; align-items:center; gap:4px; font-size:12px; font-weight:500; }
+  .cvp-billing-trend.up{ color:#10B981; }
+  .cvp-billing-trend.down{ color:var(--cvp-red-text); }
+  .cvp-trend-arrow{ width:8px; height:16px; }
+  .cvp-trend-arrow.down{ transform:rotate(180deg); }
+
+  /* ---------------- BILLING LOADS TABLE ---------------- */
+  .cvp-billing-toolbar{ display:flex; align-items:center; justify-content:space-between; margin-bottom:12px; flex-wrap:wrap; gap:12px; }
+  .cvp-billing-toolbar-title{ font-size:16px; font-weight:600; color:var(--cvp-text-dark); }
+  .cvp-billing-toolbar-actions{ display:flex; align-items:center; gap:10px; flex-wrap:wrap; }
+  .cvp-billing-refresh-btn{
+    display:flex; align-items:center; gap:6px; background:#fff; border:1px solid #E5E7EB;
+    color:var(--cvp-text-body); font-size:12px; font-weight:600; padding:7px 12px; border-radius:7px;
+    cursor:pointer; font-family:inherit; transition:border-color .15s ease;
+  }
+  .cvp-billing-refresh-btn:hover{ border-color:var(--cvp-blue); }
+  .cvp-billing-refresh-btn img{ width:12px; height:12px; }
+  .cvp-billing-search{
+    display:flex; align-items:center; gap:8px; background:#fff; border:1px solid #E5E7EB;
+    border-radius:7px; padding:7px 12px; min-width:200px;
+  }
+  .cvp-billing-search input{ border:none; outline:none; font-family:inherit; font-size:12px; color:var(--cvp-text-body); flex:1; min-width:0; }
+  .cvp-billing-search img{ width:13px; height:13px; flex:0 0 auto; }
+  .cvp-billing-pagesize{
+    display:flex; align-items:center; gap:6px; background:#fff; border:1px solid var(--cvp-blue); border-radius:7px;
+    padding:7px 12px; font-size:12px; font-weight:600; color:var(--cvp-text-dark); cursor:pointer; font-family:inherit;
+  }
+  .cvp-billing-pagesize img{ width:9px; }
+  .cvp-billing-columns-btn{
+    background:var(--cvp-blue); color:#fff; font-size:12px; font-weight:600; padding:8px 16px;
+    border-radius:7px; border:none; cursor:pointer; font-family:inherit; transition:background .15s ease;
+  }
+  .cvp-billing-columns-btn:hover{ background:var(--blue-pill-dark); }
+
+  .cvp-billing-table-wrap{ overflow-x:auto; border-radius:10px; border:1px solid var(--cvp-border); }
+  .cvp-billing-table{ width:100%; border-collapse:collapse; font-size:12px; }
+  .cvp-billing-table thead th{
+    background:#fff; color:var(--cvp-text-dark); font-weight:600; text-align:left;
+    padding:12px 14px; white-space:nowrap; border-bottom:1px solid var(--cvp-border);
+  }
+  .cvp-billing-table thead th .th-filter{ width:8px; height:8px; margin-left:5px; vertical-align:middle; opacity:.7; }
+  .cvp-billing-table tbody td{
+    padding:10px 14px; border-bottom:1px solid var(--cvp-border-soft); color:var(--cvp-text-body); white-space:nowrap;
+  }
+  .cvp-billing-table tbody tr:last-child td{ border-bottom:none; }
+  .cvp-billing-table tbody tr:hover td{ background:var(--cvp-blue-soft-bg); }
+  .cvp-billing-audit-link, .cvp-billing-load-link{ color:var(--cvp-blue); text-decoration:underline; }
+  .cvp-billing-row-expand{ width:15px; height:15px; vertical-align:middle; margin-right:6px; }
+  .cvp-billing-doc-icon{ width:18px; height:18px; display:block; }
+  .cvp-billing-review-invoiced{ display:inline-flex; align-items:center; gap:5px; color:#10B981; font-weight:500; }
+  .cvp-billing-review-invoiced img{ width:11px; height:11px; }
+  .cvp-billing-paid-text{ color:#10B981; font-weight:500; }
+  .cvp-billing-invoice-btn{
+    background:#F3F4F6; border:1px solid #D8DCE2; border-radius:7px; padding:7px 16px;
+    font-size:12px; font-weight:500; color:var(--cvp-text-body); cursor:pointer; font-family:inherit;
+    transition:background .15s ease;
+  }
+  .cvp-billing-invoice-btn:hover{ background:#E9ECF1; }
+  .cvp-billing-invoice-btn.ready{ background:#10B981; border-color:#0E9E70; color:#fff; }
+  .cvp-billing-invoice-btn.ready:hover{ background:#0E9E70; }
+  .cvp-billing-table-footer{
+    display:flex; justify-content:flex-end; align-items:baseline; gap:24px;
+    padding:14px 20px; font-size:14px; font-weight:600; color:var(--cvp-text-dark);
+  }
+  .cvp-billing-table-footer .totals-value{ font-size:12px; font-weight:500; }
+
+  /* generic empty-state tab panel */
+  .cvp-tabpanel[hidden]{ display:none; }
+  .cvp-personal-empty{
+    display:flex; flex-direction:column; align-items:center; gap:10px;
+    text-align:center; color:var(--cvp-text-muted);
+  }
+  .cvp-personal-empty svg{ width:32px; height:32px; opacity:.6; }
+  .cvp-personal-empty p{ font-size:14px; font-weight:400; margin:0; }
+  [data-tabpanel="soon"] .cvp-personal-empty{ padding:64px 20px; }
+
+  @media (max-width:1100px){
+    .cvp-billing-grid{ grid-template-columns:repeat(2,1fr); }
+  }
+  @media (max-width:600px){
+    .cvp-billing-grid{ grid-template-columns:1fr; }
+  }
+</style>
+</head>
+<body>
+
+  <header class="topbar">
+    <div class="brand-group">
+      <div class="logo-box">
+        <span class="word-dispatch">Dispatch</span>
+        <span class="word-pro">PRO</span>
+      </div>
+      <div class="brand-divider"></div>
+      <div class="company-name">Dawson Truck Lines</div>
+    </div>
+
+    <div class="right-group">
+      <div class="search-box">
+        <input type="text" placeholder="Search...">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+      </div>
+
+      <div class="surcharge-card">
+        <div class="surcharge-label">Diesel Surcharge</div>
+        <div class="surcharge-value-row">
+          <span class="surcharge-value">$0.69</span>
+          <span class="surcharge-delta up">
+            <svg width="9" height="9" viewBox="0 0 10 10"><polygon points="5,1 9,9 1,9" fill="currentColor"/></svg>.01
+          </span>
+        </div>
+        <div class="surcharge-updated">Updated 08/03/2026</div>
+      </div>
+
+      <div class="surcharge-card">
+        <div class="surcharge-label">Gas Surcharge</div>
+        <div class="surcharge-value-row">
+          <span class="surcharge-value">0.30%</span>
+          <span class="surcharge-delta down">
+            <svg width="9" height="9" viewBox="0 0 10 10"><polygon points="1,1 9,1 5,9" fill="currentColor"/></svg>.02
+          </span>
+        </div>
+        <div class="surcharge-updated">Updated 08/03/2026</div>
+      </div>
+
+      <div class="icon-actions">
+        <button class="icon-action add-action" style="color:var(--orange)">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          <span>Add Load</span>
+        </button>
+        <button class="icon-action add-action" style="color:var(--orange)">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          <span>Add Portals</span>
+        </button>
+        <button class="icon-action">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14 9V5a3 3 0 0 0-3-3l-4 9v11h11.28a2 2 0 0 0 2-1.7l1.38-9a2 2 0 0 0-2-2.3H14z"/><path d="M7 22H4a2 2 0 0 1-2-2v-7a2 2 0 0 1 2-2h3"/></svg>
+          <span>Feedback</span>
+        </button>
+        <button class="icon-action">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M9.5 9.2a2.5 2.5 0 0 1 4.9.8c0 1.7-2.4 2-2.4 3.5"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+          <span>Help</span>
+        </button>
+        <button class="icon-action">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="M2 6.5 12 13 22 6.5"/></svg>
+          <span>Mail</span>
+        </button>
+        <button class="icon-action">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8a6 6 0 0 0-12 0c0 5-2.2 6.5-2.2 6.5h16.4S18 13 18 8z"/><path d="M10.3 19a1.8 1.8 0 0 0 3.4 0"/></svg>
+          <span>Alerts</span>
+        </button>
+      </div>
+
+      <div class="user-chip">
+        <div class="avatar">CS</div>
+        <span class="user-name">Christian Snead</span>
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+      </div>
+    </div>
+  </header>
+
+  <div class="app-body">
+    <nav class="sidebar">
+      <!-- 1. Filters / sliders (active) -->
+      <button class="side-icon active" title="Filters">
+        <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><line x1="4" y1="21" x2="4" y2="14"/><line x1="4" y1="10" x2="4" y2="3"/><line x1="12" y1="21" x2="12" y2="12"/><line x1="12" y1="8" x2="12" y2="3"/><line x1="20" y1="21" x2="20" y2="16"/><line x1="20" y1="12" x2="20" y2="3"/><line x1="1" y1="14" x2="7" y2="14"/><line x1="9" y1="8" x2="15" y2="8"/><line x1="17" y1="16" x2="23" y2="16"/></svg>
+      </button>
+      <!-- 2. Document / list -->
+      <button class="side-icon" title="Loads">
+        <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="8" y1="13" x2="16" y2="13"/><line x1="8" y1="17" x2="16" y2="17"/></svg>
+      </button>
+      <!-- 3. Person -->
+      <button class="side-icon" title="Contacts">
+        <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+      </button>
+      <!-- 4. Scissors -->
+      <button class="side-icon" title="Dispatch">
+        <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="6" cy="6" r="3"/><circle cx="6" cy="18" r="3"/><line x1="20" y1="4" x2="8.12" y2="15.88"/><line x1="14.47" y1="14.48" x2="20" y2="20"/><line x1="8.12" y1="8.12" x2="12" y2="12"/></svg>
+      </button>
+      <!-- 5. Dollar -->
+      <button class="side-icon" title="Billing">
+        <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9.5"/><path d="M15 9.3h-4a1.9 1.9 0 0 0 0 3.8h2a1.9 1.9 0 0 1 0 3.8H9"/><line x1="12" y1="7.3" x2="12" y2="8.6"/><line x1="12" y1="16.9" x2="12" y2="18.2"/></svg>
+      </button>
+      <!-- 6. Fuel pump -->
+      <button class="side-icon" title="Fuel">
+        <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="22" x2="15" y2="22"/><line x1="6" y1="22" x2="6" y2="4"/><rect x="6" y="4" width="9" height="6" rx="1"/><path d="M15 9h2a2 2 0 0 1 2 2v6a1.5 1.5 0 0 0 3 0v-7l-3-3"/></svg>
+      </button>
+      <!-- 7. Ladder / rack -->
+      <button class="side-icon" title="Yard">
+        <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><line x1="7" y1="2" x2="7" y2="22"/><line x1="17" y1="2" x2="17" y2="22"/><line x1="7" y1="6" x2="17" y2="6"/><line x1="7" y1="12" x2="17" y2="12"/><line x1="7" y1="18" x2="17" y2="18"/></svg>
+      </button>
+      <!-- 8. Shield check -->
+      <button class="side-icon" title="Compliance">
+        <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2 4 5v6c0 5 3.4 9 8 11 4.6-2 8-6 8-11V5z"/><polyline points="9 12 11 14 15 10"/></svg>
+      </button>
+      <!-- 9. Pie chart -->
+      <button class="side-icon" title="Analytics">
+        <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21.2 15a9 9 0 1 1-9.2-9v9z"/><path d="M13 3.2A9 9 0 0 1 20.8 11H13z"/></svg>
+      </button>
+      <!-- 10. Bar chart -->
+      <button class="side-icon" title="Reports">
+        <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+      </button>
+      <!-- 11. File / doc -->
+      <button class="side-icon" title="Documents">
+        <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"/><polyline points="13 2 13 9 20 9"/></svg>
+      </button>
+      <!-- 12. Calendar -->
+      <button class="side-icon" title="Calendar">
+        <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+      </button>
+      <!-- 13. Chat -->
+      <button class="side-icon" title="Messages">
+        <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+      </button>
+      <!-- 14. Refresh / exchange -->
+      <button class="side-icon" title="Exchange">
+        <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="17 1 21 5 17 9"/><path d="M3 11V9a4 4 0 0 1 4-4h14"/><polyline points="7 23 3 19 7 15"/><path d="M21 13v2a4 4 0 0 1-4 4H3"/></svg>
+      </button>
+      <!-- 15. Clipboard check -->
+      <button class="side-icon" title="Tasks">
+        <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 2h6a1 1 0 0 1 1 1v2H8V3a1 1 0 0 1 1-1z"/><path d="M16 4h1a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h1"/><polyline points="9 13 11 15 15 11"/></svg>
+      </button>
+      <!-- 16. Stacked shelf / load board -->
+      <button class="side-icon" title="Load Board">
+        <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="4" rx="1"/><rect x="3" y="12" width="18" height="4" rx="1"/><line x1="5" y1="8" x2="5" y2="20"/><line x1="19" y1="8" x2="19" y2="20"/><line x1="3" y1="20" x2="21" y2="20"/></svg>
+      </button>
+
+      <div class="sidebar-spacer"></div>
+
+      <div class="sidebar-bottom">
+        <!-- Pin -->
+        <button class="side-icon" title="Pinned">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="17" x2="12" y2="22"/><path d="M5 17h14l-1.4-1.4a2 2 0 0 1-.6-1.4V9a5 5 0 0 0-10 0v5.2a2 2 0 0 1-.6 1.4z"/></svg>
+        </button>
+        <!-- Grid -->
+        <button class="side-icon" title="Apps">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+        </button>
+        <!-- Settings -->
+        <button class="side-icon" title="Settings">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.9l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.9-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 0 1-4 0v-.1a1.7 1.7 0 0 0-1-1.6 1.7 1.7 0 0 0-1.9.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.9 1.7 1.7 0 0 0-1.5-1H3a2 2 0 0 1 0-4h.1a1.7 1.7 0 0 0 1.6-1 1.7 1.7 0 0 0-.3-1.9l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.9.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 0 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.9-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.9V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 0 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg>
+        </button>
+      </div>
+    </nav>
+
+    <main class="content">
+      <div class="cvp-layout">
+        <!-- ===== Profile Card ===== -->
+        <aside class="cvp-profile-card">
+          <div class="cvp-pc-header">
+            <div class="cvp-pc-avatar-wrap">
+              <div class="cvp-pc-avatar"><img src="assets/profile-card/icon-avatar.svg" alt=""></div>
+              <span class="cvp-pc-online-dot"></span>
+            </div>
+            <div class="cvp-pc-name-block">
+              <div class="cvp-pc-name-row">
+                <span class="cvp-pc-name">Michelle Marufin</span>
+                <span class="cvp-pc-status-pill"><span class="cvp-pc-status-dot"></span>Active</span>
+              </div>
+              <div class="cvp-pc-subtitle">Primary Contact · Logistics Dept.</div>
+            </div>
+            <button class="cvp-pc-edit-btn" type="button" aria-label="Edit profile">
+              <img src="assets/profile-card/icon-edit.svg" alt="">
+            </button>
+          </div>
+
+          <div class="cvp-pc-actions">
+            <button class="cvp-pc-action-btn" type="button" aria-label="Call office"><img src="assets/profile-card/icon-phone-office.svg" alt=""></button>
+            <button class="cvp-pc-action-btn" type="button" aria-label="Call cell"><img src="assets/profile-card/icon-smartphone-cell.svg" alt=""></button>
+            <button class="cvp-pc-action-btn" type="button" aria-label="Email"><img src="assets/profile-card/icon-mail.svg" alt=""></button>
+            <button class="cvp-pc-action-btn" type="button" aria-label="ProChat"><img src="assets/profile-card/icon-chat.svg" alt=""></button>
+            <button class="cvp-pc-action-btn" type="button" aria-label="More actions"><img src="assets/profile-card/icon-more-horizontal.svg" alt=""></button>
+          </div>
+
+          <div class="cvp-pc-tabs-outer">
+            <div class="cvp-pc-tabs" role="tablist">
+              <button class="cvp-pc-tab active" type="button" role="tab" aria-selected="true">Contact Info</button>
+              <button class="cvp-pc-tab" type="button" role="tab" aria-selected="false">Personal Info</button>
+            </div>
+          </div>
+
+          <div class="cvp-pc-fields">
+            <div class="cvp-pc-field">
+              <span class="cvp-pc-field-icon"></span>
+              <div>
+                <div class="cvp-pc-field-label">Email</div>
+                <div class="cvp-pc-field-value">james.blunt@megacorplogistics.com</div>
+              </div>
+            </div>
+            <div class="cvp-pc-field">
+              <span class="cvp-pc-field-icon"><img src="assets/profile-card/icon-phone-office.svg" alt=""></span>
+              <div>
+                <div class="cvp-pc-field-label">Office</div>
+                <div class="cvp-pc-field-value">(800) 721-5081 ext. 1782</div>
+              </div>
+            </div>
+            <div class="cvp-pc-field">
+              <span class="cvp-pc-field-icon"><img src="assets/profile-card/icon-smartphone-cell.svg" alt=""></span>
+              <div>
+                <div class="cvp-pc-field-label">Cell</div>
+                <div class="cvp-pc-field-value">(800) 721-5082</div>
+              </div>
+            </div>
+            <div class="cvp-pc-field">
+              <span class="cvp-pc-field-icon"><img src="assets/profile-card/icon-fax.svg" alt=""></span>
+              <div>
+                <div class="cvp-pc-field-label">Fax</div>
+                <div class="cvp-pc-field-value">(888) 987-8999</div>
+              </div>
+            </div>
+            <div class="cvp-pc-field">
+              <span class="cvp-pc-field-icon"><img src="assets/profile-card/icon-address.svg" alt=""></span>
+              <div>
+                <div class="cvp-pc-field-label">Address</div>
+                <div class="cvp-pc-field-value">1011 Ashes Drive, Wilmington NC 28405</div>
+              </div>
+            </div>
+          </div>
+
+          <div class="cvp-pc-rating-section">
+            <div class="cvp-pc-rating-head">
+              <span class="cvp-pc-rating-label">Rating</span>
+              <div class="cvp-pc-rating-right">
+                <span class="cvp-pc-stars">
+                  <img src="assets/profile-card/icon-star-filled.svg" alt="">
+                  <img src="assets/profile-card/icon-star-filled.svg" alt="">
+                  <img src="assets/profile-card/icon-star-filled.svg" alt="">
+                  <img src="assets/profile-card/icon-star-empty.svg" alt="">
+                  <img src="assets/profile-card/icon-star-empty.svg" alt="">
+                </span>
+                <span class="cvp-pc-rating-num">3.0</span>
+                <button class="cvp-pc-change-link" type="button">Change</button>
+              </div>
+            </div>
+            <div class="cvp-pc-quickfacts">
+              <div>
+                <div class="cvp-pc-qf-label">Reminder</div>
+                <div class="cvp-pc-qf-value">Loads 409</div>
+              </div>
+              <div>
+                <div class="cvp-pc-qf-label">MC/USDOT</div>
+                <div class="cvp-pc-qf-value">69-00001</div>
+              </div>
+              <div>
+                <div class="cvp-pc-qf-label">Last Comm.</div>
+                <div class="cvp-pc-qf-value">Jan 1, 2023</div>
+              </div>
+              <div>
+                <div class="cvp-pc-qf-label">Timezone</div>
+                <div class="cvp-pc-qf-value">12:10 EST</div>
+              </div>
+            </div>
+          </div>
+
+          <div class="cvp-pc-preferred">
+            <div class="cvp-pc-preferred-label">Preferred Contact</div>
+            <div class="cvp-pc-preferred-box">
+              <img src="assets/profile-card/icon-smartphone-cell.svg" alt="">
+              <span>Michelle Obama Market</span>
+            </div>
+          </div>
+
+          <div class="cvp-pc-list-section">
+            <div class="cvp-pc-list-title">Account Summary</div>
+            <div class="cvp-pc-row"><span class="cvp-pc-row-label">Customer Type</span><span class="cvp-pc-row-value">3PL</span></div>
+            <div class="cvp-pc-row"><span class="cvp-pc-row-label">Customer Name</span><span class="cvp-pc-row-value">MegaCorp Logistics</span></div>
+            <div class="cvp-pc-row"><span class="cvp-pc-row-label">Customer ID</span><span class="cvp-pc-row-value">MCL-741</span></div>
+            <div class="cvp-pc-row"><span class="cvp-pc-row-label">Assignment</span><span class="cvp-pc-row-value">Corporate</span></div>
+            <div class="cvp-pc-row"><span class="cvp-pc-row-label">Office Type</span><span class="cvp-pc-row-value">Headquarters</span></div>
+            <div class="cvp-pc-row"><span class="cvp-pc-row-label">Parent Company</span><span class="cvp-pc-row-value">None</span></div>
+            <div class="cvp-pc-row"><span class="cvp-pc-row-label">SOAC Class</span><span class="cvp-pc-row-value">Internal Land Based</span></div>
+            <div class="cvp-pc-row"><span class="cvp-pc-row-label">PC Miler</span><span class="cvp-pc-row-value">Version 37</span></div>
+            <div class="cvp-pc-row"><span class="cvp-pc-row-label">Compliance Review</span><span class="cvp-pc-row-value">10/31/2025</span></div>
+            <div class="cvp-pc-row"><span class="cvp-pc-row-label">Comp. Date Exp.</span><span class="cvp-pc-row-value">05/01/2024</span></div>
+          </div>
+
+          <div class="cvp-pc-list-section">
+            <div class="cvp-pc-list-title">Billing Snapshot</div>
+            <div class="cvp-pc-row"><span class="cvp-pc-row-label">Billing Method</span><span class="cvp-pc-row-value">Email</span></div>
+            <div class="cvp-pc-row"><span class="cvp-pc-row-label">Payment Method</span><span class="cvp-pc-row-value">Mail</span></div>
+            <div class="cvp-pc-row"><span class="cvp-pc-row-label">Days to Pay (Avg)</span><span class="cvp-pc-row-value warn">36 Days</span></div>
+            <div class="cvp-pc-row"><span class="cvp-pc-row-label">Days to Pay (YTD)</span><span class="cvp-pc-row-value warn">29 Days</span></div>
+            <div class="cvp-pc-row"><span class="cvp-pc-row-label">Open Balance</span><span class="cvp-pc-row-value">$555,100.00</span></div>
+            <div class="cvp-pc-row"><span class="cvp-pc-row-label">Billed Balance</span><span class="cvp-pc-row-value">$604,069.55</span></div>
+            <div class="cvp-pc-row"><span class="cvp-pc-row-label">On Hwy Diesel</span><span class="cvp-pc-row-value">2/23/2025</span></div>
+            <div class="cvp-pc-row"><span class="cvp-pc-row-label">U.S. Regular Gas</span><span class="cvp-pc-row-value">2/23/2025</span></div>
+          </div>
+
+          <div class="cvp-pc-list-section">
+            <div class="cvp-pc-list-title">Credit</div>
+            <div class="cvp-pc-credit-score-row">
+              <span class="cvp-pc-row-value">Credit Score</span>
+              <span class="cvp-badge-green">A</span>
+            </div>
+            <div class="cvp-progress-row">
+              <div class="cvp-progress-track"><div class="cvp-progress-fill" style="width:19%"></div></div>
+              <span class="cvp-progress-pct">19%</span>
+            </div>
+            <div class="cvp-progress-labels">
+              <span>Balance $145,910.45</span>
+              <span>Limit $750,000</span>
+            </div>
+            <div class="cvp-pc-row" style="margin-top:8px;"><span class="cvp-pc-row-label">Credit Warning</span><span class="cvp-pc-row-value">$675,000.00</span></div>
+            <div class="cvp-pc-row"><span class="cvp-pc-row-label">First Credit Check</span><span class="cvp-pc-row-value">05/18/2009</span></div>
+            <div class="cvp-pc-row"><span class="cvp-pc-row-label">Last Credit Check</span><span class="cvp-pc-row-value">09/29/2023</span></div>
+            <div class="cvp-pc-row"><span class="cvp-pc-row-label">Credit App Exp.</span><span class="cvp-pc-row-value danger">10/25/2024</span></div>
+            <div class="cvp-pc-row"><span class="cvp-pc-row-label">Freight Bill Format</span><span class="cvp-pc-row-value">Itemized</span></div>
+            <div class="cvp-pc-row"><span class="cvp-pc-row-label">Factor Rate</span><span class="cvp-pc-row-value">2.50%</span></div>
+            <div class="cvp-pc-row"><span class="cvp-pc-row-label">Factoring Co.</span><span class="cvp-pc-row-value">RTS Financial</span></div>
+          </div>
+        </aside>
+
+        <!-- ===== Stats + Credit Utilization ===== -->
+        <div class="cvp-stats-col">
+          <div class="cvp-stats-row1">
+            <div class="cvp-stat-card">
+              <div class="cvp-stat-top">
+                <span class="cvp-stat-label">On-Time Delivery</span>
+                <span class="cvp-stat-icon" style="background:var(--cvp-icon-green-bg)"><img src="assets/dashboard-stats/icon-check.svg" alt=""></span>
+              </div>
+              <span class="cvp-stat-value">81%</span>
+              <span class="cvp-stat-caption">YTD performance</span>
+            </div>
+            <div class="cvp-stat-card">
+              <div class="cvp-stat-top">
+                <span class="cvp-stat-label">Loads Tracked</span>
+                <span class="cvp-stat-icon" style="background:var(--cvp-icon-blue-bg)"><img src="assets/dashboard-stats/icon-loads-tracked.svg" alt=""></span>
+              </div>
+              <span class="cvp-stat-value">4,213</span>
+              <span class="cvp-stat-caption">Total lifetime</span>
+            </div>
+            <div class="cvp-stat-card">
+              <div class="cvp-stat-top">
+                <span class="cvp-stat-label">Revenue YTD</span>
+                <span class="cvp-stat-icon" style="background:var(--cvp-icon-blue-bg)"><img src="assets/dashboard-stats/icon-revenue.svg" alt=""></span>
+              </div>
+              <span class="cvp-stat-value">$3.1M</span>
+              <span class="cvp-stat-caption">+12% vs prior year</span>
+            </div>
+            <div class="cvp-stat-card">
+              <div class="cvp-stat-top">
+                <span class="cvp-stat-label">Claims</span>
+                <span class="cvp-stat-icon" style="background:var(--cvp-icon-amber-bg)"><img src="assets/dashboard-stats/icon-claims-warning.svg" alt=""></span>
+              </div>
+              <span class="cvp-stat-value">40</span>
+              <span class="cvp-stat-caption">Total Miles: 591 M</span>
+            </div>
+          </div>
+
+          <div class="cvp-stats-row2">
+            <div class="cvp-stat-card">
+              <div class="cvp-stat-top">
+                <span class="cvp-stat-label">Rental Failures</span>
+                <span class="cvp-stat-icon" style="background:var(--cvp-icon-red-bg)"><img src="assets/dashboard-stats/icon-rental-failures.svg" alt=""></span>
+              </div>
+              <span class="cvp-stat-value">134</span>
+              <span class="cvp-stat-caption">Loads Affiliated: 4,270</span>
+            </div>
+            <div class="cvp-stat-card">
+              <div class="cvp-stat-top">
+                <span class="cvp-stat-label">Loads Affiliated</span>
+                <span class="cvp-stat-icon" style="background:var(--cvp-icon-indigo-bg)"><img src="assets/dashboard-stats/icon-loads-affiliated.svg" alt=""></span>
+              </div>
+              <span class="cvp-stat-value">4,270</span>
+              <span class="cvp-stat-caption">YTD loads</span>
+            </div>
+            <div class="cvp-stat-card">
+              <div class="cvp-stat-top">
+                <span class="cvp-stat-label">Credit Balance</span>
+                <span class="cvp-stat-icon" style="background:var(--cvp-icon-green-bg)"><img src="assets/dashboard-stats/icon-credit-balance.svg" alt=""></span>
+              </div>
+              <span class="cvp-stat-value">$145,910</span>
+              <span class="cvp-stat-caption">of $750K limit</span>
+            </div>
+          </div>
+
+          <div class="cvp-credit-card">
+            <div class="cvp-credit-head">
+              <span class="cvp-credit-title">Credit Utilization</span>
+              <span class="cvp-badge-green">A Rating</span>
+            </div>
+            <div class="cvp-progress-row">
+              <div class="cvp-progress-track"><div class="cvp-progress-fill" style="width:19%"></div></div>
+              <span class="cvp-progress-pct">19%</span>
+            </div>
+            <div class="cvp-progress-labels">
+              <span>Balance: $145,910.45</span>
+              <span>Limit: $750,000.00</span>
+            </div>
+          </div>
+
+          <nav class="cvp-subnav" role="tablist" aria-label="Customer sections">
+            <button class="cvp-subnav-tab active" type="button" role="tab" aria-selected="true" data-panel="account">Account</button>
+            <button class="cvp-subnav-tab" type="button" role="tab" aria-selected="false" data-panel="soon">Activity</button>
+            <button class="cvp-subnav-tab" type="button" role="tab" aria-selected="false" data-panel="soon">Loads</button>
+            <button class="cvp-subnav-tab" type="button" role="tab" aria-selected="false" data-panel="billing">Billing</button>
+            <button class="cvp-subnav-tab" type="button" role="tab" aria-selected="false" data-panel="soon">Locations</button>
+            <button class="cvp-subnav-tab" type="button" role="tab" aria-selected="false" data-panel="soon">Fuel Surcharge</button>
+            <button class="cvp-subnav-tab" type="button" role="tab" aria-selected="false" data-panel="soon">On-Time Stats</button>
+            <button class="cvp-subnav-tab" type="button" role="tab" aria-selected="false" data-panel="soon">Accessorials</button>
+            <button class="cvp-subnav-tab" type="button" role="tab" aria-selected="false" data-panel="soon">Files &amp; Images</button>
+          </nav>
+
+          <!-- ===== Account Detail Sections ===== -->
+          <div class="cvp-tabpanel" data-tabpanel="account">
+          <div class="cvp-detail-grid">
+        <div class="cvp-detail-col">
+          <div class="cvp-section-card">
+            <button class="cvp-section-head" type="button">
+              <span class="cvp-section-head-left"><img src="assets/section-cards/icon-info.svg" alt=""><span class="cvp-section-title">General Information</span></span>
+              <img class="cvp-section-chevron" src="assets/section-cards/icon-chevron.svg" alt="">
+            </button>
+            <div class="cvp-section-body">
+              <div class="cvp-info-row"><span class="cvp-info-row-label">Customer Type</span><span class="cvp-info-row-value">3PL</span></div>
+              <div class="cvp-info-row"><span class="cvp-info-row-label">Customer Name</span><span class="cvp-info-row-value">MegaCorp Logistics</span></div>
+              <div class="cvp-info-row"><span class="cvp-info-row-label">Customer ID</span><span class="cvp-info-row-value">MCL-741</span></div>
+              <div class="cvp-info-row"><span class="cvp-info-row-label">Customer Assignment</span><span class="cvp-info-row-value">Corporate</span></div>
+              <div class="cvp-info-row"><span class="cvp-info-row-label">Office Type</span><span class="cvp-info-row-value">Headquarters</span></div>
+              <div class="cvp-info-row"><span class="cvp-info-row-label">Parent Company</span><span class="cvp-info-row-value">None</span></div>
+              <div class="cvp-info-row"><span class="cvp-info-row-label">Terminal Assignment</span><span class="cvp-info-row-value">None</span></div>
+              <div class="cvp-info-row"><span class="cvp-info-row-label">MC/USDOT</span><span class="cvp-info-row-value">69-00001</span></div>
+            </div>
+          </div>
+
+          <div class="cvp-section-card">
+            <button class="cvp-section-head" type="button">
+              <span class="cvp-section-head-left"><img src="assets/section-cards/icon-map-pin.svg" alt=""><span class="cvp-section-title">Address &amp; Contact</span></span>
+              <img class="cvp-section-chevron" src="assets/section-cards/icon-chevron.svg" alt="">
+            </button>
+            <div class="cvp-section-body">
+              <div class="cvp-info-row"><span class="cvp-info-row-label">Address 1</span><span class="cvp-info-row-value">1011 Ashes Drive</span></div>
+              <div class="cvp-info-row"><span class="cvp-info-row-label">City</span><span class="cvp-info-row-value">Wilmington</span></div>
+              <div class="cvp-info-row"><span class="cvp-info-row-label">State</span><span class="cvp-info-row-value">North Carolina</span></div>
+              <div class="cvp-info-row"><span class="cvp-info-row-label">Zip</span><span class="cvp-info-row-value">28405-8762</span></div>
+              <div class="cvp-info-row"><span class="cvp-info-row-label">Phone</span><span class="cvp-info-row-value">(800) 721-5081</span></div>
+              <div class="cvp-info-row"><span class="cvp-info-row-label">Extension</span><span class="cvp-info-row-value">1782</span></div>
+              <div class="cvp-info-row"><span class="cvp-info-row-label">Fax</span><span class="cvp-info-row-value">(888) 987-8999</span></div>
+              <div class="cvp-info-row"><span class="cvp-info-row-label">Website</span><span class="cvp-info-row-value">www.megacorplogistics.com</span></div>
+              <div class="cvp-info-row"><span class="cvp-info-row-label">Email</span><span class="cvp-info-row-value">james.blunt@megacorplogistics.com</span></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="cvp-detail-col">
+          <div class="cvp-section-card">
+            <button class="cvp-section-head" type="button">
+              <span class="cvp-section-head-left"><img src="assets/section-cards/icon-dollar.svg" alt=""><span class="cvp-section-title">Billing Information</span></span>
+              <img class="cvp-section-chevron" src="assets/section-cards/icon-chevron.svg" alt="">
+            </button>
+            <div class="cvp-section-body">
+              <div class="cvp-info-row"><span class="cvp-info-row-label">Preferred Billing Method</span><span class="cvp-info-row-value">Email</span></div>
+              <div class="cvp-info-row"><span class="cvp-info-row-label">Preferred Payment Method</span><span class="cvp-info-row-value">Mail</span></div>
+              <div class="cvp-info-row"><span class="cvp-info-row-label">Billing ID</span><span class="cvp-info-row-value">MCL-741</span></div>
+              <div class="cvp-info-row"><span class="cvp-info-row-label">Bill To</span><span class="cvp-info-row-value">Mega Cargo Logistics LLC</span></div>
+              <div class="cvp-info-row"><span class="cvp-info-row-label">Billing Address</span><span class="cvp-info-row-value">1115 Sunset Avenue</span></div>
+              <div class="cvp-info-row"><span class="cvp-info-row-label">Billing City 2</span><span class="cvp-info-row-value">Suite 1700</span></div>
+              <div class="cvp-info-row"><span class="cvp-info-row-label">Billing State / Zip</span><span class="cvp-info-row-value">Miami, FL 33784</span></div>
+              <div class="cvp-info-row"><span class="cvp-info-row-label">Billing Phone</span><span class="cvp-info-row-value">(728) 439-6912</span></div>
+              <div class="cvp-info-row"><span class="cvp-info-row-label">Billing Afterhours</span><span class="cvp-info-row-value">(3128) 193-0753</span></div>
+              <div class="cvp-info-row"><span class="cvp-info-row-label">Billing Email</span><span class="cvp-info-row-value">billing@megacorplogistics.com</span></div>
+              <div class="cvp-info-row"><span class="cvp-info-row-label">Billing Contact</span><span class="cvp-info-row-value">Donna StClair</span></div>
+              <div class="cvp-info-row"><span class="cvp-info-row-label">Days To Pay (Avg)</span><span class="cvp-info-row-value warn">36 Days</span></div>
+              <div class="cvp-info-row"><span class="cvp-info-row-label">Days To Pay (YTD)</span><span class="cvp-info-row-value warn">29 Days</span></div>
+              <div class="cvp-info-row"><span class="cvp-info-row-label">Days To Pay (Lifetime)</span><span class="cvp-info-row-value">21 Days</span></div>
+              <div class="cvp-info-row"><span class="cvp-info-row-label">Open Balance</span><span class="cvp-info-row-value">$555,100.00</span></div>
+              <div class="cvp-info-row"><span class="cvp-info-row-label">Billed Balance</span><span class="cvp-info-row-value">$604,069.55</span></div>
+              <div class="cvp-info-row"><span class="cvp-info-row-label">Freight Bill Format</span><span class="cvp-info-row-value">Itemized</span></div>
+            </div>
+          </div>
+
+          <div class="cvp-section-card">
+            <button class="cvp-section-head" type="button">
+              <span class="cvp-section-head-left"><img src="assets/section-cards/icon-document.svg" alt=""><span class="cvp-section-title">Invoice Information</span></span>
+              <img class="cvp-section-chevron" src="assets/section-cards/icon-chevron.svg" alt="">
+            </button>
+            <div class="cvp-section-body">
+              <div class="cvp-info-row"><span class="cvp-info-row-label">Factor Invoices</span><span class="cvp-badge-green">Yes</span></div>
+              <div class="cvp-info-row"><span class="cvp-info-row-label">Factoring Company</span><span class="cvp-info-row-value">RTS Financial Corporation</span></div>
+              <div class="cvp-info-row"><span class="cvp-info-row-label">Factoring Type</span><span class="cvp-info-row-value">Percentage</span></div>
+              <div class="cvp-info-row"><span class="cvp-info-row-label">Factor Rate</span><span class="cvp-info-row-value">2.50%</span></div>
+              <div class="cvp-info-row"><span class="cvp-info-row-label">Terms</span><span class="cvp-info-row-value">30 Days</span></div>
+              <div class="cvp-info-row"><span class="cvp-info-row-label">Term Start Date</span><span class="cvp-info-row-value">Invoice Date</span></div>
+              <div class="cvp-info-row"><span class="cvp-info-row-label">Credit Score</span><span class="cvp-badge-green">A</span></div>
+              <div class="cvp-info-row"><span class="cvp-info-row-label">Credit Limit</span><span class="cvp-info-row-value">$750,000.00</span></div>
+              <div class="cvp-info-row"><span class="cvp-info-row-label">Credit Warning</span><span class="cvp-info-row-value">$675,000.00</span></div>
+              <div class="cvp-info-row"><span class="cvp-info-row-label">Credit Balance</span><span class="cvp-info-row-value">$145,910.45</span></div>
+              <div class="cvp-info-row"><span class="cvp-info-row-label">First Credit Check</span><span class="cvp-info-row-value">05/18/2009</span></div>
+              <div class="cvp-info-row"><span class="cvp-info-row-label">Last Credit Check</span><span class="cvp-info-row-value">09/29/2023</span></div>
+              <div class="cvp-info-row"><span class="cvp-info-row-label">Credit App Completed</span><span class="cvp-info-row-value">05/25/2009</span></div>
+              <div class="cvp-info-row"><span class="cvp-info-row-label">Credit App Expiration</span><span class="cvp-info-row-value danger">10/25/2024 — Expired</span></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="cvp-detail-col">
+          <div class="cvp-section-card">
+            <button class="cvp-section-head" type="button">
+              <span class="cvp-section-head-left"><img src="assets/section-cards/icon-bar-chart.svg" alt=""><span class="cvp-section-title">FMCSA Thresholds</span></span>
+              <img class="cvp-section-chevron" src="assets/section-cards/icon-chevron.svg" alt="">
+            </button>
+            <div class="cvp-section-body">
+              <div class="cvp-threshold">
+                <div class="cvp-threshold-top"><span class="cvp-threshold-label">HOS</span><span class="cvp-threshold-pct red">80%</span></div>
+                <div class="cvp-threshold-track"><div class="cvp-threshold-fill red" style="width:80%"></div></div>
+              </div>
+              <div class="cvp-threshold">
+                <div class="cvp-threshold-top"><span class="cvp-threshold-label">Fatigued Driving</span><span class="cvp-threshold-pct amber">65%</span></div>
+                <div class="cvp-threshold-track"><div class="cvp-threshold-fill amber" style="width:65%"></div></div>
+              </div>
+              <div class="cvp-threshold">
+                <div class="cvp-threshold-top"><span class="cvp-threshold-label">Fitness</span><span class="cvp-threshold-pct amber">75%</span></div>
+                <div class="cvp-threshold-track"><div class="cvp-threshold-fill amber" style="width:75%"></div></div>
+              </div>
+              <div class="cvp-threshold">
+                <div class="cvp-threshold-top"><span class="cvp-threshold-label">Controlled Substance</span><span class="cvp-threshold-pct red">85%</span></div>
+                <div class="cvp-threshold-track"><div class="cvp-threshold-fill red" style="width:85%"></div></div>
+              </div>
+              <div class="cvp-threshold">
+                <div class="cvp-threshold-top"><span class="cvp-threshold-label">Unsafe Driving</span><span class="cvp-threshold-pct green">0%</span></div>
+                <div class="cvp-threshold-track"><div class="cvp-threshold-fill green" style="width:0%"></div></div>
+              </div>
+              <div class="cvp-threshold">
+                <div class="cvp-threshold-top"><span class="cvp-threshold-label">Vehicle Maintenance</span><span class="cvp-threshold-pct green">15%</span></div>
+                <div class="cvp-threshold-track"><div class="cvp-threshold-fill green" style="width:15%"></div></div>
+              </div>
+              <div class="cvp-threshold">
+                <div class="cvp-threshold-top"><span class="cvp-threshold-label">Driver Fitness</span><span class="cvp-threshold-pct amber">40%</span></div>
+                <div class="cvp-threshold-track"><div class="cvp-threshold-fill amber" style="width:40%"></div></div>
+              </div>
+              <div class="cvp-threshold">
+                <div class="cvp-threshold-top"><span class="cvp-threshold-label">HazMat</span><span class="cvp-threshold-pct amber">66%</span></div>
+                <div class="cvp-threshold-track"><div class="cvp-threshold-fill amber" style="width:66%"></div></div>
+              </div>
+            </div>
+          </div>
+
+          <div class="cvp-section-card">
+            <button class="cvp-section-head" type="button">
+              <span class="cvp-section-head-left"><img src="assets/section-cards/icon-star.svg" alt=""><span class="cvp-section-title">Insurance &amp; Bond</span></span>
+              <img class="cvp-section-chevron" src="assets/section-cards/icon-chevron.svg" alt="">
+            </button>
+            <div class="cvp-section-body">
+              <div class="cvp-info-row"><span class="cvp-info-row-label">General Liability</span><span class="cvp-info-row-value">$1,000,000</span></div>
+              <div class="cvp-info-row"><span class="cvp-info-row-label">Auto Liability</span><span class="cvp-info-row-value">$1,000,000</span></div>
+              <div class="cvp-info-row"><span class="cvp-info-row-label">Cargo Liability</span><span class="cvp-info-row-value">$250,000</span></div>
+              <div class="cvp-info-row"><span class="cvp-info-row-label">Reefer Breakdown</span><span class="cvp-info-row-value">Yes</span></div>
+              <div class="cvp-info-row"><span class="cvp-info-row-label">Trailer Interchange</span><span class="cvp-info-row-value">No</span></div>
+            </div>
+          </div>
+
+          <div class="cvp-section-card">
+            <button class="cvp-section-head" type="button">
+              <span class="cvp-section-head-left"><img src="assets/section-cards/icon-truck.svg" alt=""><span class="cvp-section-title">Fleet Requirements</span></span>
+              <img class="cvp-section-chevron" src="assets/section-cards/icon-chevron.svg" alt="">
+            </button>
+            <div class="cvp-section-body">
+              <div class="cvp-info-row"><span class="cvp-info-row-label">Req'd Safer Status</span><span class="cvp-info-row-value">Satisfactory</span></div>
+              <div class="cvp-info-row"><span class="cvp-info-row-label">Authority Tenure</span><span class="cvp-info-row-value">1 year</span></div>
+              <div class="cvp-info-row"><span class="cvp-info-row-label">Min Fleet Size</span><span class="cvp-info-row-value">15 Units</span></div>
+              <div class="cvp-info-row"><span class="cvp-info-row-label">Total Load Count</span><span class="cvp-info-row-value">30 loads</span></div>
+              <div class="cvp-info-row"><span class="cvp-info-row-label">Loads Last 30 Days</span><span class="cvp-info-row-value">5 loads</span></div>
+              <div class="cvp-info-row"><span class="cvp-info-row-label">Loads Per Month</span><span class="cvp-info-row-value">15 loads</span></div>
+            </div>
+          </div>
+        </div>
+          </div><!-- /cvp-detail-grid -->
+          </div><!-- /data-tabpanel=account -->
+
+          <div class="cvp-tabpanel" data-tabpanel="billing" hidden>
+            <div class="cvp-billing-grid">
+              <div class="cvp-billing-card">
+                <div class="cvp-billing-top">
+                  <span class="cvp-billing-label">Ready to Bill</span>
+                  <span class="cvp-billing-icon"><img src="assets/billing-kpi/icon-package-box.svg" alt=""></span>
+                </div>
+                <span class="cvp-billing-value">$ 12,500.00</span>
+                <div class="cvp-billing-bottom">
+                  <span class="cvp-billing-period">This Year</span>
+                  <span class="cvp-billing-trend up"><img class="cvp-trend-arrow" src="assets/billing-kpi/icon-arrow-up.svg" alt="">5%</span>
+                </div>
+              </div>
+              <div class="cvp-billing-card">
+                <div class="cvp-billing-top">
+                  <span class="cvp-billing-label">Unbilled</span>
+                  <span class="cvp-billing-icon"><img src="assets/billing-kpi/icon-invoice.svg" alt=""></span>
+                </div>
+                <span class="cvp-billing-value">$ 45,500.25</span>
+                <div class="cvp-billing-bottom">
+                  <span class="cvp-billing-period">This Year</span>
+                  <span class="cvp-billing-trend up"><img class="cvp-trend-arrow" src="assets/billing-kpi/icon-arrow-up.svg" alt="">5%</span>
+                </div>
+              </div>
+              <div class="cvp-billing-card">
+                <div class="cvp-billing-top">
+                  <span class="cvp-billing-label">Overdue</span>
+                  <span class="cvp-billing-icon"><img src="assets/billing-kpi/icon-package-delivered.svg" alt=""></span>
+                </div>
+                <span class="cvp-billing-value">$ 7,800.00</span>
+                <div class="cvp-billing-bottom">
+                  <span class="cvp-billing-period">This Year</span>
+                  <span class="cvp-billing-trend up"><img class="cvp-trend-arrow" src="assets/billing-kpi/icon-arrow-up.svg" alt="">5%</span>
+                </div>
+              </div>
+              <div class="cvp-billing-card">
+                <div class="cvp-billing-top">
+                  <span class="cvp-billing-label">Total Billed</span>
+                  <span class="cvp-billing-icon"><img src="assets/billing-kpi/icon-stacked-boxes.svg" alt=""></span>
+                </div>
+                <span class="cvp-billing-value">$ 1,450,000.00</span>
+                <div class="cvp-billing-bottom">
+                  <span class="cvp-billing-period">This Year</span>
+                  <span class="cvp-billing-trend down"><img class="cvp-trend-arrow down" src="assets/billing-kpi/icon-arrow-up.svg" alt="">5%</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="cvp-tabpanel" data-tabpanel="soon" hidden>
+            <div class="cvp-personal-empty">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="9" y1="9" x2="15" y2="15"/><line x1="15" y1="9" x2="9" y2="15"/></svg>
+              <p>This section isn't built out yet.</p>
+            </div>
+          </div>
+        </div><!-- /cvp-stats-col -->
+      </div><!-- /cvp-layout -->
+
+      <!-- ===== Billing: loads table ===== -->
+      <div class="cvp-fullwidth-section" data-tabpanel="billing" hidden>
+        <div class="cvp-billing-toolbar">
+          <span class="cvp-billing-toolbar-title">Billing</span>
+          <div class="cvp-billing-toolbar-actions">
+            <button class="cvp-billing-refresh-btn" type="button"><img src="assets/billing-table/icon-reload.svg" alt="">Refresh</button>
+            <div class="cvp-billing-search"><input type="text" placeholder="Search"><img src="assets/billing-table/icon-search.svg" alt=""></div>
+            <button class="cvp-billing-pagesize" type="button">100<img src="assets/billing-table/icon-dropdown-caret.svg" alt=""></button>
+            <button class="cvp-billing-columns-btn" type="button">Columns</button>
+          </div>
+        </div>
+
+        <div class="cvp-billing-table-wrap">
+          <table class="cvp-billing-table">
+            <thead>
+              <tr>
+                <th></th>
+                <th>Load<img class="th-filter" src="assets/billing-table/icon-filter.svg" alt=""></th>
+                <th>Customer<img class="th-filter" src="assets/billing-table/icon-filter.svg" alt=""></th>
+                <th>Pickup Date<img class="th-filter" src="assets/billing-table/icon-filter.svg" alt=""></th>
+                <th>Origin<img class="th-filter" src="assets/billing-table/icon-filter.svg" alt=""></th>
+                <th>Delivery Date<img class="th-filter" src="assets/billing-table/icon-filter.svg" alt=""></th>
+                <th>Destination<img class="th-filter" src="assets/billing-table/icon-filter.svg" alt=""></th>
+                <th>Status<img class="th-filter" src="assets/billing-table/icon-filter.svg" alt=""></th>
+                <th>Rate<img class="th-filter" src="assets/billing-table/icon-filter.svg" alt=""></th>
+                <th>Type<img class="th-filter" src="assets/billing-table/icon-filter.svg" alt=""></th>
+                <th>Documents</th>
+                <th>Review<img class="th-filter" src="assets/billing-table/icon-filter.svg" alt=""></th>
+                <th></th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><a class="cvp-billing-audit-link" href="#">Audit</a></td>
+                <td><img class="cvp-billing-row-expand" src="assets/billing-table/icon-row-expand.svg" alt=""><a class="cvp-billing-load-link" href="#">DTL40323</a></td>
+                <td>MEGACORP</td>
+                <td>09/09/2023 12:00 EDT</td>
+                <td>Groveport, OH</td>
+                <td>09/09/2023 12:00 EDT</td>
+                <td>Chelmsford, MA</td>
+                <td>Confirmed</td>
+                <td>$ 1,315.60</td>
+                <td>Factored</td>
+                <td><img class="cvp-billing-doc-icon" src="assets/billing-table/icon-doc-red.svg" alt="Document pending"></td>
+                <td>In Review</td>
+                <td><button class="cvp-billing-invoice-btn" type="button">Invoice Now</button></td>
+              </tr>
+              <tr>
+                <td><a class="cvp-billing-audit-link" href="#">Audit</a></td>
+                <td><img class="cvp-billing-row-expand" src="assets/billing-table/icon-row-expand.svg" alt=""><a class="cvp-billing-load-link" href="#">DTL-40341</a></td>
+                <td>AVENUE LOGISTICS INC.</td>
+                <td>09/11/2023 15:00 EDT</td>
+                <td>Counce, TN</td>
+                <td>09/11/2023 15:00 EDT</td>
+                <td>Louisville, KY</td>
+                <td>In Transit</td>
+                <td>$ 1,200.00</td>
+                <td>Direct Bill</td>
+                <td></td>
+                <td>In Review</td>
+                <td><button class="cvp-billing-invoice-btn" type="button">Invoice Now</button></td>
+              </tr>
+              <tr>
+                <td><a class="cvp-billing-audit-link" href="#">Audit</a></td>
+                <td><img class="cvp-billing-row-expand" src="assets/billing-table/icon-row-expand.svg" alt=""><a class="cvp-billing-load-link" href="#">DTL-40333</a></td>
+                <td>AXLE LOGISTICS, LLC</td>
+                <td>09/11/2023 06:00 EDT</td>
+                <td>Roanoke, VA</td>
+                <td>09/11/2023 06:00 EDT</td>
+                <td>Saint Albans, WV</td>
+                <td>Ready to Bill</td>
+                <td>$ 800.00</td>
+                <td>Factored</td>
+                <td><img class="cvp-billing-doc-icon" src="assets/billing-table/icon-doc-green.svg" alt="Document complete"></td>
+                <td>Complete</td>
+                <td><button class="cvp-billing-invoice-btn ready" type="button">Invoice Now</button></td>
+              </tr>
+              <tr>
+                <td><a class="cvp-billing-audit-link" href="#">Audit</a></td>
+                <td><img class="cvp-billing-row-expand" src="assets/billing-table/icon-row-expand.svg" alt=""><a class="cvp-billing-load-link" href="#">DTL-40338</a></td>
+                <td>Geodis Transportation Solutions LLC</td>
+                <td>09/12/2023 12:00 CDT</td>
+                <td>Vinita, OK</td>
+                <td>09/12/2023 12:00 CDT</td>
+                <td>Houston, TX</td>
+                <td>Preplanned</td>
+                <td>$ 1,100.00</td>
+                <td>Direct Bill</td>
+                <td><img class="cvp-billing-doc-icon" src="assets/billing-table/icon-doc-red.svg" alt="Document pending"></td>
+                <td>In Review</td>
+                <td><button class="cvp-billing-invoice-btn" type="button">Invoice Now</button></td>
+              </tr>
+              <tr>
+                <td><a class="cvp-billing-audit-link" href="#">Audit</a></td>
+                <td><img class="cvp-billing-row-expand" src="assets/billing-table/icon-row-expand.svg" alt=""><a class="cvp-billing-load-link" href="#">DTL-40338</a></td>
+                <td>SHORELINE TRANSFER</td>
+                <td>09/07/2023 12:00 EDT</td>
+                <td>Tucker, GA</td>
+                <td>09/07/2023 12:00 EDT</td>
+                <td>Ashland, VA</td>
+                <td>Available</td>
+                <td>$ 1,200.00</td>
+                <td>Factored</td>
+                <td><img class="cvp-billing-doc-icon" src="assets/billing-table/icon-doc-red.svg" alt="Document pending"></td>
+                <td>In Review</td>
+                <td><button class="cvp-billing-invoice-btn" type="button">Invoice Now</button></td>
+              </tr>
+              <tr>
+                <td><a class="cvp-billing-audit-link" href="#">Audit</a></td>
+                <td><img class="cvp-billing-row-expand" src="assets/billing-table/icon-row-expand.svg" alt=""><a class="cvp-billing-load-link" href="#">DTL-40338</a></td>
+                <td>FITZMARK</td>
+                <td>09/07/2023 10:30 EDT</td>
+                <td>Woodstock, AL</td>
+                <td>09/07/2023 10:30 EDT</td>
+                <td>Lima, OH</td>
+                <td>On Hold</td>
+                <td>$ 1,250.00</td>
+                <td>Factored</td>
+                <td><img class="cvp-billing-doc-icon" src="assets/billing-table/icon-doc-red.svg" alt="Document pending"></td>
+                <td>In Review</td>
+                <td><button class="cvp-billing-invoice-btn" type="button">Invoice Now</button></td>
+              </tr>
+              <tr>
+                <td><a class="cvp-billing-audit-link" href="#">Audit</a></td>
+                <td><img class="cvp-billing-row-expand" src="assets/billing-table/icon-row-expand.svg" alt=""><a class="cvp-billing-load-link" href="#">DTL-40313</a></td>
+                <td>AVENUE LOGISTICS INC.</td>
+                <td>09/09/2023 10:00 EDT</td>
+                <td>Carey, OH</td>
+                <td>09/09/2023 10:00 EDT</td>
+                <td>Charleston, SC</td>
+                <td>Invoiced</td>
+                <td>$ 1,825.00</td>
+                <td>Factored</td>
+                <td><img class="cvp-billing-doc-icon" src="assets/billing-table/icon-doc-green.svg" alt="Document complete"></td>
+                <td>Complete</td>
+                <td><span class="cvp-billing-review-invoiced">Invoiced<img src="assets/billing-table/icon-undo.svg" alt="Undo"></span></td>
+              </tr>
+              <tr>
+                <td><a class="cvp-billing-audit-link" href="#">Audit</a></td>
+                <td><img class="cvp-billing-row-expand" src="assets/billing-table/icon-row-expand.svg" alt=""><a class="cvp-billing-load-link" href="#">DTL-40321</a></td>
+                <td>DIRECT TRAFFIC SOLUTIONS, INC</td>
+                <td>09/08/2023 13:00 EDT</td>
+                <td>Wilmington, NC</td>
+                <td>09/08/2023 13:00 EDT</td>
+                <td>Anderson, SC</td>
+                <td>Pending</td>
+                <td>$ 1,100.00</td>
+                <td>Factored</td>
+                <td><img class="cvp-billing-doc-icon" src="assets/billing-table/icon-doc-red.svg" alt="Document pending"></td>
+                <td>In Review</td>
+                <td><button class="cvp-billing-invoice-btn" type="button">Invoice Now</button></td>
+              </tr>
+              <tr>
+                <td><a class="cvp-billing-audit-link" href="#">Audit</a></td>
+                <td><img class="cvp-billing-row-expand" src="assets/billing-table/icon-row-expand.svg" alt=""><a class="cvp-billing-load-link" href="#">DTL-40338</a></td>
+                <td>CIRCLE</td>
+                <td>09/08/2023 12:00 EDT</td>
+                <td>Petersburg, VA</td>
+                <td>09/08/2023 12:00 EDT</td>
+                <td>Ringgold, VA</td>
+                <td>In Transit</td>
+                <td>$ 800.00</td>
+                <td>Factored</td>
+                <td><img class="cvp-billing-doc-icon" src="assets/billing-table/icon-doc-red.svg" alt="Document pending"></td>
+                <td>In Review</td>
+                <td><button class="cvp-billing-invoice-btn" type="button">Invoice Now</button></td>
+              </tr>
+              <tr>
+                <td><a class="cvp-billing-audit-link" href="#">Audit</a></td>
+                <td><img class="cvp-billing-row-expand" src="assets/billing-table/icon-row-expand.svg" alt=""><a class="cvp-billing-load-link" href="#">DTL-40332</a></td>
+                <td>LOADSMART, INC</td>
+                <td>09/11/2023 08:00 EDT</td>
+                <td>Sand Fork, WV</td>
+                <td>09/11/2023 08:00 EDT</td>
+                <td>Greenfield, MA</td>
+                <td>In Transit</td>
+                <td>$ 2,900.00</td>
+                <td>Factored</td>
+                <td><img class="cvp-billing-doc-icon" src="assets/billing-table/icon-doc-red.svg" alt="Document pending"></td>
+                <td>In Review</td>
+                <td><button class="cvp-billing-invoice-btn" type="button">Invoice Now</button></td>
+              </tr>
+              <tr>
+                <td><a class="cvp-billing-audit-link" href="#">Audit</a></td>
+                <td><img class="cvp-billing-row-expand" src="assets/billing-table/icon-row-expand.svg" alt=""><a class="cvp-billing-load-link" href="#">DTL-40336</a></td>
+                <td>Quality Freight Logistics</td>
+                <td>09/11/2023 12:00 EDT</td>
+                <td>Shelby, NC</td>
+                <td>09/11/2023 12:00 EDT</td>
+                <td>Dayton, OH</td>
+                <td>Ready to Bill</td>
+                <td>$ 1,000.00</td>
+                <td>Factored</td>
+                <td><img class="cvp-billing-doc-icon" src="assets/billing-table/icon-doc-green.svg" alt="Document complete"></td>
+                <td>Complete</td>
+                <td><button class="cvp-billing-invoice-btn ready" type="button">Invoice Now</button></td>
+              </tr>
+              <tr>
+                <td><a class="cvp-billing-audit-link" href="#">Audit</a></td>
+                <td><img class="cvp-billing-row-expand" src="assets/billing-table/icon-row-expand.svg" alt=""><a class="cvp-billing-load-link" href="#">DTL-40338</a></td>
+                <td>TBD</td>
+                <td>09/09/2023 01:00 EDT</td>
+                <td>St Henry, OH</td>
+                <td>09/09/2023 01:00 EDT</td>
+                <td>Salisbury, NC</td>
+                <td>Confirmed</td>
+                <td>$ 1,450.00</td>
+                <td>Direct Bill</td>
+                <td><img class="cvp-billing-doc-icon" src="assets/billing-table/icon-doc-red.svg" alt="Document pending"></td>
+                <td>In Review</td>
+                <td><button class="cvp-billing-invoice-btn" type="button">Invoice Now</button></td>
+              </tr>
+              <tr>
+                <td><a class="cvp-billing-audit-link" href="#">Audit</a></td>
+                <td><img class="cvp-billing-row-expand" src="assets/billing-table/icon-row-expand.svg" alt=""><a class="cvp-billing-load-link" href="#">DTL40337</a></td>
+                <td>CHARIOT LOGISTICS</td>
+                <td>09/11/2023 12:00 EDT</td>
+                <td>Newnan, GA</td>
+                <td>09/11/2023 12:00 EDT</td>
+                <td>Manchester, IN</td>
+                <td>Ready to Bill</td>
+                <td>$ 900.00</td>
+                <td>Factored</td>
+                <td><img class="cvp-billing-doc-icon" src="assets/billing-table/icon-doc-green.svg" alt="Document complete"></td>
+                <td>Complete</td>
+                <td><button class="cvp-billing-invoice-btn ready" type="button">Invoice Now</button></td>
+              </tr>
+              <tr>
+                <td><a class="cvp-billing-audit-link" href="#">Audit</a></td>
+                <td><img class="cvp-billing-row-expand" src="assets/billing-table/icon-row-expand.svg" alt=""><a class="cvp-billing-load-link" href="#">DTL-40338</a></td>
+                <td>CHARIOT LOGISTICS</td>
+                <td>09/09/2023 01:00 EDT</td>
+                <td>St Henry, OH</td>
+                <td>09/09/2023 01:00 EDT</td>
+                <td>Salisbury, NC</td>
+                <td>Invoiced</td>
+                <td>$ 1,450.00</td>
+                <td>Factored</td>
+                <td><img class="cvp-billing-doc-icon" src="assets/billing-table/icon-doc-green.svg" alt="Document complete"></td>
+                <td>Complete</td>
+                <td><span class="cvp-billing-paid-text">Paid</span></td>
+              </tr>
+              <tr>
+                <td><a class="cvp-billing-audit-link" href="#">Audit</a></td>
+                <td><img class="cvp-billing-row-expand" src="assets/billing-table/icon-row-expand.svg" alt=""><a class="cvp-billing-load-link" href="#">DTL-40336</a></td>
+                <td>Quality Freight Logistics</td>
+                <td>09/11/2023 12:00 EDT</td>
+                <td>Shelby, NC</td>
+                <td>09/11/2023 12:00 EDT</td>
+                <td>Dayton, OH</td>
+                <td>Ready to Bill</td>
+                <td>$ 1,000.00</td>
+                <td>Factored</td>
+                <td><img class="cvp-billing-doc-icon" src="assets/billing-table/icon-doc-green.svg" alt="Document complete"></td>
+                <td>Complete</td>
+                <td><button class="cvp-billing-invoice-btn ready" type="button">Invoice Now</button></td>
+              </tr>
+              <tr>
+                <td><a class="cvp-billing-audit-link" href="#">Audit</a></td>
+                <td><img class="cvp-billing-row-expand" src="assets/billing-table/icon-row-expand.svg" alt=""><a class="cvp-billing-load-link" href="#">DTL-40321</a></td>
+                <td>DIRECT TRAFFIC SOLUTIONS, INC</td>
+                <td>09/08/2023 12:00 EDT</td>
+                <td>Wilmington, NC</td>
+                <td>09/08/2023 12:00 EDT</td>
+                <td>Anderson, SC</td>
+                <td>Pending</td>
+                <td>$ 1,100.00</td>
+                <td>Factored</td>
+                <td><img class="cvp-billing-doc-icon" src="assets/billing-table/icon-doc-red.svg" alt="Document pending"></td>
+                <td>In Review</td>
+                <td><button class="cvp-billing-invoice-btn" type="button">Invoice Now</button></td>
+              </tr>
+              <tr>
+                <td><a class="cvp-billing-audit-link" href="#">Audit</a></td>
+                <td><img class="cvp-billing-row-expand" src="assets/billing-table/icon-row-expand.svg" alt=""><a class="cvp-billing-load-link" href="#">DTL-40338</a></td>
+                <td>CIRCLE</td>
+                <td>09/08/2023 12:00 EDT</td>
+                <td>Petersburg, VA</td>
+                <td>09/08/2023 12:00 EDT</td>
+                <td>Ringgold, VA</td>
+                <td>In Transit</td>
+                <td>$ 800.00</td>
+                <td>Factored</td>
+                <td><img class="cvp-billing-doc-icon" src="assets/billing-table/icon-doc-red.svg" alt="Document pending"></td>
+                <td>In Review</td>
+                <td><button class="cvp-billing-invoice-btn" type="button">Invoice Now</button></td>
+              </tr>
+            </tbody>
+          </table>
+          <div class="cvp-billing-table-footer">
+            <span>Totals</span>
+            <span class="totals-value">$ 18,000.00</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- ===== Representatives ===== -->
+      <div class="cvp-fullwidth-section" data-tabpanel="account">
+        <div class="cvp-section-card">
+          <div class="cvp-section-head" style="cursor:default;">
+            <span class="cvp-section-head-left"><img src="assets/representatives/icon-header-people.svg" alt=""><span class="cvp-section-title">Representatives</span></span>
+          </div>
+          <div class="cvp-section-body">
+            <div class="cvp-rep-grid">
+              <div class="cvp-rep-card">
+                <span class="cvp-rep-avatar">MJ</span>
+                <div class="cvp-rep-info">
+                  <div class="cvp-rep-name">Michael Jaxson</div>
+                  <div class="cvp-rep-dept">Accounting</div>
+                  <div class="cvp-rep-contact">
+                    <span class="cvp-rep-contact-item"><img src="assets/representatives/icon-phone-tiny.svg" alt="">(800) 721-5081</span>
+                    <span class="cvp-rep-contact-item"><img src="assets/representatives/icon-mail.svg" alt="">mjaxson@megacorplogistics.com</span>
+                  </div>
+                </div>
+                <div class="cvp-rep-actions">
+                  <button class="cvp-rep-action-btn" type="button" aria-label="Call Michael Jaxson"><img src="assets/representatives/icon-action-call.svg" alt=""></button>
+                  <button class="cvp-rep-action-btn" type="button" aria-label="Text Michael Jaxson"><img src="assets/representatives/icon-action-message.svg" alt=""></button>
+                  <button class="cvp-rep-action-btn" type="button" aria-label="Chat with Michael Jaxson"><img src="assets/representatives/icon-action-chat.svg" alt=""></button>
+                </div>
+              </div>
+              <div class="cvp-rep-card">
+                <span class="cvp-rep-avatar">SP</span>
+                <div class="cvp-rep-info">
+                  <div class="cvp-rep-name">Scotty Pippen</div>
+                  <div class="cvp-rep-dept">Customer Service</div>
+                  <div class="cvp-rep-contact">
+                    <span class="cvp-rep-contact-item"><img src="assets/representatives/icon-phone-tiny.svg" alt="">(800) 721-5082</span>
+                    <span class="cvp-rep-contact-item"><img src="assets/representatives/icon-mail.svg" alt="">scotty.pippen@megacorplogistics.com</span>
+                  </div>
+                </div>
+                <div class="cvp-rep-actions">
+                  <button class="cvp-rep-action-btn" type="button" aria-label="Call Scotty Pippen"><img src="assets/representatives/icon-action-call.svg" alt=""></button>
+                  <button class="cvp-rep-action-btn" type="button" aria-label="Text Scotty Pippen"><img src="assets/representatives/icon-action-message.svg" alt=""></button>
+                  <button class="cvp-rep-action-btn" type="button" aria-label="Chat with Scotty Pippen"><img src="assets/representatives/icon-action-chat.svg" alt=""></button>
+                </div>
+              </div>
+              <div class="cvp-rep-card">
+                <span class="cvp-rep-avatar">DR</span>
+                <div class="cvp-rep-info">
+                  <div class="cvp-rep-name">DeVoria Ruthner</div>
+                  <div class="cvp-rep-dept">Brokerage</div>
+                  <div class="cvp-rep-contact">
+                    <span class="cvp-rep-contact-item"><img src="assets/representatives/icon-phone-tiny.svg" alt="">(800) 721-5083</span>
+                    <span class="cvp-rep-contact-item"><img src="assets/representatives/icon-mail.svg" alt="">devoria.ruthner@megacorplogistics.com</span>
+                  </div>
+                </div>
+                <div class="cvp-rep-actions">
+                  <button class="cvp-rep-action-btn" type="button" aria-label="Call DeVoria Ruthner"><img src="assets/representatives/icon-action-call.svg" alt=""></button>
+                  <button class="cvp-rep-action-btn" type="button" aria-label="Text DeVoria Ruthner"><img src="assets/representatives/icon-action-message.svg" alt=""></button>
+                  <button class="cvp-rep-action-btn" type="button" aria-label="Chat with DeVoria Ruthner"><img src="assets/representatives/icon-action-chat.svg" alt=""></button>
+                </div>
+              </div>
+              <div class="cvp-rep-card">
+                <span class="cvp-rep-avatar">SC</span>
+                <div class="cvp-rep-info">
+                  <div class="cvp-rep-name">Shaun Curry</div>
+                  <div class="cvp-rep-dept">Insurance</div>
+                  <div class="cvp-rep-contact">
+                    <span class="cvp-rep-contact-item"><img src="assets/representatives/icon-phone-tiny.svg" alt="">(800) 721-5084</span>
+                    <span class="cvp-rep-contact-item"><img src="assets/representatives/icon-mail.svg" alt="">shaun.curry@megacorplogistics.com</span>
+                  </div>
+                </div>
+                <div class="cvp-rep-actions">
+                  <button class="cvp-rep-action-btn" type="button" aria-label="Call Shaun Curry"><img src="assets/representatives/icon-action-call.svg" alt=""></button>
+                  <button class="cvp-rep-action-btn" type="button" aria-label="Text Shaun Curry"><img src="assets/representatives/icon-action-message.svg" alt=""></button>
+                  <button class="cvp-rep-action-btn" type="button" aria-label="Chat with Shaun Curry"><img src="assets/representatives/icon-action-chat.svg" alt=""></button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ===== Insurance ===== -->
+      <div class="cvp-fullwidth-section" data-tabpanel="account">
+        <div class="cvp-loose-header">
+          <span class="cvp-loose-header-left"><img src="assets/insurance/icon-header.svg" alt=""><span class="cvp-loose-title">Insurance</span></span>
+          <button class="cvp-loose-add" type="button"><img src="assets/insurance/icon-plus.svg" alt="">Add Policy</button>
+        </div>
+        <div class="cvp-loose-grid cols-5">
+          <div class="cvp-policy-card">
+            <div class="cvp-policy-top">
+              <span class="cvp-policy-name">Cargo</span>
+              <span class="cvp-badge-green">Active</span>
+            </div>
+            <span class="cvp-policy-issuer">Travelers Property Casualty</span>
+            <div class="cvp-policy-body">
+              <div class="cvp-policy-row"><span class="cvp-policy-row-label">Policy #</span><span class="cvp-policy-row-value">69/12535</span></div>
+              <div class="cvp-policy-row"><span class="cvp-policy-row-label">Certificate</span><button class="cvp-policy-view" type="button"><img src="assets/insurance/icon-view.svg" alt="">View</button></div>
+              <div class="cvp-policy-row"><span class="cvp-policy-row-label">Limit</span><span class="cvp-policy-row-value strong">$2,000,000</span></div>
+              <div class="cvp-policy-row"><span class="cvp-policy-row-label">Expiry</span><span class="cvp-policy-row-value">9/1/2023</span></div>
+            </div>
+          </div>
+          <div class="cvp-policy-card">
+            <div class="cvp-policy-top">
+              <span class="cvp-policy-name">Worker's Comp</span>
+              <span class="cvp-badge-green">Active</span>
+            </div>
+            <span class="cvp-policy-issuer">LM Insurance Corporation</span>
+            <div class="cvp-policy-body">
+              <div class="cvp-policy-row"><span class="cvp-policy-row-label">Policy #</span><span class="cvp-policy-row-value">69/12535</span></div>
+              <div class="cvp-policy-row"><span class="cvp-policy-row-label">Certificate</span><button class="cvp-policy-view" type="button"><img src="assets/insurance/icon-view.svg" alt="">View</button></div>
+              <div class="cvp-policy-row"><span class="cvp-policy-row-label">Limit</span><span class="cvp-policy-row-value strong">$1,000,000</span></div>
+              <div class="cvp-policy-row"><span class="cvp-policy-row-label">Expiry</span><span class="cvp-policy-row-value">9/1/2023</span></div>
+            </div>
+          </div>
+          <div class="cvp-policy-card">
+            <div class="cvp-policy-top">
+              <span class="cvp-policy-name">Trailer Interchange</span>
+              <span class="cvp-badge-green">Active</span>
+            </div>
+            <span class="cvp-policy-issuer">Travelers Property Casualty Company of California</span>
+            <div class="cvp-policy-body">
+              <div class="cvp-policy-row"><span class="cvp-policy-row-label">Policy #</span><span class="cvp-policy-row-value">6812535</span></div>
+              <div class="cvp-policy-row"><span class="cvp-policy-row-label">Certificate</span><button class="cvp-policy-view" type="button"><img src="assets/insurance/icon-view.svg" alt="">View</button></div>
+              <div class="cvp-policy-row"><span class="cvp-policy-row-label">Limit</span><span class="cvp-policy-row-value strong">$68,893</span></div>
+              <div class="cvp-policy-row"><span class="cvp-policy-row-label">Expiry</span><span class="cvp-policy-row-value">9/3/2024</span></div>
+            </div>
+          </div>
+          <div class="cvp-policy-card">
+            <div class="cvp-policy-top">
+              <span class="cvp-policy-name">General Liability</span>
+              <span class="cvp-badge-green">Active</span>
+            </div>
+            <span class="cvp-policy-issuer">Berkley Casualty Company</span>
+            <div class="cvp-policy-body">
+              <div class="cvp-policy-row"><span class="cvp-policy-row-label">Policy #</span><span class="cvp-policy-row-value">69/12518</span></div>
+              <div class="cvp-policy-row"><span class="cvp-policy-row-label">Certificate</span><button class="cvp-policy-view" type="button"><img src="assets/insurance/icon-view.svg" alt="">View</button></div>
+              <div class="cvp-policy-row"><span class="cvp-policy-row-label">Limit</span><span class="cvp-policy-row-value strong">$1,000,000</span></div>
+              <div class="cvp-policy-row"><span class="cvp-policy-row-label">Expiry</span><span class="cvp-policy-row-value">9/3/2024</span></div>
+            </div>
+          </div>
+          <div class="cvp-policy-card">
+            <div class="cvp-policy-top">
+              <span class="cvp-policy-name">Auto</span>
+              <span class="cvp-badge-red">Expired</span>
+            </div>
+            <span class="cvp-policy-issuer">Berkley Casualty Company</span>
+            <div class="cvp-policy-body">
+              <div class="cvp-policy-row"><span class="cvp-policy-row-label">Policy #</span><span class="cvp-policy-row-value">69/12518</span></div>
+              <div class="cvp-policy-row"><span class="cvp-policy-row-label">Certificate</span><button class="cvp-policy-view" type="button"><img src="assets/insurance/icon-view.svg" alt="">View</button></div>
+              <div class="cvp-policy-row"><span class="cvp-policy-row-label">Limit</span><span class="cvp-policy-row-value strong">$1,000,000</span></div>
+              <div class="cvp-policy-row"><span class="cvp-policy-row-label">Expiry</span><span class="cvp-policy-row-value danger">9/3/2024</span></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ===== Bonds ===== -->
+      <div class="cvp-fullwidth-section" data-tabpanel="account">
+        <div class="cvp-loose-header">
+          <span class="cvp-loose-header-left"><img src="assets/bonds/icon-header.svg" alt=""><span class="cvp-loose-title">Bonds</span></span>
+          <button class="cvp-loose-add" type="button"><img src="assets/bonds/icon-plus.svg" alt="">Add Bond</button>
+        </div>
+        <div class="cvp-loose-grid cols-3">
+          <div class="cvp-bond-card">
+            <div class="cvp-bond-top">
+              <div>
+                <div class="cvp-bond-label">Bond Certificate</div>
+                <div class="cvp-bond-issuer">Markoman Bonds</div>
+              </div>
+              <span class="cvp-badge-green">Active</span>
+            </div>
+            <div class="cvp-bond-mid">
+              <div>
+                <div class="cvp-bond-amount-label">Bond Amount</div>
+                <div class="cvp-bond-amount">$100,000</div>
+                <div class="cvp-bond-amount-words">One Hundred Thousand Dollars</div>
+              </div>
+              <div class="cvp-bond-expiry-wrap">
+                <div class="cvp-bond-expiry-label">Expiration</div>
+                <div class="cvp-bond-expiry">9/1/2023</div>
+              </div>
+            </div>
+            <div class="cvp-bond-grid">
+              <div><div class="cvp-bond-field-label">Bond #</div><div class="cvp-bond-field-value">69/12535</div></div>
+              <div><div class="cvp-bond-field-label">Bond Contact</div><div class="cvp-bond-field-value">Michael Clifford</div></div>
+              <div><div class="cvp-bond-field-label">Phone</div><div class="cvp-bond-field-value">(888) 987-8999</div></div>
+              <div><div class="cvp-bond-field-label">Email</div><div class="cvp-bond-field-value link">jamesbond@marksmanbond.com</div></div>
+            </div>
+          </div>
+          <div class="cvp-bond-card">
+            <div class="cvp-bond-top">
+              <div>
+                <div class="cvp-bond-label">Bond Certificate</div>
+                <div class="cvp-bond-issuer">Markoman Bonds</div>
+              </div>
+              <span class="cvp-badge-green">Active</span>
+            </div>
+            <div class="cvp-bond-mid">
+              <div>
+                <div class="cvp-bond-amount-label">Bond Amount</div>
+                <div class="cvp-bond-amount">$100,000</div>
+                <div class="cvp-bond-amount-words">One Hundred Thousand Dollars</div>
+              </div>
+              <div class="cvp-bond-expiry-wrap">
+                <div class="cvp-bond-expiry-label">Expiration</div>
+                <div class="cvp-bond-expiry">9/1/2023</div>
+              </div>
+            </div>
+            <div class="cvp-bond-grid">
+              <div><div class="cvp-bond-field-label">Bond #</div><div class="cvp-bond-field-value">69/12535</div></div>
+              <div><div class="cvp-bond-field-label">Bond Contact</div><div class="cvp-bond-field-value">Michael Clifford</div></div>
+              <div><div class="cvp-bond-field-label">Phone</div><div class="cvp-bond-field-value">(888) 987-8999</div></div>
+              <div><div class="cvp-bond-field-label">Email</div><div class="cvp-bond-field-value link">jamesbond@marksmanbond.com</div></div>
+            </div>
+          </div>
+          <div class="cvp-bond-card">
+            <div class="cvp-bond-top">
+              <div>
+                <div class="cvp-bond-label">Bond Certificate</div>
+                <div class="cvp-bond-issuer">Hartford Surety Group</div>
+              </div>
+              <span class="cvp-badge-red">Expired</span>
+            </div>
+            <div class="cvp-bond-mid">
+              <div>
+                <div class="cvp-bond-amount-label">Bond Amount</div>
+                <div class="cvp-bond-amount">$250,000</div>
+                <div class="cvp-bond-amount-words">Two Hundred Fifty Thousand Dollars</div>
+              </div>
+              <div class="cvp-bond-expiry-wrap">
+                <div class="cvp-bond-expiry-label">Expiration</div>
+                <div class="cvp-bond-expiry danger">3/15/2025</div>
+              </div>
+            </div>
+            <div class="cvp-bond-grid">
+              <div><div class="cvp-bond-field-label">Bond #</div><div class="cvp-bond-field-value">HG-99821</div></div>
+              <div><div class="cvp-bond-field-label">Bond Contact</div><div class="cvp-bond-field-value">Sandra Lee</div></div>
+              <div><div class="cvp-bond-field-label">Phone</div><div class="cvp-bond-field-value">(800) 334-2211</div></div>
+              <div><div class="cvp-bond-field-label">Email</div><div class="cvp-bond-field-value link">s.lee@hartfordsurety.com</div></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <script>
+    (function(){
+      // Sub-nav tabs: switch active state + swap every panel matching data-tabpanel
+      // (multiple separate DOM sections can share the same panel key, e.g. "account"
+      // spans the detail-grid inside the stats column plus the full-width sections below it)
+      var subnavTabs = Array.prototype.slice.call(document.querySelectorAll('.cvp-subnav-tab'));
+      var allPanels = Array.prototype.slice.call(document.querySelectorAll('[data-tabpanel]'));
+      subnavTabs.forEach(function(tab){
+        tab.addEventListener('click', function(){
+          subnavTabs.forEach(function(t){
+            t.classList.toggle('active', t === tab);
+            t.setAttribute('aria-selected', t === tab ? 'true' : 'false');
+          });
+          var target = tab.getAttribute('data-panel');
+          allPanels.forEach(function(panel){
+            panel.hidden = (panel.getAttribute('data-tabpanel') !== target);
+          });
+        });
+      });
+
+      // Collapsible section cards (only headers with a chevron are collapsible)
+      var sectionHeads = Array.prototype.slice.call(document.querySelectorAll('.cvp-section-head'));
+      sectionHeads.forEach(function(head){
+        if(!head.querySelector('.cvp-section-chevron')) return;
+        head.addEventListener('click', function(){
+          head.closest('.cvp-section-card').classList.toggle('collapsed');
+        });
+      });
+    })();
+  </script>
+</body>
+</html>

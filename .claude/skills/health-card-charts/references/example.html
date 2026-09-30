@@ -1,0 +1,418 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Health Card Charts — worked example</title>
+<!-- A smoke test and reference build: the card shell plus one card per
+     archetype, wired to real-looking dispatch data. Open it to see the
+     system assembled, and to check a change against both themes. -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="tokens.css">
+<style>
+  /* ---- chart primitives (see chart-recipes.md) ---- */
+  .bars { display:flex; align-items:flex-end; gap:6px; height:120px; }
+  .bar { flex:1; height:var(--v); min-height:8px; background:var(--blue-400);
+         border-radius:var(--r-pill); position:relative;
+         transition:height .4s cubic-bezier(.4,0,.2,1); }
+  .bar.is-peak { background:var(--blue-600); }
+  .bar .peak { position:absolute; bottom:100%; left:50%; transform:translateX(-50%);
+    margin-bottom:8px; white-space:nowrap; background:var(--fg); color:var(--card);
+    font-size:var(--fs-tick); font-weight:500; padding:4px 8px; border-radius:var(--r-pill); }
+  .bar .peak::after { content:""; position:absolute; top:100%; left:50%;
+    transform:translateX(-50%); border:4px solid transparent; border-top-color:var(--fg); }
+
+  .sbar { flex:1; display:flex; flex-direction:column-reverse; gap:3px;
+          height:100%; justify-content:flex-start; }
+  .sbar i { display:block; height:var(--v); border-radius:var(--r-pill); }
+
+  .rbar { flex:1; position:relative; height:100%; }
+  .rbar::before { content:""; position:absolute; inset:0; margin:0 auto; width:10px;
+    background:var(--blue-100); border-radius:var(--r-pill); }
+  .rbar i { position:absolute; left:0; right:0; margin:0 auto; width:10px;
+    top:var(--top); bottom:var(--bot); background:var(--blue-500);
+    border-radius:var(--r-pill); }
+  .rbar .cap { position:absolute; top:-3px; left:50%; transform:translateX(-50%);
+    width:6px; height:6px; border-radius:var(--r-pill); background:var(--red-500); }
+
+  .spark { width:100%; height:90px; display:block; }
+
+  .gauge { position:relative; }
+  .gauge svg { width:100%; display:block; }
+  .gauge path { fill:none; stroke-width:16; stroke-linecap:round; }
+  .g-track { stroke:var(--track); }
+  .g-fill { stroke:var(--blue-500); stroke-dasharray:377;
+            stroke-dashoffset:calc(377 - 377 * var(--pct));
+            transition:stroke-dashoffset .6s cubic-bezier(.4,0,.2,1); }
+  .g-val { position:absolute; inset:auto 0 14% 0; text-align:center; }
+
+  .meter { position:relative; padding-bottom:20px; }
+  .m-segs { display:flex; gap:4px; }
+  .m-segs i { flex:1; height:10px; border-radius:var(--r-pill); }
+  .m-ptr { position:absolute; top:12px; left:var(--pos); transform:translateX(-50%);
+    width:0; height:0; border-left:5px solid transparent;
+    border-right:5px solid transparent; border-top:6px solid var(--fg); }
+
+  .prows { display:flex; flex-direction:column; gap:14px; }
+  .prow { display:grid; grid-template-columns:1fr auto; gap:6px 8px; }
+  .prow span { font-size:var(--fs-caption); color:var(--fg-secondary); }
+  .prow b { font-size:var(--fs-caption); font-weight:500; font-variant-numeric:tabular-nums; }
+  .prow i { grid-column:1 / -1; height:8px; border-radius:var(--r-pill);
+    background:linear-gradient(to right, var(--c) var(--v), var(--track) var(--v)); }
+
+  .pbar { display:flex; gap:3px; height:26px; }
+  .pbar i { width:var(--v); border-radius:var(--r-pill); }
+
+  .dots { display:flex; gap:10px; align-items:center; height:110px; }
+  .dcol { flex:1; display:flex; flex-direction:column; gap:6px; align-items:center; }
+  .dcol b { border-radius:var(--r-pill); width:var(--s); height:var(--s); background:var(--c); }
+
+  .hyp { position:relative; height:96px; }
+  .hyp b { position:absolute; left:var(--x); width:var(--w);
+    height:calc(100% / var(--bands) - 6px);
+    top:calc(var(--lane) * 100% / var(--bands)); border-radius:var(--r-sm); }
+
+  /* theme toggle, demo chrome only */
+  .toolbar { display:flex; align-items:center; gap:12px; padding:20px 16px 0; }
+  .toolbar h1 { margin:0; font-size:15px; font-weight:600; letter-spacing:-.01em; }
+  .toolbar button { margin-left:auto; border:1px solid var(--border); background:var(--card);
+    color:var(--fg); border-radius:var(--r-pill); padding:7px 14px; font-size:12px;
+    font-family:var(--font); cursor:pointer; }
+</style>
+</head>
+<body>
+
+<div class="toolbar">
+  <h1>Health Card Charts — worked example</h1>
+  <button onclick="document.documentElement.dataset.theme =
+    document.documentElement.dataset.theme === 'dark' ? 'light' : 'dark'">Toggle theme</button>
+</div>
+
+<main class="grid">
+
+  <!-- rounded-cap bars + annotated peak -->
+  <article class="card">
+    <div class="card-hd">
+      <svg viewBox="0 0 24 24"><path d="M3 12h4l3 8 4-16 3 8h4"/></svg>
+      <h3>Loads Delivered</h3><button class="more" aria-label="More">···</button>
+    </div>
+    <div class="mtr-row">
+      <div><span class="mtr-v">780</span><span class="mtr-u">loads</span>
+        <div class="mtr-c">Total this week</div></div>
+      <div><span class="mtr-v">250</span><span class="mtr-u">avg</span>
+        <div class="mtr-d up">+27% vs last week</div></div>
+    </div>
+    <div class="bars">
+      <div class="bar" style="--v:52%"></div>
+      <div class="bar" style="--v:71%"></div>
+      <div class="bar" style="--v:64%"></div>
+      <div class="bar is-peak" style="--v:100%"><span class="peak">1,463</span></div>
+      <div class="bar" style="--v:83%"></div>
+      <div class="bar" style="--v:46%"></div>
+      <div class="bar" style="--v:38%"></div>
+    </div>
+    <div class="ticks"><span>Sun</span><span>Mon</span><span>Tue</span><span>Wed</span>
+      <span>Thu</span><span>Fri</span><span>Sat</span></div>
+  </article>
+
+  <!-- stacked segment bars -->
+  <article class="card">
+    <div class="card-hd">
+      <svg viewBox="0 0 24 24"><path d="M4 20V10M10 20V4M16 20v-8M22 20v-5"/></svg>
+      <h3>Activity Summary</h3><button class="more" aria-label="More">···</button>
+    </div>
+    <div class="mtr-row">
+      <div><span class="mtr-v">24</span><span class="mtr-u">%</span>
+        <div class="mtr-c">Last week</div></div>
+      <div><span class="mtr-v">762</span><span class="mtr-u">hrs</span>
+        <div class="mtr-c">Drive time</div></div>
+    </div>
+    <div class="bars">
+      <div class="sbar"><i style="--v:22%;background:var(--blue-200)"></i>
+        <i style="--v:30%;background:var(--blue-400)"></i>
+        <i style="--v:34%;background:var(--blue-600)"></i></div>
+      <div class="sbar"><i style="--v:18%;background:var(--blue-200)"></i>
+        <i style="--v:24%;background:var(--blue-400)"></i>
+        <i style="--v:20%;background:var(--blue-600)"></i></div>
+      <div class="sbar"><i style="--v:26%;background:var(--blue-200)"></i>
+        <i style="--v:20%;background:var(--blue-400)"></i>
+        <i style="--v:14%;background:var(--blue-600)"></i></div>
+      <div class="sbar"><i style="--v:20%;background:var(--blue-200)"></i>
+        <i style="--v:34%;background:var(--blue-400)"></i>
+        <i style="--v:38%;background:var(--blue-600)"></i></div>
+      <div class="sbar"><i style="--v:24%;background:var(--blue-200)"></i>
+        <i style="--v:26%;background:var(--blue-400)"></i>
+        <i style="--v:24%;background:var(--blue-600)"></i></div>
+      <div class="sbar"><i style="--v:16%;background:var(--blue-200)"></i>
+        <i style="--v:30%;background:var(--blue-400)"></i>
+        <i style="--v:28%;background:var(--blue-600)"></i></div>
+      <div class="sbar"><i style="--v:14%;background:var(--blue-200)"></i>
+        <i style="--v:18%;background:var(--blue-400)"></i>
+        <i style="--v:16%;background:var(--blue-600)"></i></div>
+    </div>
+    <div class="ticks"><span>Sun</span><span>Mon</span><span>Tue</span><span>Wed</span>
+      <span>Thu</span><span>Fri</span><span>Sat</span></div>
+  </article>
+
+  <!-- floating range bars -->
+  <article class="card">
+    <div class="card-hd">
+      <svg viewBox="0 0 24 24"><path d="M5 4v16M12 7v10M19 3v18"/></svg>
+      <h3>Dwell Time Range</h3><button class="more" aria-label="More">···</button>
+    </div>
+    <div class="mtr-row">
+      <div><span class="mtr-v">10-22</span><span class="mtr-u">min</span>
+        <div class="mtr-c">Typical range</div></div>
+    </div>
+    <div class="bars">
+      <div class="rbar"><i style="--top:18%;--bot:40%"></i></div>
+      <div class="rbar"><i style="--top:30%;--bot:28%"></i></div>
+      <div class="rbar"><i style="--top:8%;--bot:52%"><b class="cap"></b></i></div>
+      <div class="rbar"><i style="--top:34%;--bot:22%"></i></div>
+      <div class="rbar"><i style="--top:22%;--bot:44%"></i></div>
+      <div class="rbar"><i style="--top:40%;--bot:18%"></i></div>
+      <div class="rbar"><i style="--top:26%;--bot:36%"></i></div>
+    </div>
+    <div class="ticks"><span>6 AM</span><span>10 AM</span><span>2 PM</span><span>6 PM</span></div>
+  </article>
+
+  <!-- sparkline -->
+  <article class="card">
+    <div class="card-hd">
+      <svg viewBox="0 0 24 24"><path d="M3 17l6-6 4 4 8-8"/></svg>
+      <h3>Fuel Efficiency</h3><button class="more" aria-label="More">···</button>
+    </div>
+    <div class="mtr-row">
+      <div><span class="mtr-v">6.4</span><span class="mtr-u">mpg</span>
+        <div class="mtr-c">Fleet average</div></div>
+      <div><span class="mtr-v">5.9-7.1</span><span class="mtr-u">mpg</span>
+        <div class="mtr-c">Variability</div></div>
+    </div>
+    <svg class="spark" viewBox="0 0 300 90" preserveAspectRatio="none">
+      <g stroke="var(--grid)" stroke-dasharray="2 4" stroke-width="1">
+        <line x1="0" y1="22" x2="300" y2="22"/><line x1="0" y1="45" x2="300" y2="45"/>
+        <line x1="0" y1="68" x2="300" y2="68"/>
+      </g>
+      <defs><linearGradient id="sf" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0%" stop-color="var(--blue-500)" stop-opacity=".18"/>
+        <stop offset="100%" stop-color="var(--blue-500)" stop-opacity="0"/>
+      </linearGradient></defs>
+      <path d="M0,70 C20,68 40,40 60,44 S110,20 140,34 S200,62 240,50 S285,26 300,30 L300,90 L0,90 Z" fill="url(#sf)"/>
+      <path d="M0,70 C20,68 40,40 60,44 S110,20 140,34 S200,62 240,50 S285,26 300,30"
+        fill="none" stroke="var(--blue-500)" stroke-width="2"
+        stroke-linecap="round" vector-effect="non-scaling-stroke"/>
+    </svg>
+    <div class="stat-strip">
+      <div><span class="mtr-v">127</span><span class="mtr-u">trk</span><div class="mtr-c">Now</div></div>
+      <div><span class="mtr-v">80</span><span class="mtr-u">trk</span><div class="mtr-c">Min</div></div>
+      <div><span class="mtr-v">142</span><span class="mtr-u">trk</span><div class="mtr-c">Max</div></div>
+    </div>
+  </article>
+
+  <!-- radial gauge -->
+  <article class="card">
+    <div class="card-hd">
+      <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 12l4-3"/></svg>
+      <h3>Readiness Score</h3><button class="more" aria-label="More">···</button>
+    </div>
+    <div class="gauge">
+      <svg viewBox="0 0 200 132">
+        <path class="g-track" d="M20,120 A80,80 0 1,1 180,120"/>
+        <path class="g-fill" d="M20,120 A80,80 0 1,1 180,120" style="--pct:.72"/>
+      </svg>
+      <div class="g-val"><span class="mtr-v">72</span><div class="mtr-c">Fleet ready</div></div>
+    </div>
+    <div class="mtr-c" style="text-align:center">
+      <span style="color:var(--pos)">8 points higher</span> than last month.
+    </div>
+  </article>
+
+  <!-- segmented threshold meter -->
+  <article class="card">
+    <div class="card-hd">
+      <svg viewBox="0 0 24 24"><path d="M3 12a9 9 0 0118 0"/><path d="M12 12l5-3"/></svg>
+      <h3>Load Pressure</h3><button class="more" aria-label="More">···</button>
+    </div>
+    <div class="mtr-row" style="align-items:baseline">
+      <div><span class="mtr-v">120/70</span><span class="mtr-u">pct</span>
+        <div class="mtr-c">This month</div></div>
+      <div style="margin-left:auto"><span class="mtr-v" style="font-size:20px">Stage 2</span></div>
+    </div>
+    <div class="meter">
+      <div class="m-segs">
+        <i style="background:var(--blue-500)"></i><i style="background:var(--green-500)"></i>
+        <i style="background:var(--amber-500)"></i><i style="background:var(--orange-400)"></i>
+        <i style="background:var(--orange-600)"></i><i style="background:var(--red-500)"></i>
+      </div>
+      <b class="m-ptr" style="--pos:68%"></b>
+      <div class="ticks" style="position:absolute;left:0;right:0;bottom:0">
+        <span>50</span><span>140</span></div>
+    </div>
+    <div class="stat-strip">
+      <div><span class="mtr-v">117</span><div class="mtr-c">Booked</div></div>
+      <div><span class="mtr-v">80</span><div class="mtr-c">Covered</div></div>
+      <div><span class="mtr-v">85</span><div class="mtr-c">Tendered</div></div>
+    </div>
+  </article>
+
+  <!-- labelled progress rows -->
+  <article class="card">
+    <div class="card-hd">
+      <svg viewBox="0 0 24 24"><path d="M4 6h16M4 12h10M4 18h13"/></svg>
+      <h3>Performance Index</h3><button class="more" aria-label="More">···</button>
+    </div>
+    <div class="mtr-row">
+      <div><span class="mtr-v">97</span><span class="mtr-u">%</span><div class="mtr-c">On time</div></div>
+      <div><span class="mtr-v">87</span><span class="mtr-u">%</span><div class="mtr-c">Utilization</div></div>
+      <div><span class="mtr-v">36.6</span><span class="mtr-u">h</span><div class="mtr-c">Avg cycle</div></div>
+    </div>
+    <div class="prows">
+      <div class="prow"><span>On-time delivery</span><b>96%</b>
+        <i style="--v:96%;--c:var(--orange-500)"></i></div>
+      <div class="prow"><span>Dock balance</span><b>20%</b>
+        <i style="--v:20%;--c:var(--blue-500)"></i></div>
+      <div class="prow"><span>Fleet utilization</span><b>76%</b>
+        <i style="--v:76%;--c:var(--blue-400)"></i></div>
+      <div class="prow"><span>Idle time</span><b>80%</b>
+        <i style="--v:80%;--c:var(--purple-500)"></i></div>
+    </div>
+  </article>
+
+  <!-- multi-segment proportion bar -->
+  <article class="card">
+    <div class="card-hd">
+      <svg viewBox="0 0 24 24"><path d="M6 4v16M18 4v16M3 12h18"/></svg>
+      <h3>Activity Hours</h3><button class="more" aria-label="More">···</button>
+    </div>
+    <div class="mtr-row">
+      <div><span class="mtr-v">2</span><span class="mtr-u">h</span>
+        <span class="mtr-v">23</span><span class="mtr-u">min</span>
+        <div class="mtr-c">Activity hours</div></div>
+    </div>
+    <div class="pbar">
+      <i style="--v:14%;background:var(--blue-600)"></i>
+      <i style="--v:62%;background:var(--blue-400)"></i>
+      <i style="--v:24%;background:var(--blue-200)"></i>
+    </div>
+    <div class="legend">
+      <span><i style="--c:var(--blue-600)"></i>Pause</span>
+      <span><i style="--c:var(--blue-400)"></i>Active</span>
+      <span><i style="--c:var(--blue-200)"></i>Extra</span>
+    </div>
+    <div class="stat-strip">
+      <div><span class="mtr-v">30</span><span class="mtr-u">min</span></div>
+      <div><span class="mtr-v">1:30</span><span class="mtr-u">h</span></div>
+      <div><span class="mtr-v">23</span><span class="mtr-u">min</span></div>
+    </div>
+  </article>
+
+  <!-- hex heatmap -->
+  <article class="card">
+    <div class="card-hd">
+      <svg viewBox="0 0 24 24"><path d="M12 3l7 4v10l-7 4-7-4V7z"/></svg>
+      <h3>Lane Density</h3><button class="more" aria-label="More">···</button>
+    </div>
+    <svg id="hex" style="width:100%;display:block"></svg>
+    <div class="legend">
+      <span><i style="--c:var(--purple-300)"></i>Low</span>
+      <span><i style="--c:var(--purple-500)"></i>Medium</span>
+      <span><i style="--c:var(--pink-500)"></i>High</span>
+    </div>
+    <div class="stat-strip">
+      <div><span class="mtr-v">19</span><span class="mtr-u">%</span></div>
+      <div><span class="mtr-v">57</span><span class="mtr-u">%</span></div>
+      <div><span class="mtr-v">24</span><span class="mtr-u">%</span></div>
+    </div>
+  </article>
+
+  <!-- dot matrix -->
+  <article class="card">
+    <div class="card-hd">
+      <svg viewBox="0 0 24 24"><circle cx="6" cy="6" r="2"/><circle cx="12" cy="12" r="2"/>
+        <circle cx="18" cy="8" r="2"/><circle cx="12" cy="18" r="2"/></svg>
+      <h3>Wellness Index</h3><button class="more" aria-label="More">···</button>
+    </div>
+    <div class="mtr-row">
+      <div><span class="mtr-v">78</span><span class="mtr-u">%</span>
+        <div class="mtr-d up">+10% last week</div></div>
+    </div>
+    <div class="dots" id="dots"></div>
+    <div class="ticks"><span>Sun</span><span>Wed</span><span>Sat</span></div>
+  </article>
+
+  <!-- hypnogram -->
+  <article class="card">
+    <div class="card-hd">
+      <svg viewBox="0 0 24 24"><path d="M3 18v-6h6v6M9 12V8h6v10M15 8V5h6v13"/></svg>
+      <h3>Driver Status</h3><button class="more" aria-label="More">···</button>
+    </div>
+    <div class="mtr-row">
+      <div><span class="mtr-v">7</span><span class="mtr-u">h</span>
+        <span class="mtr-v">23</span><span class="mtr-u">min</span>
+        <div class="mtr-c">On duty</div></div>
+      <div><span class="mtr-v">7</span><span class="mtr-u">h</span>
+        <span class="mtr-v">10</span><span class="mtr-u">min</span>
+        <div class="mtr-c">Driving</div></div>
+    </div>
+    <div class="hyp" style="--bands:4">
+      <b style="--lane:0;--x:2%;--w:5%;background:var(--orange-500)"></b>
+      <b style="--lane:1;--x:8%;--w:13%;background:var(--blue-400)"></b>
+      <b style="--lane:2;--x:23%;--w:21%;background:var(--blue-500)"></b>
+      <b style="--lane:3;--x:45%;--w:16%;background:var(--purple-500)"></b>
+      <b style="--lane:2;--x:62%;--w:11%;background:var(--blue-500)"></b>
+      <b style="--lane:1;--x:74%;--w:15%;background:var(--blue-400)"></b>
+      <b style="--lane:0;--x:90%;--w:7%;background:var(--orange-500)"></b>
+    </div>
+    <div class="ticks"><span>11:00</span><span>06:23</span></div>
+    <div class="prows">
+      <div class="prow"><span>Off duty</span><b>20 min</b><i style="--v:8%;--c:var(--orange-500)"></i></div>
+      <div class="prow"><span>Sleeper</span><b>1h 25m</b><i style="--v:34%;--c:var(--blue-400)"></i></div>
+      <div class="prow"><span>Driving</span><b>5h 22m</b><i style="--v:72%;--c:var(--blue-500)"></i></div>
+      <div class="prow"><span>On duty</span><b>52 min</b><i style="--v:22%;--c:var(--purple-500)"></i></div>
+    </div>
+  </article>
+
+</main>
+
+<script>
+// hex heatmap — generated, because every other row offsets by half a hex
+(function () {
+  const svg = document.getElementById('hex');
+  const COLS = 14, ROWS = 8, R = 11;
+  const ramp = ['--purple-200','--purple-300','--purple-400','--pink-400','--pink-500'];
+  const hex = (cx, cy) => Array.from({length: 6}, (_, i) => {
+    const a = Math.PI / 180 * (60 * i - 30);
+    return (cx + R * Math.cos(a)).toFixed(1) + ',' + (cy + R * Math.sin(a)).toFixed(1);
+  }).join(' ');
+  const w = R * Math.sqrt(3), h = R * 1.5;
+  let out = '';
+  for (let r = 0; r < ROWS; r++) for (let c = 0; c < COLS; c++) {
+    const cx = c * w + (r % 2 ? w / 2 : 0) + R, cy = r * h + R;
+    // fake a hot centre so the ramp is visible
+    const d = Math.hypot((c - COLS / 2) / (COLS / 2), (r - ROWS / 2) / (ROWS / 2));
+    const step = Math.max(0, Math.min(4, Math.round((1 - d) * 5.2)));
+    out += '<polygon points="' + hex(cx, cy) + '" fill="var(' + ramp[step] + ')"/>';
+  }
+  svg.innerHTML = out;
+  svg.setAttribute('viewBox', '0 0 ' + (COLS * w + w) + ' ' + (ROWS * h + R * 2));
+})();
+
+// dot matrix
+(function () {
+  const el = document.getElementById('dots');
+  const tones = ['--blue-200','--blue-300','--blue-400','--blue-500','--blue-600'];
+  const cols = [3, 4, 2, 5, 3, 4, 2, 5, 4, 3];
+  el.innerHTML = cols.map(function (n, ci) {
+    let inner = '';
+    for (let i = 0; i < n; i++) {
+      const t = Math.min(4, Math.round((i / Math.max(1, n - 1)) * 4 + (ci % 2)));
+      inner += '<b style="--s:' + (6 + t * 2.5) + 'px;--c:var(' + tones[t] + ')"></b>';
+    }
+    return '<div class="dcol">' + inner + '</div>';
+  }).join('');
+})();
+</script>
+</body>
+</html>
