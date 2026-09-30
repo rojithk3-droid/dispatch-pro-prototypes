@@ -883,7 +883,7 @@
               </div>
               <div class="vtool-group">
                 <button class="vtool" type="button" id="toolRotate" aria-pressed="false" title="Auto-rotate"><i data-lucide="rotate-3d"></i></button>
-                <button class="vtool" type="button" id="toolXray" aria-pressed="true" title="X-ray body"><i data-lucide="scan-eye"></i></button>
+                <button class="vtool" type="button" id="toolXray" aria-pressed="false" title="X-ray body"><i data-lucide="scan-eye"></i></button>
                 <button class="vtool" type="button" id="toolZoomIn" title="Zoom in"><i data-lucide="zoom-in"></i></button>
                 <button class="vtool" type="button" id="toolZoomOut" title="Zoom out"><i data-lucide="zoom-out"></i></button>
                 <button class="vtool" type="button" id="toolReset" title="Reset view"><i data-lucide="maximize"></i></button>
@@ -1810,6 +1810,7 @@ window.dpEnhanceSelect = (function(){
   /* ---------- viewer bridge ---------- */
   window.addEventListener('dp-viewer-ready', function(){
     viewer = window.dpViewer;
+    viewer.on('xray', function(on){ $('#toolXray').setAttribute('aria-pressed', on ? 'true' : 'false'); });
     viewer.on('pick', function(i){ selectAxle(i, true); });
     viewer.on('hover', function(i){
       $$('tr', body).forEach(function(tr){ tr.classList.toggle('is-linked', +tr.dataset.i === i); });
@@ -1901,7 +1902,10 @@ window.dpEnhanceSelect = (function(){
     hub:    std({ color:0x3a3d42, metalness:0.6, roughness:0.45 }),
     cab:    std({ color:0x5c5f5c, metalness:0.55, roughness:0.36 }),
     cabHi:  std({ color:0x8a8f96, metalness:0.5, roughness:0.4 }),
-    glass:  std({ color:0x0b1626, metalness:0.75, roughness:0.08 }),
+    glass:  std({ color:0x0b1626, metalness:0.75, roughness:0.08, side:THREE.DoubleSide }),
+    paint:  new THREE.MeshPhysicalMaterial({ color:0xf3f5f7, roughness:0.28, metalness:0.08, clearcoat:1, clearcoatRoughness:0.1 }),
+    skirt:  std({ color:0x6b7280, metalness:0.4, roughness:0.55 }),
+    rubber: std({ color:0x15181c, roughness:0.95, metalness:0 }),
     accent: std({ color:0x0F6FFF, emissive:0x0F6FFF, emissiveIntensity:0.35, roughness:0.4, metalness:0.3 }),
     lamp:   std({ color:0xfff4d6, emissive:0xfff0c2, emissiveIntensity:0.9, roughness:0.3 }),
     amber:  std({ color:0xf59e0b, emissive:0xf59e0b, emissiveIntensity:0.6 }),
@@ -1912,8 +1916,8 @@ window.dpEnhanceSelect = (function(){
   };
   var edgeMat = new THREE.LineBasicMaterial({ color:0x6b7280, transparent:true, opacity:0.55 });
   var BAND = new THREE.MeshBasicMaterial({ color:0x0F6FFF, transparent:true, opacity:0, depthWrite:false });
-  var XRAY = { deck:[0.5, 0.97], van:[0.2, 0.95] };
-  var xrayOn = true;
+  var XRAY = { paint:[0.3, 1], van:[0.2, 0.95] };
+  var xrayOn = false;
 
   var GEO = {
     box:new THREE.BoxGeometry(1, 1, 1),
@@ -1934,22 +1938,26 @@ window.dpEnhanceSelect = (function(){
     e.position.copy(m.position); e.rotation.copy(m.rotation); e.scale.copy(m.scale); return e;
   }
 
-  /* ---------- geometry from the vector ---------- */
-  var D = { beamW:1.666, beamD:0.204, beamH:0.16, wr:0.345, ww:0.5, gap:0.02, rimR:0.19 };
+  /* ---------- proportions (metres) — real heavy-truck sizes ----------
+     wheel radius 0.5 (295/75R22.5), steer track 2.06, drive track 1.84 */
+  var D = { wr:0.5, ww:0.36, wd:0.29, gap:0.04, rimR:0.29, beamD:0.24, beamH:0.2, steerHalf:1.03, driveHalf:0.92 };
 
-  function axleZ(type, n){
-    var out = [];
-    if(type === 'truck'){
-      var steer = -2.912, last = 3.57;
-      out.push(steer);
-      if(n === 1) return out;
-      var rear = n - 1;
-      var sp = rear > 1 ? Math.max(0.72, Math.min(0.8, (last - (steer + 1.1)) / (rear - 1))) : 0;
-      for(var k = 0; k < rear; k++) out.push(last - (rear - 1 - k) * sp);
-    } else {
-      var lastT = 4.35, spT = n > 3 ? Math.max(0.75, Math.min(1.3, 7.2 / (n - 1))) : 1.3;
-      for(var j = 0; j < n; j++) out.push(lastT - (n - 1 - j) * spT);
-    }
+  /* Kenworth-style tractor: steer axle fixed under the hood, drives packed behind
+     the sleeper. More axles than fit walk forward, then grow the frame rearward. */
+  var TRUCK = { steer:-2.75, last:3.05, frameEnd:3.9 };
+  function truckLayout(n){
+    var out = [TRUCK.steer];
+    if(n <= 1) return { z:out, ext:0 };
+    var r = n - 1, firstMin = TRUCK.steer + 1.25, avail = TRUCK.last - firstMin, sp = 1.3, first;
+    if(r === 1) first = TRUCK.last;
+    else if((r - 1) * sp <= avail) first = TRUCK.last - (r - 1) * sp;
+    else { sp = Math.max(1.12, avail / (r - 1)); first = firstMin; }
+    for(var j = 0; j < r; j++) out.push(first + j * sp);
+    return { z:out, ext:Math.max(0, out[out.length - 1] + 0.85 - TRUCK.frameEnd) };
+  }
+  function trailerAxleZ(n){
+    var out = [], last = 4.35, sp = n > 3 ? Math.max(1.1, Math.min(1.3, 8.6 / (n - 1))) : 1.3;
+    for(var j = 0; j < n; j++) out.push(last - (n - 1 - j) * sp);
     return out;
   }
 
@@ -1957,33 +1965,33 @@ window.dpEnhanceSelect = (function(){
   function tireGeo(w){
     var key = w.toFixed(3);
     if(tireGeoCache[key]) return tireGeoCache[key];
-    var R = D.wr, h = w / 2, pts = [];
-    pts.push(new THREE.Vector2(D.rimR, -h + 0.015));
-    pts.push(new THREE.Vector2(R - 0.075, -h));
-    pts.push(new THREE.Vector2(R - 0.03, -h + 0.012));
-    pts.push(new THREE.Vector2(R - 0.006, -h + 0.04));
-    var span = w - 0.16, grooves = w > 0.4 ? [-0.15, 0, 0.15] : (w > 0.25 ? [0] : []);
-    pts.push(new THREE.Vector2(R, -h + 0.07));
-    grooves.forEach(function(g){
-      pts.push(new THREE.Vector2(R, g - 0.02)); pts.push(new THREE.Vector2(R - 0.016, g - 0.014));
-      pts.push(new THREE.Vector2(R - 0.016, g + 0.014)); pts.push(new THREE.Vector2(R, g + 0.02));
+    var R = D.wr, h = w / 2, s = R / 0.345, pts = [];
+    var sh = Math.min(0.07 * s, h * 0.36), k = sh / (0.07 * s);
+    var V = function(r, a){ pts.push(new THREE.Vector2(r, a)); };
+    V(D.rimR, -h + 0.02 * s * k);
+    V(R - 0.075 * s, -h);
+    V(R - 0.03 * s, -h + 0.012 * s * k);
+    V(R - 0.006 * s, -h + 0.04 * s * k);
+    V(R, -h + sh);
+    (w >= 0.3 ? [-w * 0.25, 0, w * 0.25] : [0]).forEach(function(g){
+      V(R, g - 0.02 * s); V(R - 0.016 * s, g - 0.014 * s); V(R - 0.016 * s, g + 0.014 * s); V(R, g + 0.02 * s);
     });
-    pts.push(new THREE.Vector2(R, h - 0.07));
-    pts.push(new THREE.Vector2(R - 0.006, h - 0.04));
-    pts.push(new THREE.Vector2(R - 0.03, h - 0.012));
-    pts.push(new THREE.Vector2(R - 0.075, h));
-    pts.push(new THREE.Vector2(D.rimR, h - 0.015));
-    var g = new THREE.LatheGeometry(pts, 40); g.rotateZ(Math.PI / 2);
+    V(R, h - sh);
+    V(R - 0.006 * s, h - 0.04 * s * k);
+    V(R - 0.03 * s, h - 0.012 * s * k);
+    V(R - 0.075 * s, h);
+    V(D.rimR, h - 0.02 * s * k);
+    var g = new THREE.LatheGeometry(pts, 48); g.rotateZ(Math.PI / 2);
     return (tireGeoCache[key] = g);
   }
   function rimGeo(w){
     var key = w.toFixed(3);
     if(rimGeoCache[key]) return rimGeoCache[key];
-    var g = new THREE.CylinderGeometry(D.rimR - 0.004, D.rimR - 0.004, w * 0.9, 28); g.rotateZ(Math.PI / 2);
+    var g = new THREE.CylinderGeometry(D.rimR - 0.005, D.rimR - 0.005, w * 0.9, 32); g.rotateZ(Math.PI / 2);
     return (rimGeoCache[key] = g);
   }
-  var lugGeo = new THREE.CylinderGeometry(0.012, 0.012, 0.03, 8);
-  var capGeo = new THREE.CylinderGeometry(0.075, 0.075, 0.04, 20);
+  var lugGeo = new THREE.CylinderGeometry(0.017, 0.017, 0.04, 8);
+  var capGeo = new THREE.CylinderGeometry(0.11, 0.11, 0.05, 24);
   capGeo.rotateZ(Math.PI / 2);
 
   /* one wheel with its OUTER face toward +x */
@@ -1992,49 +2000,47 @@ window.dpEnhanceSelect = (function(){
     g.add(mesh(tireGeo(w), tireMat));
     g.add(mesh(rimGeo(w), M.chrome));
     if(outer){
-      var cap = mesh(capGeo, M.chrome, w * 0.45 + 0.005, 0, 0); g.add(cap);
-      for(var i = 0; i < 8; i++){
-        var a = i / 8 * Math.PI * 2;
-        var lug = mesh(lugGeo, M.dark, w * 0.45 + 0.012, Math.sin(a) * 0.125, Math.cos(a) * 0.125); lug.rotation.z = Math.PI / 2; g.add(lug);
+      g.add(mesh(capGeo, M.chrome, w * 0.45 + 0.006, 0, 0));
+      for(var i = 0; i < 10; i++){
+        var a = i / 10 * Math.PI * 2;
+        var lug = mesh(lugGeo, M.dark, w * 0.45 + 0.016, Math.sin(a) * 0.185, Math.cos(a) * 0.185); lug.rotation.z = Math.PI / 2; g.add(lug);
       }
     }
     return g;
   }
+  /* wheels of one side, centred on the axle end; j = 0 is the outermost tire */
   function fillSide(group, perSide, tireMat){
     while(group.children.length){ group.remove(group.children[0]); }
     if(!perSide) return;
-    var w = perSide === 1 ? D.ww : (1.04 - D.gap * (perSide - 1)) / perSide;
+    var w = perSide === 1 ? D.ww : Math.min(D.wd, (0.74 - D.gap * (perSide - 1)) / perSide);
     for(var j = 0; j < perSide; j++){
       var wheel = makeWheel(w, tireMat, j === 0);
-      wheel.position.x = 0.25 - w / 2 - j * (w + D.gap);
+      wheel.position.x = ((perSide - 1) / 2 - j) * (w + D.gap);
       group.add(wheel);
     }
   }
 
-  function createAxle(i, z, kind, deckY){
+  function createAxle(i, z, kind, sideX){
     var grp = new THREE.Group(); grp.position.z = z; grp.userData.axle = i;
+    var half = kind === 'steer' ? D.steerHalf : D.driveHalf;
     var beamMat = M.steel.clone(), tireMat = M.tire.clone();
-    var beam = box(D.beamW, D.beamH, D.beamD, beamMat, 0, D.wr, 0); grp.add(beam);
-    if(kind !== 'steer'){
-      var diff = mesh(rb(0.5, 0.34, 0.42, 0.08), M.dark, 0, D.wr, 0); grp.add(diff);
-    } else {
-      grp.add(mesh(rb(0.3, 0.22, 0.3, 0.06), M.dark, 0, D.wr, 0));
-    }
+    grp.add(box(half * 2, D.beamH, D.beamD, beamMat, 0, D.wr, 0));
+    if(kind === 'steer') grp.add(mesh(rb(0.38, 0.28, 0.36, 0.06), M.dark, 0, D.wr, 0));
+    else grp.add(mesh(rb(0.72, 0.44, 0.52, 0.1), M.dark, 0, D.wr, 0));
     [-1, 1].forEach(function(s){
-      grp.add(box(0.16, 0.2, 0.16, M.hub, s * 0.62, D.wr, 0));
-      grp.add(box(0.11, 0.07, 0.56, M.steel, s * 0.44, D.wr + 0.13, 0));
-      grp.add(cyl(0.12, 0.05, M.dark, s * 0.83, D.wr, 0, 'x'));
+      grp.add(box(0.13, 0.1, 0.66, M.steel, s * half * 0.55, D.wr + 0.2, 0));
+      grp.add(cyl(0.15, 0.4, M.hub, s * (half - 0.28), D.wr, 0, 'x'));
     });
     var L = new THREE.Group(), R = new THREE.Group();
-    L.position.x = -D.beamW / 2; L.rotation.y = Math.PI;
-    R.position.x = D.beamW / 2;
-    L.position.y = R.position.y = D.wr; grp.add(L); grp.add(R);
+    L.position.set(-half, D.wr, 0); L.rotation.y = Math.PI;
+    R.position.set(half, D.wr, 0);
+    grp.add(L); grp.add(R);
     var band = new THREE.Mesh(new THREE.PlaneGeometry(1, 1), BAND.clone());
     band.rotation.x = -Math.PI / 2; band.position.y = 0.035; grp.add(band);
-    var bar = new THREE.Mesh(GEO.box, new THREE.MeshStandardMaterial({ color:0x0F6FFF, transparent:true, opacity:0.85, roughness:0.4 }));
-    bar.castShadow = true; bar.visible = false; grp.add(bar);
+    var bar = new THREE.Mesh(GEO.box, new THREE.MeshStandardMaterial({ color:0x0F6FFF, transparent:true, opacity:0.62, roughness:0.4, depthWrite:false }));
+    bar.visible = false; grp.add(bar);
     grp.traverse(function(o){ if(o.isMesh && o !== band && o !== bar) o.userData.axle = i; });
-    return { i:i, z:z, kind:kind, grp:grp, beamMat:beamMat, tireMat:tireMat, L:L, R:R, band:band, bar:bar, deckY:deckY,
+    return { i:i, z:z, kind:kind, grp:grp, beamMat:beamMat, tireMat:tireMat, L:L, R:R, band:band, bar:bar, sideX:sideX,
       tires:0, hl:0, hlT:0, barH:0, barT:0, born:0 };
   }
   function setTires(a, n, animate){
@@ -2047,70 +2053,106 @@ window.dpEnhanceSelect = (function(){
     if(animate && !reduced && n){ a.popWheels = performance.now(); }
   }
 
-  /* ---------- truck body ---------- */
-  function cabPrism(zf, zr, wf, wr, y0, h, rf, mat){
-    var s = new THREE.Shape();
-    s.moveTo(-wf / 2 + rf, -zf);
-    s.lineTo(wf / 2 - rf, -zf);
-    s.quadraticCurveTo(wf / 2, -zf, wf / 2, -zf - rf);
-    s.lineTo(wr / 2, -zr);
-    s.lineTo(-wr / 2, -zr);
-    s.lineTo(-wf / 2, -zf - rf);
-    s.quadraticCurveTo(-wf / 2, -zf, -wf / 2 + rf, -zf);
-    var g = new THREE.ExtrudeGeometry(s, { depth:h, bevelEnabled:true, bevelSize:0.025, bevelThickness:0.025, bevelSegments:2, curveSegments:8 });
-    g.rotateX(-Math.PI / 2); g.translate(0, y0 + 0.025, 0);
+  /* ---------- helpers for the body ---------- */
+  /* a 2D shape drawn in (z, y) extruded across x, centred, with a soft bevel */
+  function extrudeShape(shape, width, mat, bevel){
+    var depth = Math.max(0.001, width - 2 * bevel);
+    var g = new THREE.ExtrudeGeometry(shape, { depth:depth, bevelEnabled:bevel > 0, bevelSize:bevel, bevelThickness:bevel, bevelSegments:3, curveSegments:14 });
+    g.rotateY(-Math.PI / 2); g.translate(depth / 2, 0, 0);
     return mesh(g, mat);
   }
-  function faceOn(w, h, mat, cx, cy, cz, rotY, rotX){
-    var p = new THREE.Mesh(new THREE.PlaneGeometry(w, h), mat);
-    p.position.set(cx, cy, cz); p.rotation.set(rotX || 0, rotY || 0, 0); return p;
+  function sideExtrude(pts, width, mat, bevel){
+    var s = new THREE.Shape();
+    pts.forEach(function(p, i){ if(i) s.lineTo(p[0], p[1]); else s.moveTo(p[0], p[1]); });
+    return extrudeShape(s, width, mat, bevel);
+  }
+  /* a flat glass panel in the side of the cab: points are (z, y); faces +x, or -x when flip */
+  function sideGlass(pts, x, flip){
+    var s = new THREE.Shape();
+    pts.forEach(function(p, i){ var px = flip ? p[0] : -p[0]; if(i) s.lineTo(px, p[1]); else s.moveTo(px, p[1]); });
+    var g = new THREE.ShapeGeometry(s, 8);
+    g.rotateY(flip ? -Math.PI / 2 : Math.PI / 2);
+    var m = new THREE.Mesh(g, M.glass); m.position.x = x; return m;
   }
 
-  function buildTruck(){
-    var g = new THREE.Group(), xr = [];
-    var slab = mesh(rb(2.52, 0.04, 7.65, 0.015, 2), M.slab, 0, 0.02, 0);
+  /* ---------- Kenworth-style conventional sleeper tractor ---------- */
+  function buildTruck(n){
+    var g = new THREE.Group(), lay = truckLayout(Math.max(1, n)), ext = lay.ext, fe = TRUCK.frameEnd + ext;
+    M.paint.transparent = false; M.paint.opacity = 1; M.paint.depthWrite = true;
+
+    var slabLen = 9.1 + ext;
+    var slab = mesh(rb(3.1, 0.04, slabLen, 0.015, 2), M.slab, 0, 0.02, -0.15 + ext / 2);
     slab.castShadow = false; g.add(slab);
-    var slabEdge = edges(slab, new THREE.LineBasicMaterial({ color:0x9aa1ab, transparent:true, opacity:0.5 })); g.add(slabEdge);
+    g.add(edges(slab, new THREE.LineBasicMaterial({ color:0x9aa1ab, transparent:true, opacity:0.5 })));
 
-    /* chassis */
-    [-0.55, 0.55].forEach(function(x){ g.add(box(0.11, 0.22, 7.0, M.dark, x, 0.58, 0.2)); });
-    [-3.1, -2.1, -1.0, 0.1, 1.2, 2.3, 3.4].forEach(function(z){ g.add(box(1.1, 0.1, 0.12, M.dark, 0, 0.6, z)); });
-    g.add(cyl(0.045, 6.2, M.steel, 0, 0.5, 0.35, 'z'));
-    [-0.74, 0.74].forEach(function(x){ g.add(cyl(0.2, 0.95, M.chrome, x, 0.55, -0.35, 'z')); });
+    /* frame rails, crossmembers, driveline */
+    var railLen = fe + 3.8, railZ = (fe - 3.8) / 2;
+    [-0.43, 0.43].forEach(function(x){ g.add(box(0.1, 0.3, railLen, M.dark, x, 0.9, railZ)); });
+    for(var cz = -3.3; cz < fe - 0.2; cz += 0.95) g.add(box(0.76, 0.1, 0.1, M.dark, 0, 0.86, cz));
+    g.add(cyl(0.05, fe + 1.8, M.steel, 0, 0.62, (fe - 3) / 2, 'z'));
 
-    /* hood + cab: the trapezoid from the vector */
-    var hood = cabPrism(-3.795, -2.30, 1.15, 1.53, 0.72, 0.62, 0.14, M.cab); g.add(hood);
-    var cab  = cabPrism(-2.30, -0.295, 1.53, 2.04, 0.9, 1.7, 0.04, M.cab); g.add(cab);
-    g.add(box(0.92, 0.05, 0.96, M.cabHi, 0, 1.365, -3.05));
-    g.add(faceOn(1.32, 0.78, M.glass, 0, 2.02, -2.33, Math.PI, 0.16));
-    [[1, 1.696], [-1, -1.696]].forEach(function(s){
-      var mx = s[0] * (1.53 + (2.04 - 1.53) * 0.5) / 2, mz = -1.3;
-      var win = faceOn(1.12, 0.62, M.glass, mx + s[0] * 0.032, 2.02, mz, s[1], 0);
-      win.position.x = s[0] * (0.765 + (0.255 * ((mz + 2.30) / 2.005))) + s[0] * 0.03; g.add(win);
-      g.add(box(0.1, 0.55, 0.16, M.dark, s[0] * (0.765 + 0.09 + 0.18), 2.0, -2.2));
-      g.add(box(0.14, 0.03, 0.03, M.steel, s[0] * (0.765 + 0.09 + 0.09), 1.85, -2.2));
-      g.add(cyl(0.06, 1.7, M.chrome, s[0] * 0.92, 1.75, -0.1));
+    /* hood: long, sloping, narrower than the cab */
+    g.add(sideExtrude([[-3.92, 1.02], [-3.92, 1.9], [-3.78, 2.02], [-2.9, 2.1], [-1.62, 2.18], [-1.62, 1.05]], 1.55, M.paint, 0.07));
+
+    /* day cab + raised sleeper as one side profile */
+    g.add(sideExtrude([[-1.58, 1.05], [-1.58, 2.1], [-1.3, 3.02], [-0.55, 3.1], [0.25, 3.28], [1.18, 3.3], [1.24, 3.2], [1.24, 1.05]], 2.5, M.paint, 0.09));
+    var wind = new THREE.Mesh(new THREE.PlaneGeometry(2.2, 0.82), M.glass);
+    wind.position.set(0, 2.588, -1.531); wind.rotation.x = Math.PI + 0.294; g.add(wind);
+    var visor = mesh(rb(2.24, 0.09, 0.34, 0.04), M.paint, 0, 3.16, -1.4); visor.rotation.x = -0.1; g.add(visor);   // drop visor
+    [-0.66, -0.33, 0, 0.33, 0.66].forEach(function(x){ g.add(mesh(rb(0.11, 0.07, 0.06, 0.02), M.amber, x, 3.2, -1.36)); });
+
+    [1, -1].forEach(function(sd){
+      var x = sd * 1.253, flip = sd < 0;
+      g.add(sideGlass([[-1.43, 2.18], [-0.34, 2.18], [-0.34, 2.93], [-1.33, 2.95]], x, flip));   // door window
+      g.add(sideGlass([[0.12, 2.28], [0.86, 2.28], [0.86, 2.8], [0.12, 2.8]], x, flip));          // sleeper window
+      g.add(box(0.02, 1.45, 0.02, M.dark, sd * 1.257, 1.75, -0.31));                               // door seam
+      g.add(box(0.03, 0.05, 0.22, M.chrome, sd * 1.262, 1.98, -0.56));                             // door handle
+      g.add(box(0.014, 0.1, 2.85, M.accent, sd * 1.253, 1.55, -0.17));                             // brand stripe
+      g.add(box(0.05, 0.36, 0.95, M.skirt, sd * 1.225, 0.82, 0.8));                                // sleeper fairing
+      /* mirror on a chrome arm */
+      g.add(box(0.36, 0.022, 0.022, M.chrome, sd * 1.5, 2.78, -1.5));
+      g.add(mesh(rb(0.09, 0.64, 0.26, 0.03), M.dark, sd * 1.68, 2.52, -1.5));
+      g.add(mesh(rb(0.07, 0.2, 0.2, 0.03), M.dark, sd * 1.6, 1.95, -1.55));
+      /* fuel tank under the door, chrome */
+      var tank = mesh(new THREE.CapsuleGeometry(0.34, 0.95, 6, 22), M.chrome, sd * 1.02, 0.78, -0.55); tank.rotation.x = Math.PI / 2; g.add(tank);
+      [-0.95, -0.15].forEach(function(z){ g.add(box(0.03, 0.72, 0.06, M.steel, sd * 1.02, 0.78, z)); });
+      /* twin stack + muffler behind the cab */
+      var muf = mesh(new THREE.CapsuleGeometry(0.17, 0.5, 6, 18), M.chrome, sd * 1.37, 1.32, -0.05); muf.rotation.x = Math.PI / 2; g.add(muf);
+      g.add(cyl(0.085, 2.3, M.chrome, sd * 1.37, 2.55, 0.05));
+      g.add(cyl(0.098, 0.05, M.chrome, sd * 1.37, 3.72, 0.05));
+      [2.1, 3.0].forEach(function(y){ g.add(box(0.14, 0.05, 0.12, M.steel, sd * 1.315, y, 0.05)); });
+      /* front fender: flat top from the headlight pod back over the steer wheel, arch below */
+      g.add(mesh(rb(0.52, 0.07, 1.55, 0.03), M.paint, sd * 1.035, 1.13, -3.2));
+      var arch = new THREE.Shape(); arch.absarc(0, 0, 0.66, 0, Math.PI, false); arch.absarc(0, 0, 0.62, Math.PI, 0, true);
+      var am = extrudeShape(arch, 0.5, M.paint, 0); am.position.set(sd * D.steerHalf, D.wr, TRUCK.steer); g.add(am);
+      /* headlight pod: chrome bezel, lens, corner marker */
+      g.add(mesh(rb(0.44, 0.32, 0.3, 0.06), M.chrome, sd * 0.98, 1.2, -3.84));
+      g.add(mesh(rb(0.34, 0.22, 0.03, 0.012), M.lamp, sd * 0.98, 1.2, -4.0));
+      g.add(box(0.08, 0.14, 0.04, M.amber, sd * 1.165, 1.2, -3.995));
+      /* rear mud flap on a chrome stem, tail lamp */
+      g.add(box(0.62, 0.55, 0.03, M.rubber, sd * 0.9, 0.5, fe + 0.16));
+      g.add(box(0.025, 0.4, 0.025, M.chrome, sd * 0.9, 0.9, fe + 0.14));
+      g.add(mesh(rb(0.3, 0.13, 0.06, 0.02), M.tail, sd * 0.72, 1.0, fe + 0.06));
     });
-    var roof = mesh(rb(1.4, 0.34, 1.75, 0.12, 3), M.cab, 0, 2.77, -1.15); roof.rotation.x = -0.1; g.add(roof);
 
-    /* front: bumper, grille, lamps (headlight clusters at the vector's corners) */
-    g.add(mesh(rb(2.04, 0.26, 0.15, 0.05), M.chrome, 0, 0.5, -3.78));
-    g.add(mesh(rb(0.9, 0.42, 0.06, 0.03), M.dark, 0, 1.0, -3.83));
-    [0.9, 1.0, 1.1].forEach(function(y){ g.add(box(0.86, 0.02, 0.07, M.chrome, 0, y - 0.03, -3.845)); });
-    g.add(box(0.9, 0.05, 0.075, M.accent, 0, 1.24, -3.835));
-    [-0.745, 0.745].forEach(function(x){
-      g.add(mesh(rb(0.46, 0.18, 0.08, 0.04), M.lamp, x, 0.72, -3.78));
-      g.add(box(0.11, 0.04, 0.07, M.amber, x, 0.56, -3.79));
-    });
+    /* front: chrome bezel + mesh + slats, badge, bumper, tow hooks */
+    g.add(mesh(rb(1.26, 1.0, 0.08, 0.03), M.chrome, 0, 1.45, -4.02));
+    g.add(mesh(rb(1.06, 0.84, 0.04, 0.02), M.dark, 0, 1.45, -4.075));
+    for(var si = 0; si < 9; si++) g.add(box(0.98, 0.028, 0.03, M.chrome, 0, 1.08 + si * 0.0975, -4.1));
+    g.add(box(0.03, 0.86, 0.03, M.chrome, 0, 1.45, -4.105));
+    g.add(cyl(0.1, 0.03, M.chrome, 0, 1.92, -4.07, 'z'));
+    g.add(cyl(0.072, 0.036, M.accent, 0, 1.92, -4.075, 'z'));
+    g.add(mesh(rb(2.38, 0.3, 0.26, 0.09), M.chrome, 0, 0.6, -4.11));
+    [-0.55, 0.55].forEach(function(x){ g.add(box(0.1, 0.07, 0.22, M.dark, x, 0.42, -4.16)); });
 
-    /* flatbed: translucent so the axles stay legible from above */
-    var deck = mesh(rb(2.4, 0.1, 3.9, 0.03), M.deck, 0, 1.03, 1.87); deck.castShadow = false; g.add(deck); xr.push(['deck', deck.material]);
-    g.add(edges(deck));
-    [-1.2, 1.2].forEach(function(x){ g.add(box(0.06, 0.16, 3.9, M.chrome, x, 1.16, 1.87)); });
-    [-0.95, 0.95].forEach(function(x){ g.add(mesh(rb(0.3, 0.1, 0.05, 0.02), M.tail, x, 0.86, 3.84)); });
-    g.add(box(1.9, 0.14, 0.1, M.dark, 0, 0.62, 3.8));
+    /* fifth wheel on slide rails, air tanks */
+    g.add(cyl(0.5, 0.07, M.dark, 0, 1.13, 2.25));
+    g.add(box(0.14, 0.075, 0.55, M.steel, 0, 1.13, 2.53));
+    [-0.44, 0.44].forEach(function(x){ g.add(box(0.1, 0.08, 1.3, M.steel, x, 1.11, 2.25)); });
+    g.add(box(1.7, 0.14, 0.1, M.dark, 0, 0.72, fe + 0.04));
+    var air = mesh(new THREE.CapsuleGeometry(0.11, 0.6, 5, 14), M.steel, 0, 0.62, 0.9); air.rotation.z = Math.PI / 2; g.add(air);
 
-    return { root:g, slab:slab, deckY:1.08, xray:xr, len:7.65, R:6 };
+    return { root:g, slab:slab, deckY:0, xray:[['paint', M.paint]], len:slabLen, R:6.8 + ext * 1.0, tY:1.5, tZ:ext / 2, lay:lay, sideX:1.95 };
   }
 
   /* ---------- trailer body ---------- */
@@ -2118,8 +2160,8 @@ window.dpEnhanceSelect = (function(){
     var g = new THREE.Group(), xr = [];
     var slab = mesh(rb(3.0, 0.04, 12.4, 0.015, 2), M.slab, 0, 0.02, 0); slab.castShadow = false; g.add(slab);
     g.add(edges(slab, new THREE.LineBasicMaterial({ color:0x9aa1ab, transparent:true, opacity:0.5 })));
-    [-0.62, 0.62].forEach(function(x){ g.add(box(0.16, 0.3, 11.9, M.dark, x, 0.92, 0)); });
-    for(var z = -5.4; z <= 5.6; z += 0.9) g.add(box(1.4, 0.1, 0.1, M.dark, 0, 0.9, z));
+    [-0.45, 0.45].forEach(function(x){ g.add(box(0.16, 0.3, 11.9, M.dark, x, 0.92, 0)); });
+    for(var z = -5.4; z <= 5.6; z += 0.9) g.add(box(1.0, 0.1, 0.1, M.dark, 0, 0.9, z));
     var floor = box(2.6, 0.08, 12.1, M.steel, 0, 1.12, 0); g.add(floor);
     var van = mesh(rb(2.6, 2.7, 12.0, 0.05), M.van, 0, 2.5, 0); van.castShadow = false; g.add(van); xr.push(['van', van.material]);
     var ve = edges(van); ve.material = new THREE.LineBasicMaterial({ color:0x0F6FFF, transparent:true, opacity:0.45 }); g.add(ve);
@@ -2132,7 +2174,7 @@ window.dpEnhanceSelect = (function(){
     g.add(box(2.4, 0.26, 0.12, M.dark, 0, 0.62, 6.15));
     [-1.05, 1.05].forEach(function(x){ g.add(mesh(rb(0.3, 0.12, 0.06, 0.02), M.tail, x, 1.05, 6.12)); });
     g.add(box(2.4, 0.03, 0.03, M.accent, 0, 3.55, -5.9));
-    return { root:g, slab:slab, deckY:1.2, xray:xr, len:12.4, R:9.5 };
+    return { root:g, slab:slab, deckY:0, xray:xr, len:12.4, R:9.5, tY:1.4, sideX:2.0 };
   }
 
   /* ---------- model management ---------- */
@@ -2155,15 +2197,19 @@ window.dpEnhanceSelect = (function(){
   }
   function applyXray(){
     if(!model) return;
-    model.xray.forEach(function(p){ p[1].opacity = XRAY[p[0]][xrayOn ? 0 : 1]; p[1].depthWrite = !xrayOn; p[1].needsUpdate = true; });
+    model.xray.forEach(function(p){
+      p[1].transparent = p[0] === 'paint' ? xrayOn : true;
+      p[1].opacity = XRAY[p[0]][xrayOn ? 0 : 1]; p[1].depthWrite = !xrayOn; p[1].needsUpdate = true;
+    });
   }
   var tgtView = null;
   function viewPose(name){
-    var R = model ? model.R : 6, t = new THREE.Vector3(0, 0.9, 0), p = new THREE.Vector3();
+    var R = model ? model.R : 6, t = new THREE.Vector3(0, model && model.tY ? model.tY : 0.9, model && model.tZ ? model.tZ : 0), p = new THREE.Vector3();
     if(name === 'top') p.set(0, R * 3.3, 0.02);
-    else if(name === 'side') p.set(R * 2.7, R * 0.3, 0);
-    else if(name === 'front') p.set(0, R * 0.5, -R * 2.6);
+    else if(name === 'side') p.set(R * 2.15, R * 0.3, 0);
+    else if(name === 'front') p.set(0, R * 0.5, -R * 2.1);
     else p.set(R * 1.3, R * 0.85, R * 1.4);
+    p.z += t.z;
     return { p:p, t:t };
   }
   function setView(name, instant){
@@ -2204,15 +2250,16 @@ window.dpEnhanceSelect = (function(){
     clearModel();
     if(!type){ built = { type:'', n:0 }; return; }
     built = { type:type, n:n };
-    model = type === 'truck' ? buildTruck() : buildTrailer();
+    if(typeChanged){ xrayOn = type === 'trailer'; emit('xray', xrayOn); }   // the van needs X-ray to show its axles; the tractor does not
+    model = type === 'truck' ? buildTruck(n) : buildTrailer();
     scene.add(model.root);
     applyXray();
-    var zs = axleZ(type, Math.max(0, n));
+    var zs = type === 'truck' ? model.lay.z : trailerAxleZ(Math.max(0, n));
     if(n > 0) zs.forEach(function(z, i){
       var kind = type === 'truck' ? (i === 0 ? 'Steer' : 'Drive') : 'Trailer';
-      var a = createAxle(i, z, i === 0 && type === 'truck' ? 'steer' : 'drive', model.deckY);
+      var a = createAxle(i, z, i === 0 && type === 'truck' ? 'steer' : 'drive', model.sideX);
       a.kindLabel = kind;
-      a.band.scale.set(type === 'truck' ? 2.52 : 3.0, 0.9, 1);
+      a.band.scale.set(type === 'truck' ? 3.1 : 3.0, 1.1, 1);
       a.pin = makePin(i);
       axles.push(a);
       scene.add(a.grp);
@@ -2256,7 +2303,7 @@ window.dpEnhanceSelect = (function(){
   }
 
   /* ---------- selection / hover ---------- */
-  var handlers = { pick:[], hover:[] };
+  var handlers = { pick:[], hover:[], xray:[] };
   function emit(k, v){ handlers[k].forEach(function(fn){ fn(v); }); }
   function refreshHL(){
     axles.forEach(function(a, i){ a.hlT = i === selected ? 1 : (i === hovered ? 0.55 : 0); });
@@ -2322,9 +2369,11 @@ window.dpEnhanceSelect = (function(){
       a.tireMat.emissive.setHex(0x0F6FFF); a.tireMat.emissiveIntensity = h * 0.25;
       a.band.material.opacity = h * 0.16;
       a.barH += (a.barT - a.barH) * 0.14;
+      /* bars and pins stand on whichever flank faces the camera, clear of the bodywork */
+      var bx = (camera.position.x >= 0 ? 1 : -1) * a.sideX;
       if(a.barH > 0.02){
         a.bar.visible = true;
-        a.bar.scale.set(0.62, a.barH, 0.42); a.bar.position.y = a.deckY + a.barH / 2;
+        a.bar.scale.set(0.5, a.barH, 0.5); a.bar.position.set(bx, a.barH / 2, 0);
       } else a.bar.visible = false;
       if(a.popWheels){
         var t = Math.min(1, (now - a.popWheels) / 420), s = Math.max(0.001, ease(t));
@@ -2332,7 +2381,7 @@ window.dpEnhanceSelect = (function(){
         if(t >= 1){ a.popWheels = 0; a.L.scale.setScalar(1); a.R.scale.setScalar(1); }
       }
       if(a.pin){
-        tmp.set(0, a.deckY + Math.max(0.5, a.barH + 0.32), a.z).project(camera);
+        tmp.set(bx, a.barH + 0.55, a.z).project(camera);
         var px = (tmp.x * 0.5 + 0.5) * W, py = (-tmp.y * 0.5 + 0.5) * H;
         a.sx = px; a.sy = py; a.behind = tmp.z > 1;
         a.pin.style.transform = 'translate(' + (px - 11.25).toFixed(1) + 'px,' + (py - 11.25).toFixed(1) + 'px)';
@@ -2382,7 +2431,7 @@ window.dpEnhanceSelect = (function(){
     },
     on:function(k, fn){ handlers[k].push(fn); },
     pinPos:function(i){ var a = axles[i]; return a && a.pin && !a.behind ? { x:a.sx, y:a.sy, w:W, h:H } : null; },
-    _debug:function(){ return { scene:scene, camera:camera, axles:axles, renderer:renderer }; }
+    _debug:function(){ return { scene:scene, camera:camera, controls:controls, axles:axles, renderer:renderer, frame:frame }; }
   };
   window.dpViewer = api;
   setView('iso', true);
