@@ -928,6 +928,8 @@
   .back-btn:hover{ color:var(--blue); }
   .back-btn:hover .back-ico{ border-color:var(--blue); background:var(--blue-bg); color:var(--blue); }
   .detail-bar .asset-picker{ width:375px; }
+  .detail-bar .subtype-picker{ width:225px; }
+  .detail-bar .subtype-picker[hidden], .tools-row .dropdown[hidden]{ display:none; }
   .detail-bar .spacer{ flex:1 1 auto; }
   .asset-picker .dropdown-value b{ font-weight:600; color:var(--text-heading); }
   .asset-picker .dropdown-value span{ color:var(--muted-fg); }
@@ -1351,6 +1353,7 @@
                 </div></div>
                 <div class="card-head-actions tools-row">
                   <div class="dropdown" id="statusFilterMount" data-size="sm"></div>
+                  <div class="dropdown" id="subFilterMount" data-size="sm" hidden></div>
                   <div class="search-field"><i data-lucide="search"></i>
                     <input class="text-input" id="assetSearch" type="text" placeholder="Search Truck" autocomplete="off" style="height:var(--h-8)">
                   </div>
@@ -1409,6 +1412,7 @@
             <button class="back-btn" type="button" id="backBtn"><span class="back-ico"><i data-lucide="chevron-left"></i></span> Back</button>
             <div class="asset-picker" id="assetPickerMount"></div>
             <span class="badge" id="typeBadge">Truck</span>
+            <div class="asset-picker subtype-picker" id="subTypeMount" hidden></div>
             <div class="spacer"></div>
             <button class="btn-outline" type="button" id="gearBtn"><i data-lucide="bell-ring"></i> Alert settings</button>
           </div>
@@ -1739,6 +1743,7 @@
     dpIcons();
   </script>
 
+<script src="trailer-types.js"></script>
 <script type="module">
 import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
@@ -1813,9 +1818,19 @@ function layoutTractor(){
   });
   return t;
 }
-function layoutTrailer(){
+/* One layout per trailer subtype: axle count + positions come from DPTrailer (module z → page x = -z).
+   A box truck's front axle is a steer axle of singles, every other axle is duals. */
+function layoutTrailer(key){
+  const df = DPTrailer.def(key), ax = DPTrailer.axles(df.key, df.axles, { real:true });
   const t = []; let n = 1;
-  [[-5.55,'Axle 1'], [-7.05,'Axle 2']].forEach(([x, axle]) => {
+  ax.z.forEach((z, i) => {
+    const x = -z, steer = ax.steerFirst && i === 0;
+    const axle = steer ? 'Steer' : ax.steerFirst ? (ax.z.length > 2 ? `Rear ${i}` : 'Rear') : `Axle ${i + 1}`;
+    if(steer){
+      t.push({n:n++, axle, side:'Left',  pos:'Left',  x, z:-0.98, dual:false, outer:true});
+      t.push({n:n++, axle, side:'Right', pos:'Right', x, z: 0.98, dual:false, outer:true});
+      return;
+    }
     t.push({n:n++, axle, side:'Left',  pos:'Left outside',  x, z:-1.07, dual:true, outer:true});
     t.push({n:n++, axle, side:'Left',  pos:'Left inside',   x, z:-0.73, dual:true, outer:false});
     t.push({n:n++, axle, side:'Right', pos:'Right inside',  x, z: 0.73, dual:true, outer:false});
@@ -1823,7 +1838,10 @@ function layoutTrailer(){
   });
   return t;
 }
-const LAYOUT = { truck:layoutTractor(), trailer:layoutTrailer() };
+const LAYOUT = { truck:layoutTractor() };
+DPTrailer.TYPES.forEach(tp => { LAYOUT[tp.key] = layoutTrailer(tp.key); });
+/* layout / model key of an asset: 'truck' or its trailer subtype */
+const lk = a => a.sub;
 
 /* [id, type, status seed, city, state, driver, street, zip, speed mph, lat, lon] */
 const ROSTER = [
@@ -1846,14 +1864,18 @@ const ROSTER = [
   ['V311','trailer','warn','Clay','WV','Luis Navarro','150 Main St','25043',58, 38.459,-81.079],
   ['V312','trailer','good','Ripley','WV','Hannah Cole','22 Church St','25271',63, 38.819,-81.711],
   ['V313','trailer','warn','Charleston','WV','Owen Prescott','410 Summers St','25301',0, 38.350,-81.633],
-  ['V314','trailer','good','Nitro','WV','Rita Alvarez','1 1st Ave','25143',0, 38.414,-81.844]
+  ['V314','trailer','good','Nitro','WV','Rita Alvarez','1 1st Ave','25143',0, 38.414,-81.844],
+  ['V315','trailer','warn','Beckley','WV','Caleb Dunn','240 Neville St','25801',57, 37.778,-81.188]
 ];
+/* default trailer subtype per roster id — all 11 types appear; a choice saved on any page wins */
+const SUBTYPE = { V305:'dryvan', V306:'reefer', V307:'flatbed', V308:'stepdeck', V309:'rgn', V310:'lowboy', V311:'container', V312:'boxtruck', V313:'tanker', V314:'curtain', V315:'dump' };
+const STORED_SUB = DPTrailer.stored();
 
 /* Tires are seeded so that each asset's derived status matches its seed at the
    default thresholds, with margins wide enough that the live jitter can't flip it. */
 function seedTires(asset){
   const r = rng(hash32(asset.id));
-  const lay = LAYOUT[asset.type];
+  const lay = LAYOUT[lk(asset)];
   const tires = lay.map(l => ({
     n:l.n, base:{ psi: 98 + r()*7, temp: 152 + r()*28 }, psi:null, temp:null, off:false
   }));
@@ -1874,7 +1896,8 @@ function seedTires(asset){
   return tires;
 }
 const ASSETS = ROSTER.map(([id,type,seed,city,st,driver,street,zip,speed,lat,lon]) => {
-  const a = { id, type, seed, city, st, driver, addr:`${street} ${zip}`, speed, moving:speed>0, lat, lon,
+  const sub = type === 'truck' ? 'truck' : (LAYOUT[STORED_SUB[id]] && STORED_SUB[id] !== 'truck' ? STORED_SUB[id] : (SUBTYPE[id] || 'dryvan'));
+  const a = { id, type, sub, seed, city, st, driver, addr:`${street} ${zip}`, speed, moving:speed>0, lat, lon,
               upd:1 + (hash32(id) % 5), updAt:Date.now() - (1 + (hash32(id) % 5)) * 60000 };
   a.tires = seedTires(a);
   return a;
@@ -1898,7 +1921,7 @@ const STATE_COLOR = () => ({ good:cssv('--green'), warn:cssv('--amber'), crit:cs
    app state + router
    ====================================================================== */
 const S = {
-  view:'equipment', type:'truck', filter:'all', q:'',
+  view:'equipment', type:'truck', filter:'all', sub:'all', q:'',
   assetId:'DTL88', mode:'psi', sel:new Set(), vis:{ psi:true, temp:false, speed:false },
   range:{ t0:0, t1:0 }, selTire:null, viewPreset:'top', sort:{ k:'id', dir:1 }, hover:null, pendingTire:null, spin:false, rosterF:'all'
 };
@@ -2104,12 +2127,17 @@ const statusFilter = makeDropdown({
   ],
   onChange:v => { S.filter = v; renderFleet(); }
 });
+const subFilter = makeDropdown({
+  mount:$('#subFilterMount'), placeholder:'Trailer type', value:'all', minWidth:190,
+  options:[{value:'all', label:'All trailer types'}].concat(DPTrailer.TYPES.map(t => ({ value:t.key, label:t.label, meta:t.axles + ' axles' }))),
+  onChange:v => { S.sub = v; renderFleet(); }
+});
 $('#assetSearch').addEventListener('input', e => { S.q = e.target.value; renderFleet(); });
 $('#typeSeg').addEventListener('click', e => {
   const b = e.target.closest('button'); if(!b) return;
   S.type = b.dataset.type; renderFleet();
 });
-$('#clearFilters').addEventListener('click', () => { S.filter = 'all'; S.q = ''; $('#assetSearch').value = ''; statusFilter.set('all'); renderFleet(); });
+$('#clearFilters').addEventListener('click', () => { S.filter = 'all'; S.sub = 'all'; subFilter.set('all'); S.q = ''; $('#assetSearch').value = ''; statusFilter.set('all'); renderFleet(); });
 
 function badgeFor(state){
   const v = STATE_VARIANT[state];
@@ -2203,7 +2231,7 @@ function renderAttn(){
   const crit = items.filter(i => tireState(i.t) === 'crit').length;
   const b = $('#attnCount'); b.textContent = items.length; b.setAttribute('data-variant', crit ? 'danger' : 'warning');
   $('#attnList').innerHTML = items.slice(0, 6).map(({ a, t }) => {
-    const st = tireState(t), l = LAYOUT[a.type][t.n - 1];
+    const st = tireState(t), l = LAYOUT[lk(a)][t.n - 1];
     return `<li><button type="button" class="attn-row" data-id="${a.id}" data-n="${t.n}">
       <span class="attn-ico" data-s="${st}"><i data-lucide="${st === 'crit' ? 'triangle-alert' : 'circle-alert'}"></i></span>
       <span><span class="attn-t">${a.id} · Tire ${t.n}</span><span class="attn-m">${esc(l.axle)} · ${esc(l.pos)} — ${esc(reasonOf(t))}</span></span>
@@ -2214,12 +2242,14 @@ function renderAttn(){
 function renderFleet(){
   $$('#typeSeg button').forEach(b => b.classList.toggle('active', b.dataset.type === S.type));
   $('#assetSearch').placeholder = S.type === 'truck' ? 'Search Truck' : 'Search Trailer';
+  $('#subFilterMount').hidden = S.type !== 'trailer';
   const q = S.q.trim().toLowerCase();
   const SEV = { crit:0, warn:1, unknown:2, good:3 };
   const byId2 = (x, y) => x.id.localeCompare(y.id, undefined, { numeric:true });
   const rows = ASSETS.filter(a => a.type === S.type)
     .filter(a => S.filter === 'all' || (S.filter === 'attn' ? ['warn', 'crit'].includes(assetState(a)) : assetState(a) === S.filter))
-    .filter(a => !q || `${a.id} ${a.city} ${a.st} ${a.driver}`.toLowerCase().includes(q))
+    .filter(a => a.type !== 'trailer' || S.sub === 'all' || a.sub === S.sub)
+    .filter(a => !q || `${a.id} ${a.city} ${a.st} ${a.driver} ${a.type === 'trailer' ? DPTrailer.label(a.sub) : ''}`.toLowerCase().includes(q))
     .sort((x, y) => S.sort.dir * (S.sort.k === 'status' ? (SEV[assetState(x)] - SEV[assetState(y)] || byId2(x, y)) : byId2(x, y)));
   $('#assetCount').textContent = rows.length;
   $$('#assetTable th.sortable').forEach(th => {
@@ -2229,9 +2259,9 @@ function renderFleet(){
   });
   $('#assetTable tbody').innerHTML = rows.map(a => {
     const w = worstTire(a), cnt = { good:0, warn:0, crit:0, unknown:0 }; a.tires.forEach(t => cnt[tireState(t)]++);
-    const hc = { t:`${a.id} · ${a.tires.length} tires`, s:'Sensor readings right now', r:[['#10B981', 'In range', cnt.good], ['#F59E0B', 'Cautionary', cnt.warn], ['#EF4444', 'Critical', cnt.crit]].concat(cnt.unknown ? [['#9CA3AF', 'No signal', cnt.unknown]] : []) };
+    const hc = { t:`${a.id} · ${a.type === 'trailer' ? DPTrailer.label(a.sub) + ' · ' : ''}${a.tires.length} tires`, s:'Sensor readings right now', r:[['#10B981', 'In range', cnt.good], ['#F59E0B', 'Cautionary', cnt.warn], ['#EF4444', 'Critical', cnt.crit]].concat(cnt.unknown ? [['#9CA3AF', 'No signal', cnt.unknown]] : []) };
     return `<tr data-id="${a.id}" tabindex="0">
-      <td><button class="asset-link" type="button">${a.id}</button></td>
+      <td><button class="asset-link" type="button">${a.id}</button>${a.type === 'trailer' ? ` <span class="cell-muted">${esc(DPTrailer.label(a.sub))}</span>` : ''}</td>
       <td>${esc(a.city)}, ${a.st} <span class="cell-muted">- Updated ${agoText(a)}</span></td>
       <td><span class="driver-cell"><span class="mini-avatar">${esc(initials(a.driver))}</span>${esc(a.driver)}</span></td>
       <td><span class="tire-dots" data-hc='${esc(JSON.stringify(hc))}'>${a.tires.map(t => `<i data-s="${tireState(t)}"></i>`).join('')}</span></td>
@@ -2320,17 +2350,24 @@ function enterDetail(){
   $$('#viewSeg button').forEach(b => b.classList.toggle('active', b.dataset.view === 'top'));
   $$('#rosterSeg button').forEach(b => b.classList.toggle('active', b.dataset.f === 'all'));
   hideHCard();
-  $('#typeBadge').textContent = a.type === 'truck' ? 'Tractor' : '53′ Dry van';
-  $('#stageTitle').textContent = `${a.id} · ${a.type === 'truck' ? 'Tractor' : 'Dry van'}`;
-  $('#stageSub').textContent = `${a.tires.length} tires · ${a.city}, ${a.st} · ${a.driver}`;
+  assetHead(a);
 
   assetPicker = makeDropdown({
     mount:$('#assetPickerMount'), value:a.id, search:'Search assets, drivers…', minWidth:375,
-    options:ASSETS.map(x => ({ value:x.id, label:`${x.id} | ${x.driver} | ${x.addr}`, meta:x.type === 'truck' ? 'Truck' : 'Trailer' })),
+    options:ASSETS.map(x => ({ value:x.id, label:`${x.id} | ${x.driver} | ${x.addr}`, meta:x.type === 'truck' ? 'Truck' : DPTrailer.label(x.sub) })),
     renderValue:v => { const x = byId(v); return `<b>${x.id}</b><span>&nbsp;|&nbsp;${esc(x.driver)}&nbsp;|&nbsp;${esc(x.addr)}</span>`; },
     onChange:v => go('tmps/' + v)
   });
   $('#assetPickerMount').classList.add('asset-picker');
+
+  const stm = $('#subTypeMount'); stm.hidden = a.type !== 'trailer';
+  subTypePicker = a.type !== 'trailer' ? null : makeDropdown({
+    mount:stm, value:a.sub, minWidth:225,
+    options:DPTrailer.TYPES.map(t => ({ value:t.key, label:t.label, meta:t.axles + ' axles' })),
+    renderValue:v => `<span>Trailer type&nbsp;|&nbsp;</span><b>${esc(DPTrailer.label(v))}</b>`,
+    onChange:v => setSubtype(byId(S.assetId), v)
+  });
+  stm.classList.add('asset-picker', 'subtype-picker');
 
   buildTireSelect(a); buildPills(a);
   lastKpi = ''; lastRosterSig = '';
@@ -2342,6 +2379,24 @@ function enterDetail(){
     sceneShow(a); ensureMap(a);
     if(S.sel.size === 1) focusTire(Array.from(S.sel)[0]);
   });
+}
+let subTypePicker = null;
+function assetHead(a){
+  const lbl = a.type === 'truck' ? 'Tractor' : DPTrailer.label(a.sub), axles = new Set(LAYOUT[lk(a)].map(l => l.axle)).size;
+  $('#typeBadge').textContent = lbl;
+  $('#stageTitle').textContent = `${a.id} · ${lbl}`;
+  $('#stageSub').textContent = `${a.tires.length} tires on ${axles} axles · ${a.city}, ${a.st} · ${a.driver}`;
+}
+/* choose another trailer body for this asset: new tire layout, model, pills and roster — and remembered for every page */
+function setSubtype(a, v){
+  if(a.type !== 'trailer' || !LAYOUT[v] || v === a.sub) return;
+  a.sub = v; DPTrailer.save(a.id, v);
+  a.tires = seedTires(a);
+  S.sel = new Set(); S.hover = null; hideHCard();
+  assetHead(a); buildTireSelect(a); buildPills(a);
+  lastKpi = ''; lastRosterSig = '';
+  updateStatusPanel(); renderLegend(); drawChart(true);
+  sceneShow(a);
 }
 $('#backBtn').addEventListener('click', () => go('tmps'));
 $('#gearBtn').addEventListener('click', () => go('tmps/' + S.assetId + '/settings'));
@@ -2368,7 +2423,7 @@ function updateKpis(){
   const hot = off ? null : live.reduce((m, t) => t.temp > m.temp ? t : m, live[0]);
   const sp = a.moving ? Math.round(a.speedNow ?? a.speed) : 0;
   const tone = { good:'success', warn:'warning', crit:'danger', unknown:'' }[st];
-  const hotL = hot ? LAYOUT[a.type][hot.n - 1] : null, hotSt = hot ? tireState(hot) : 'unknown';
+  const hotL = hot ? LAYOUT[lk(a)][hot.n - 1] : null, hotSt = hot ? tireState(hot) : 'unknown';
   const tile = (ico, tn, label, val, sub, cls = '') => `<div class="kpi"><span class="kpi-top">${label}<span class="kpi-ico"${tn ? ` data-tone="${tn}"` : ''}><i data-lucide="${ico}"></i></span></span><span class="kpi-val ${cls}">${val}</span><span class="kpi-sub">${sub}</span></div>`;
   const html =
     tile('shield-check', tone, 'Tire condition', badgeFor(st), off ? 'Sensors are not reporting' : `<b>${inRange}</b> of ${live.length} tires in range`, 'center') +
@@ -2389,7 +2444,7 @@ function fracOf(t){
 function buildPills(a){
   const layer = $('#tagLayer'); layer.innerHTML = ''; pillEls = [];
   const lines = $('#tagLines'); lines.innerHTML = '';
-  LAYOUT[a.type].forEach(l => {
+  LAYOUT[lk(a)].forEach(l => {
     const el = document.createElement('button');
     el.type = 'button'; el.className = 'tire-tag'; el.dataset.n = l.n;
     el.setAttribute('aria-label', `Tire ${l.n}, ${l.axle}, ${l.pos}`);
@@ -2438,7 +2493,7 @@ function rowValues(t){
     : { b:off ? '—' : Math.round(t.temp), u:'°F', s:off ? 'No signal' : `${Math.round(t.psi)} PSI` };
 }
 function renderRoster(){
-  const a = byId(S.assetId), lay = LAYOUT[a.type], list = $('#rosterList');
+  const a = byId(S.assetId), lay = LAYOUT[lk(a)], list = $('#rosterList');
   const sts = a.tires.map(tireState);
   const attn = sts.filter(s => s === 'warn' || s === 'crit').length, ok = sts.filter(s => s === 'good').length;
   $('#rosterCount').textContent = a.tires.length;
@@ -2511,7 +2566,7 @@ function setSel(set, focus){
 
 /* the tire hover card — reading, range, status and a 24 h sparkline */
 function tireCardHTML(a, n){
-  const t = a.tires[n - 1], l = LAYOUT[a.type][n - 1], st = tireState(t), off = t.off || t.psi == null, pm = S.mode === 'psi';
+  const t = a.tires[n - 1], l = LAYOUT[lk(a)][n - 1], st = tireState(t), off = t.off || t.psi == null, pm = S.mode === 'psi';
   const now = Date.now(), fn = pm ? tirePsi : tireTemp, color = pm ? cssv('--blue') : '#F97316';
   let spark = '';
   if(!off){
@@ -2538,7 +2593,7 @@ function tireCardHTML(a, n){
 
 /* ---------- tire multi-select in the Historic Data card ---------- */
 function buildTireSelect(a){
-  const lay = LAYOUT[a.type];
+  const lay = LAYOUT[lk(a)];
   const opts = [{ value:'all', label:'All tires (average)' }, { separator:true }].concat(
     lay.map(l => ({ value:String(l.n), label:`Tire ${l.n}`, meta:l.axle + ' · ' + l.pos })));
   tireSelect = makeDropdown({
@@ -2891,7 +2946,7 @@ $('#mapFit').addEventListener('click', () => { mapTouched = false; fitRoute(); }
 const stageEl = $('#tireStage'), canvas = $('#tireCanvas');
 let renderer = null, scene = null, camera = null, controls = null, sun = null, hemi = null, groundShadow = null;
 let sceneOK = true, curModel = null, fly = null, stageK = 1;
-const models = { truck:null, trailer:null };
+const models = {};                       // one cached model per vehicle key: 'truck' or a trailer subtype
 const MAT = {};
 
 function initMaterials(){
@@ -3072,40 +3127,30 @@ function logoTexture(){
   x.fillStyle = '#F97316'; x.fillRect(830, 140, 420, 22);
   const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = 4; return t;
 }
-function buildTrailer(){
-  const g = new THREE.Group(), tires = [];
-  mesh(new RoundedBoxGeometry(16.0, 2.8, 2.6, 5, .1), MAT.trailer, .05, 2.62, 0, g);
-  mesh(box(15.9, .14, 2.4, .02), MAT.frame, .05, 1.17, 0, g);
-  const rib = new THREE.InstancedMesh(box(.03, .012, 2.5, .004), MAT.ribs, 46), m4 = new THREE.Matrix4();
-  for(let i = 0; i < 46; i++){ m4.setPosition(-7.5 + i * .333, 4.024, 0); rib.setMatrixAt(i, m4); }
-  rib.castShadow = false; g.add(rib);
-  const sr = new THREE.InstancedMesh(box(.03, 2.55, .014, .004), MAT.ribs, 92);
-  for(let i = 0; i < 46; i++){ [-1, 1].forEach((s, k) => { m4.setPosition(-7.5 + i * .333, 2.62, s * 1.302); sr.setMatrixAt(i * 2 + k, m4); }); }
-  g.add(sr);
-  [-.55, .55].forEach(z => mesh(box(15.2, .2, .1, .02), MAT.axle, -.2, 1.02, z, g));
-  [7.0, 3.0, -1.0, -4.5, -6.3].forEach(x => mesh(box(.12, .14, 1.9, .02), MAT.axle, x, 1.03, 0, g));
-  mesh(new THREE.CylinderGeometry(.09, .09, .1, 12), MAT.alum, 7.0, 1.1, 0, g);            // kingpin
-  [-1, 1].forEach(s => {
-    mesh(box(.14, .95, .12, .02), MAT.axle, 4.9, .72, s * .95, g);                          // landing gear
-    mesh(box(.36, .05, .3, .01), MAT.axle, 4.9, .27, s * .95, g);
-    mesh(box(6.0, .55, .035, .01), MAT.skirt, 2.1, .88, s * 1.27, g);                       // aero skirt
-    mesh(box(.04, .55, .9, .005), MAT.rubber, -7.55, .6, s * .9, g);                         // mudflap
-    mesh(box(.06, .5, .22, .02), MAT.lampR, -8.0, 1.62, s * 1.12, g);                       // tail lights
-    mesh(box(.06, .18, .22, .02), MAT.lampR, -8.0, 3.72, s * 1.12, g);
+function buildTrailer(sub){
+  const g = new THREE.Group(), tires = [], df = DPTrailer.def(sub), key = df.key;
+  MAT.accent = MAT.accent || new THREE.MeshStandardMaterial({ color:'#0F6FFF', roughness:.4, metalness:.3 });
+  /* the shared procedural model builds along z with its nose at -z; this page runs along x with the nose at +x */
+  const built = DPTrailer.build(key, { THREE, RoundedBoxGeometry, real:true, mat:{
+    body:MAT.trailer, steel:MAT.axle, dark:MAT.dark, chrome:MAT.chrome, tail:MAT.lampR, accent:MAT.accent, rubber:MAT.rubber,
+    skirt:MAT.skirt, alum:MAT.alum, glass:MAT.glass, paint:MAT.paint, lamp:MAT.lampH } });
+  built.root.rotation.y = -Math.PI / 2; g.add(built.root);
+  const ax = DPTrailer.axles(key, df.axles, { real:true });
+  ax.z.forEach((z, i) => {                                                 // axle beams (the shared model leaves them out)
+    const w = ax.steerFirst && i === 0 ? 2.0 : 1.95;
+    const c = mesh(new THREE.CylinderGeometry(.075, .075, w, 14), MAT.axle, -z, TR, 0, g); c.rotation.x = Math.PI / 2;
+    if(!(ax.steerFirst && i === 0)) mesh(box(.5, .3, .5, .06), MAT.axle, -z, TR + .12, 0, g);
   });
-  mesh(box(.1, .1, 1.9, .02), MAT.axle, 4.9, 1.0, 0, g);
-  mesh(box(.08, .18, .2, .02), MAT.dark, 4.9, .82, 1.06, g);                                // crank box
-  [-5.55, -7.05].forEach(x => { const c = mesh(new THREE.CylinderGeometry(.075, .075, 1.95, 14), MAT.axle, x, TR, 0, g); c.rotation.x = Math.PI / 2; });
-  mesh(box(.16, .28, 2.5, .04), MAT.frame, -8.02, .86, 0, g);                                // ICC bumper
-  mesh(box(.02, 2.5, .02, .004), MAT.dark, -8.0, 2.62, 0, g);
-  [-.85, -.35, .35, .85].forEach(z => mesh(new THREE.CylinderGeometry(.022, .022, 2.45, 8), MAT.chrome, -8.03, 2.6, z, g));
-  const tex = logoTexture();
-  [-1, 1].forEach(s => {
-    const p = new THREE.Mesh(new THREE.PlaneGeometry(5.2, 1.3), new THREE.MeshStandardMaterial({ map:tex, transparent:true, roughness:.5 }));
-    p.position.set(2.4, 2.75, s * 1.309); if(s < 0) p.rotation.y = Math.PI; g.add(p);
-  });
-  LAYOUT.trailer.forEach(l => tires.push(makeTire(l, g)));
-  return { group:g, tires, len:16.1, cx:.05, type:'trailer' };
+  /* the carrier's logo on the van-like bodies */
+  if(key === 'dryvan' || key === 'reefer' || key === 'curtain'){
+    const tex = logoTexture(), off = key === 'dryvan' ? 1.318 : 1.335, yy = key === 'curtain' ? 2.8 : 2.75;
+    [-1, 1].forEach(s => {
+      const p = new THREE.Mesh(new THREE.PlaneGeometry(5.2, 1.3), new THREE.MeshStandardMaterial({ map:tex, transparent:true, roughness:.5 }));
+      p.position.set(2.4, yy, s * off); if(s < 0) p.rotation.y = Math.PI; g.add(p);
+    });
+  }
+  LAYOUT[key].forEach(l => tires.push(makeTire(l, g)));
+  return { group:g, tires, len:built.len, cx:0, type:key };
 }
 
 /* ---------- scene ---------- */
@@ -3140,12 +3185,13 @@ function updateSceneTheme(){
 }
 function sceneShow(a){
   ensureScene(); if(!renderer) return;
-  if(!models[a.type]){
-    models[a.type] = a.type === 'truck' ? buildTractor() : buildTrailer();
-    scene.add(models[a.type].group); models[a.type].group.visible = false;
+  const key = lk(a);
+  if(!models[key]){
+    models[key] = key === 'truck' ? buildTractor() : buildTrailer(key);
+    scene.add(models[key].group); models[key].group.visible = false;
   }
-  Object.entries(models).forEach(([k, m]) => { if(m) m.group.visible = k === a.type; });
-  curModel = models[a.type]; setSpin(false);
+  Object.entries(models).forEach(([k, m]) => { if(m) m.group.visible = k === key; });
+  curModel = models[key]; setSpin(false);
   const half = curModel.len / 2 + 2.5;
   Object.assign(sun.shadow.camera, { left:-half, right:half, top:half, bottom:-half, near:1, far:60 });
   sun.shadow.camera.updateProjectionMatrix();
@@ -3168,11 +3214,11 @@ new ResizeObserver(() => { if(S.view === 'detail'){ sceneResize(); if(!fly && cu
 function pose(name, m){
   const t = Math.tan(camera.fov * Math.PI / 360), asp = camera.aspect || 1.3;
   if(name === 'top'){
-    const D = Math.max((m.len + (m.type === 'trailer' ? 4.2 : 3.4)) / (2 * t), 9.4 / (2 * t * asp));
+    const D = Math.max((m.len + (m.type !== 'truck' ? 4.2 : 3.4)) / (2 * t), 9.4 / (2 * t * asp));
     return { pos:[m.cx - D * .1, D, 0], tgt:[m.cx, 0, 0] };
   }
   if(name === 'iso'){
-    const R = Math.max((m.type === 'trailer' ? 1.22 : 1.07) * (m.len + 5), .5 * (m.len + 2) / (t * asp)), el = .42, az = m.type === 'truck' ? .62 : 2.5;
+    const R = Math.max((m.type !== 'truck' ? 1.22 : 1.07) * (m.len + 5), .5 * (m.len + 2) / (t * asp)), el = .42, az = m.type === 'truck' ? .62 : 2.5;
     return { pos:[m.cx + R * Math.cos(el) * Math.cos(az), R * Math.sin(el) + .5, R * Math.cos(el) * Math.sin(az)], tgt:[m.cx, 1.3, 0] };
   }
   const D = Math.max((m.len + 2.2) / (2 * t * asp), 12);
@@ -3214,7 +3260,7 @@ $('#resetBtn').addEventListener('click', () => { setSpin(false); applyView(S.vie
 /* ---------- tire state on the model: health tint, hover glow, selection ring ---------- */
 function updateTireViz(){
   const a = byId(S.assetId);
-  if(!curModel || curModel.type !== a.type) return;
+  if(!curModel || curModel.type !== lk(a)) return;
   curModel.tires.forEach(t => {
     const st = tireState(a.tires[t.n - 1]), hov = S.hover === t.n, sel = S.sel.has(t.n);
     if(hov){ t.mat.emissive.set('#0F6FFF'); t.mat.emissiveIntensity = .7; }
@@ -3232,7 +3278,7 @@ window.sceneHover = () => updateTireViz();
 /* ---------- pills + leader lines ---------- */
 const _v = new THREE.Vector3(), _look = new THREE.Vector3();
 function projectTags(){
-  if(!curModel || !pillEls.length || curModel.type !== byId(S.assetId).type) return;
+  if(!curModel || !pillEls.length || curModel.type !== lk(byId(S.assetId))) return;
   const w = stageEl.clientWidth, h = stageEl.clientHeight, k = stageK, lay = LAYOUT[curModel.type];
   const lines = $$('#tagLines line'), dots = $$('#tagLines circle');
   /* Looking straight down the bubbles fan out beside the vehicle; from any other angle each
@@ -3320,7 +3366,7 @@ function loop(now){
     if(u >= 1) fly = null;
   }
   const a = byId(S.assetId);
-  if(a.moving && curModel.type === a.type){                       // wheels roll with the vehicle's speed
+  if(a.moving && curModel.type === lk(a)){                       // wheels roll with the vehicle's speed
     const om = (a.speedNow ?? a.speed) * .447 / TR * .1 * dt;
     curModel.tires.forEach(t => { t.grp.rotation.z -= om; });
   }

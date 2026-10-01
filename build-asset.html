@@ -814,6 +814,10 @@
                   <select class="select-input" id="selAxles"></select>
                 </div>
               </div>
+              <div class="field" id="fldSub" hidden>
+                <label class="field-label" for="selSub">Trailer type</label>
+                <select class="select-input" id="selSub"></select>
+              </div>
               <p class="field-hint" id="axleHint" style="margin-top:8.75px">Choose an asset type first, then how many axles it has.</p>
             </div>
 
@@ -928,7 +932,7 @@
                 <button type="button" class="choice-card" data-quick="trailer">
                   <span class="choice-card-icon"><i data-lucide="container"></i></span>
                   <span class="choice-card-title">Trailer</span>
-                  <span class="choice-card-desc">Van trailer with king pin, landing gear and tandems.</span>
+                  <span class="choice-card-desc">Dry van, reefer, flatbed, tanker and more, with king pin and tandems.</span>
                 </button>
               </div>
             </div>
@@ -1257,6 +1261,7 @@ window.dpEnhanceSelect = (function(){
 })();
 </script>
 
+<script src="trailer-types.js"></script>
 <script>
 /* ============================================================
    BUILD ASSET — state, table, dialogs
@@ -1274,11 +1279,15 @@ window.dpEnhanceSelect = (function(){
     trailer: function(){ return { tires:'4', weight:'17000', psi:'100' }; }
   };
 
-  var state = { type:'', axles:0, rows:[], mode:'model', selected:-1, editingId:null, savedSig:'' };
+  var state = { type:'', sub:'dryvan', axles:0, rows:[], mode:'model', selected:-1, editingId:null, savedSig:'' };
   var viewer = null;
 
   /* ---------- helpers ---------- */
-  function role(i){ return state.type === 'trailer' ? 'Trailer' : (i === 0 ? 'Steer' : 'Drive'); }
+  function steerFirst(){ return state.type === 'truck' || (state.type === 'trailer' && !!DPTrailer.def(state.sub).steerFirst); }
+  function role(i){ return steerFirst() ? (i === 0 ? 'Steer' : 'Drive') : 'Trailer'; }
+  function subOf(r){ return r.type === 'trailer' ? DPTrailer.def(r.trailerType || DPTrailer.stored()[r.id]).key : ''; }
+  function typeLabel(s){ return s.type === 'trailer' ? 'Trailer · ' + DPTrailer.label(subOf(s)) : TYPES[s.type].label; }
+  function typeIcon(s){ return s.type === 'trailer' ? DPTrailer.def(subOf(s)).icon : TYPES[s.type].icon; }
   function num(v){ return parseInt(String(v).replace(/[^\d]/g, ''), 10) || 0; }
   function rowErrors(r){
     var e = {};
@@ -1295,7 +1304,7 @@ window.dpEnhanceSelect = (function(){
     return e;
   }
   function complete(r){ return !Object.keys(rowErrors(r)).length; }
-  function sig(){ return JSON.stringify([state.type, state.axles, state.rows.map(function(r){ return [num(r.tires), num(r.weight), num(r.psi)]; })]); }
+  function sig(){ return JSON.stringify([state.type, state.type === 'trailer' ? state.sub : '', state.axles, state.rows.map(function(r){ return [num(r.tires), num(r.weight), num(r.psi)]; })]); }
   function dirty(){
     return !!state.type || state.rows.some(function(r){ return r.tires || r.weight || r.psi; });
   }
@@ -1309,7 +1318,7 @@ window.dpEnhanceSelect = (function(){
     saved = [
       { id:'a1', name:'TRK-5AX-001', unit:'214', type:'truck', axles:5, savedAt:Date.now() - 86400000 * 3,
         rows:[ {tires:'2',weight:'12000',psi:'110'}, {tires:'4',weight:'20000',psi:'100'}, {tires:'4',weight:'20000',psi:'98'}, {tires:'4',weight:'20000',psi:'102'}, {tires:'4',weight:'20000',psi:'84'} ] },
-      { id:'a2', name:'TRL-3AX-014', unit:'T-14', type:'trailer', axles:3, savedAt:Date.now() - 86400000,
+      { id:'a2', name:'TRL-3AX-014', unit:'T-14', type:'trailer', trailerType:'reefer', axles:3, savedAt:Date.now() - 86400000,
         rows:[ {tires:'4',weight:'17000',psi:'100'}, {tires:'4',weight:'17000',psi:'96'}, {tires:'4',weight:'17000',psi:'68'} ] }
     ];
     persist(saved);
@@ -1323,12 +1332,17 @@ window.dpEnhanceSelect = (function(){
   for(var k = 1; k <= 10; k++) ax += '<option value="' + k + '">' + k + '</option>';
   selAxles.innerHTML = ax;
   selAxles.disabled = true;
+  var selSub = $('#selSub');
+  selSub.innerHTML = DPTrailer.TYPES.map(function(t){ return '<option value="' + t.key + '" data-icon="' + t.icon + '">' + t.label + '</option>'; }).join('');
+  selSub.value = state.sub;
   dpEnhanceSelect(selType, { minWidth:160 });
   dpEnhanceSelect(selAxles, { minWidth:160 });
+  dpEnhanceSelect(selSub, { minWidth:200 });
   function setSelect(sel, v){ sel.value = String(v); if(sel._dropdownSync) sel._dropdownSync(); }
 
   selType.addEventListener('change', function(){ setType(selType.value); });
   selAxles.addEventListener('change', function(){ setAxles(parseInt(selAxles.value, 10)); });
+  selSub.addEventListener('change', function(){ setSub(selSub.value, true); });
 
   function setType(t){
     state.type = t;
@@ -1337,6 +1351,13 @@ window.dpEnhanceSelect = (function(){
     state.selected = -1;
     if(state.axles) renderRows();
     render();
+  }
+  /* pick a trailer subtype; a user pick also suggests that type's usual axle count */
+  function setSub(k, suggest){
+    state.sub = DPTrailer.def(k).key;
+    setSelect(selSub, state.sub);
+    if(suggest) setAxles(DPTrailer.def(state.sub).axles);
+    else { state.selected = -1; if(state.axles) renderRows(); render(); }
   }
   function setAxles(n){
     state.axles = n;
@@ -1436,7 +1457,7 @@ window.dpEnhanceSelect = (function(){
     if(!tv) missing.push('tires'); if(!wv) missing.push('max weight'); if(!pv) missing.push('pressure');
     var ps = pv ? psiState(p) : 'na', pips = '';
     for(var j = 1; j <= 8; j++) pips += '<i class="ac-pip' + (tv && j <= t ? ' on' : '') + '"></i>';
-    var sub = state.type === 'truck' ? role(i) + ' axle · ' + (i === 0 ? 'front' : 'rear') : 'Trailer axle';
+    var sub = steerFirst() ? role(i) + ' axle · ' + (i === 0 ? 'front' : 'rear') : 'Trailer axle';
     var wPct = wv ? Math.min(100, w / 40000 * 100) : 0, pPct = pv ? Math.min(100, p / 150 * 100) : 0;
     return '<span class="ac-arrow"></span>' +
       '<div class="ac-head"><span class="ac-tile">' + (i + 1) + '</span>' +
@@ -1522,7 +1543,7 @@ window.dpEnhanceSelect = (function(){
     dpToast('success', 'Changes discarded', 'The builder is back to a blank asset.');
   });
   function resetAll(){
-    state.type = ''; state.axles = 0; state.rows = []; state.selected = -1; state.editingId = null; state.savedSig = '';
+    state.type = ''; state.sub = 'dryvan'; setSelect(selSub, 'dryvan'); state.axles = 0; state.rows = []; state.selected = -1; state.editingId = null; state.savedSig = '';
     setSelect(selType, ''); setSelect(selAxles, '');
     selAxles.disabled = true;
     renderRows();
@@ -1599,6 +1620,7 @@ window.dpEnhanceSelect = (function(){
     if(!name){ inName.classList.add('field-invalid'); $('#nameError').hidden = false; inName.focus(); return; }
     var rec = { id:(!asNew && state.editingId) || ('a' + Date.now()), name:name, unit:inUnit.value.trim(), type:state.type, axles:state.axles,
       rows:state.rows.map(function(r){ return { tires:String(num(r.tires)), weight:String(num(r.weight)), psi:String(num(r.psi)) }; }), savedAt:Date.now() };
+    if(state.type === 'trailer'){ rec.trailerType = state.sub; DPTrailer.save(rec.id, state.sub); }
     var idx = -1; saved.forEach(function(s, i){ if(s.id === rec.id) idx = i; });
     if(idx >= 0) saved[idx] = rec; else saved.unshift(rec);
     persist(saved);
@@ -1623,9 +1645,9 @@ window.dpEnhanceSelect = (function(){
       host.innerHTML = '<ul class="profile-list">' + saved.map(function(s){
         var t = 0, w = 0; s.rows.forEach(function(r){ t += num(r.tires); w += num(r.weight); });
         var d = new Date(s.savedAt).toLocaleDateString('en-US', { month:'short', day:'numeric' });
-        return '<li><button type="button" class="profile-row" data-load="' + s.id + '"><span class="profile-row-icon"><i data-lucide="' + TYPES[s.type].icon + '"></i></span>' +
+        return '<li><button type="button" class="profile-row" data-load="' + s.id + '"><span class="profile-row-icon"><i data-lucide="' + typeIcon(s) + '"></i></span>' +
           '<span class="profile-row-text"><span class="profile-row-name"></span><span class="profile-row-meta">' +
-          TYPES[s.type].label + ' · ' + s.axles + ' axles · ' + t + ' tires · ' + fmt(w) + ' lb</span></span>' +
+          typeLabel(s) + ' · ' + s.axles + ' axles · ' + t + ' tires · ' + fmt(w) + ' lb</span></span>' +
           '<span class="badge">' + d + '</span></button>' +
           '<button type="button" class="profile-del" data-del="' + s.id + '" aria-label="Delete asset"><i data-lucide="trash-2"></i></button></li>';
       }).join('') + '</ul>';
@@ -1653,6 +1675,7 @@ window.dpEnhanceSelect = (function(){
   });
   function loadAsset(r){
     state.type = r.type; state.axles = r.axles;
+    state.sub = r.type === 'trailer' ? subOf(r) : 'dryvan'; setSelect(selSub, state.sub);
     state.rows = r.rows.map(function(x){ return { tires:x.tires, weight:x.weight, psi:x.psi }; });
     state.editingId = r.id; state.selected = -1;
     setSelect(selType, r.type); selAxles.disabled = false; setSelect(selAxles, r.axles);
@@ -1724,7 +1747,7 @@ window.dpEnhanceSelect = (function(){
   });
   $('#toolShot').addEventListener('click', function(){
     if(!viewer) return;
-    var name = (state.editingId && saved.filter(function(s){ return s.id === state.editingId; })[0] || {}).name || (TYPES[state.type] ? TYPES[state.type].label.toLowerCase() : 'asset') + '-' + state.axles + 'axle';
+    var name = (state.editingId && saved.filter(function(s){ return s.id === state.editingId; })[0] || {}).name || (state.type === 'trailer' ? state.sub : TYPES[state.type] ? TYPES[state.type].label.toLowerCase() : 'asset') + '-' + state.axles + 'axle';
     viewer.screenshot(name + '.png');
     dpToast('success', 'Image downloaded', name + '.png');
   });
@@ -1755,7 +1778,7 @@ window.dpEnhanceSelect = (function(){
 
   /* ---------- render ---------- */
   function snapshot(){
-    return { type:state.type, axles:state.axles, mode:state.mode, selected:state.selected,
+    return { type:state.type, sub:state.sub, axles:state.axles, mode:state.mode, selected:state.selected,
       rows:state.rows.map(function(r){ var e = rowErrors(r); return { tires:e.tires ? 0 : num(r.tires), weight:e.weight ? 0 : num(r.weight), psi:e.psi ? 0 : num(r.psi), done:!Object.keys(e).length }; }) };
   }
   function refresh(){
@@ -1787,9 +1810,12 @@ window.dpEnhanceSelect = (function(){
   }
   function render(){
     var has = !!state.type, hasAx = state.axles > 0;
+    var isTrl = state.type === 'trailer', sd = DPTrailer.def(state.sub);
+    $('#fldSub').hidden = !isTrl;
     $('#axleHint').textContent = !has ? 'Choose an asset type first, then how many axles it has.' :
-      !hasAx ? 'Now choose how many axles the ' + TYPES[state.type].label.toLowerCase() + ' has (1–10).' :
-      (state.type === 'truck' ? 'Axle 1 is the steer axle; the rest are placed as drives.' : 'Axles are grouped as a tandem at the rear of the trailer.');
+      !hasAx ? 'Now choose how many axles the ' + (isTrl ? sd.label.toLowerCase() + ' trailer' : 'truck') + ' has (1–10).' :
+      steerFirst() ? 'Axle 1 is the steer axle; the rest are placed as drives.' :
+      isTrl ? sd.desc + '. Axles are grouped at the rear of the trailer.' : 'Axles are grouped as a tandem at the rear of the trailer.';
     $('#axleScroll').hidden = !hasAx;
     $('#axleEmpty').hidden = hasAx;
     $('#axleCount').textContent = state.axles;
@@ -1798,8 +1824,8 @@ window.dpEnhanceSelect = (function(){
     $('#vTop').hidden = !has; $('#vBottom').hidden = !has;
     $('#vHint').hidden = !has || hasAx;
     if(has){
-      $('#vChipTitle').textContent = TYPES[state.type].label + (hasAx ? ' · ' + state.axles + (state.axles > 1 ? ' axles' : ' axle') : '');
-      $('.v-chip-ico').innerHTML = '<i data-lucide="' + TYPES[state.type].icon + '"></i>';
+      $('#vChipTitle').textContent = (isTrl ? sd.label : TYPES[state.type].label) + (hasAx ? ' · ' + state.axles + (state.axles > 1 ? ' axles' : ' axle') : '');
+      $('.v-chip-ico').innerHTML = '<i data-lucide="' + (isTrl ? sd.icon : TYPES[state.type].icon) + '"></i>';
     }
     $('#savedCount').textContent = saved.length;
     markSelected();
@@ -1823,7 +1849,7 @@ window.dpEnhanceSelect = (function(){
   window.addEventListener('dp-viewer-failed', function(){ $('#vFallback').hidden = false; $('#vEmpty').style.display = 'none'; dpIcons(); });
   window.addEventListener('dp-pin-click', function(e){ selectAxle(e.detail, true); });
 
-  window.dpBuild = { state:state, setType:setType, setAxles:setAxles, snapshot:snapshot, totals:totals };
+  window.dpBuild = { state:state, setType:setType, setSub:setSub, setAxles:setAxles, snapshot:snapshot, totals:totals };
   render();
   dpIcons();
 })();
@@ -1954,11 +1980,6 @@ window.dpEnhanceSelect = (function(){
     else { sp = Math.max(1.12, avail / (r - 1)); first = firstMin; }
     for(var j = 0; j < r; j++) out.push(first + j * sp);
     return { z:out, ext:Math.max(0, out[out.length - 1] + 0.85 - TRUCK.frameEnd) };
-  }
-  function trailerAxleZ(n){
-    var out = [], last = 4.35, sp = n > 3 ? Math.max(1.1, Math.min(1.3, 8.6 / (n - 1))) : 1.3;
-    for(var j = 0; j < n; j++) out.push(last - (n - 1 - j) * sp);
-    return out;
   }
 
   var tireGeoCache = {}, rimGeoCache = {};
@@ -2163,25 +2184,18 @@ window.dpEnhanceSelect = (function(){
   }
 
   /* ---------- trailer body ---------- */
-  function buildTrailer(){
-    var g = new THREE.Group(), xr = [];
-    var slab = mesh(rb(3.0, 0.04, 12.4, 0.015, 2), M.slab, 0, 0.02, 0); slab.castShadow = false; g.add(slab);
+  function buildTrailer(sub, n){
+    var g = new THREE.Group(), key = DPTrailer.def(sub).key;
+    M.paint.transparent = false; M.paint.opacity = 1; M.paint.depthWrite = true;   // a truck's x-ray may have left it ghosted
+    var T = DPTrailer.build(key, { THREE:THREE, RoundedBoxGeometry:RoundedBoxGeometry, edges:true,
+      mat:{ body:M.van, steel:M.steel, dark:M.dark, chrome:M.chrome, tail:M.tail, accent:M.accent, rubber:M.rubber, skirt:M.skirt, glass:M.glass, paint:M.paint, lamp:M.lamp } });
+    /* the slab is the body length + 0.4, widened only when extra axles run past the end */
+    var az = DPTrailer.axles(key, n, {}).z, lo = -T.len / 2 - 0.2, hi = T.len / 2 + 0.2;
+    if(az.length){ lo = Math.min(lo, az[0] - 0.9); hi = Math.max(hi, az[az.length - 1] + 0.9); }
+    var slab = mesh(rb(3.0, 0.04, hi - lo, 0.015, 2), M.slab, 0, 0.02, (hi + lo) / 2); slab.castShadow = false; g.add(slab);
     g.add(edges(slab, new THREE.LineBasicMaterial({ color:0x9aa1ab, transparent:true, opacity:0.5 })));
-    [-0.45, 0.45].forEach(function(x){ g.add(box(0.16, 0.3, 11.9, M.dark, x, 0.92, 0)); });
-    for(var z = -5.4; z <= 5.6; z += 0.9) g.add(box(1.0, 0.1, 0.1, M.dark, 0, 0.9, z));
-    var floor = box(2.6, 0.08, 12.1, M.steel, 0, 1.12, 0); g.add(floor);
-    var van = mesh(rb(2.6, 2.7, 12.0, 0.05), M.van, 0, 2.5, 0); van.castShadow = false; g.add(van); xr.push(['van', van.material]);
-    var ve = edges(van); ve.material = new THREE.LineBasicMaterial({ color:0x0F6FFF, transparent:true, opacity:0.45 }); g.add(ve);
-    g.add(cyl(0.45, 0.06, M.steel, 0, 1.0, -5.3));
-    g.add(cyl(0.09, 0.3, M.chrome, 0, 0.92, -5.3));
-    [-0.95, 0.95].forEach(function(x){
-      g.add(box(0.14, 0.95, 0.14, M.steel, x, 0.52, -3.4));
-      g.add(box(0.5, 0.06, 0.4, M.dark, x, 0.05, -3.4));
-    });
-    g.add(box(2.4, 0.26, 0.12, M.dark, 0, 0.62, 6.15));
-    [-1.05, 1.05].forEach(function(x){ g.add(mesh(rb(0.3, 0.12, 0.06, 0.02), M.tail, x, 1.05, 6.12)); });
-    g.add(box(2.4, 0.03, 0.03, M.accent, 0, 3.55, -5.9));
-    return { root:g, slab:slab, deckY:0, xray:xr, len:12.4, R:9.5, tY:1.4, sideX:2.0 };
+    g.add(T.root);
+    return { root:g, slab:slab, deckY:0, xray:T.xr, len:hi - lo, R:Math.max(T.R, (hi - lo) * 0.78 + 0.2), tY:1.4, sideX:2.0 };
   }
 
   /* ---------- model management ---------- */
@@ -2251,20 +2265,22 @@ window.dpEnhanceSelect = (function(){
     return b;
   }
 
-  var built = { type:'', n:0 };
-  function rebuild(type, n){
-    var wasEmpty = built.type === '', typeChanged = built.type !== type;
+  var built = { type:'', sub:'', n:0 };
+  function rebuild(type, n, sub){
+    sub = type === 'trailer' ? DPTrailer.def(sub).key : '';
+    var wasEmpty = built.type === '', typeChanged = built.type !== type, subChanged = built.sub !== sub;
     clearModel();
-    if(!type){ built = { type:'', n:0 }; return; }
-    built = { type:type, n:n };
+    if(!type){ built = { type:'', sub:'', n:0 }; return; }
+    built = { type:type, sub:sub, n:n };
     if(typeChanged){ xrayOn = type === 'trailer'; emit('xray', xrayOn); }   // the van needs X-ray to show its axles; the tractor does not
-    model = type === 'truck' ? buildTruck(n) : buildTrailer();
+    model = type === 'truck' ? buildTruck(n) : buildTrailer(sub, Math.max(0, n));
     scene.add(model.root);
     applyXray();
-    var zs = type === 'truck' ? model.lay.z : trailerAxleZ(Math.max(0, n));
+    var tl = type === 'truck' ? null : DPTrailer.axles(sub, Math.max(0, n), {});
+    var zs = type === 'truck' ? model.lay.z : tl.z, sf = type === 'truck' || tl.steerFirst;
     if(n > 0) zs.forEach(function(z, i){
-      var kind = type === 'truck' ? (i === 0 ? 'Steer' : 'Drive') : 'Trailer';
-      var a = createAxle(i, z, i === 0 && type === 'truck' ? 'steer' : 'drive', model.sideX);
+      var kind = sf ? (i === 0 ? 'Steer' : 'Drive') : 'Trailer';
+      var a = createAxle(i, z, i === 0 && sf ? 'steer' : 'drive', model.sideX);
       a.kindLabel = kind;
       a.band.scale.set(type === 'truck' ? 3.1 : 3.0, 1.1, 1);
       a.pin = makePin(i);
@@ -2275,7 +2291,7 @@ window.dpEnhanceSelect = (function(){
     });
     model.root.scale.set(1, 0.001, 1);
     tween(560, 0, function(t){ model.root.scale.y = Math.max(0.001, ease(t)); });
-    if(typeChanged) setView('iso', wasEmpty);
+    if(typeChanged || subChanged) setView('iso', wasEmpty);
     applyMode();
   }
 
@@ -2405,7 +2421,8 @@ window.dpEnhanceSelect = (function(){
     update:function(s){
       lastRows = s.rows;
       var type = s.type || '', n = s.axles || 0;
-      if(type !== built.type || n !== built.n) rebuild(type, n);
+      var sub = type === 'trailer' ? DPTrailer.def(s.sub).key : '';
+      if(type !== built.type || n !== built.n || sub !== built.sub) rebuild(type, n, sub);
       axles.forEach(function(a, i){
         var r = s.rows[i] || {};
         setTires(a, r.tires || 0, true);
